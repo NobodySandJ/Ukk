@@ -6,13 +6,13 @@
     "about": "<strong>Mujōken no Umi (無条件の海)</strong>, atau \"Lautan Tanpa Syarat,\" adalah grup idola yang mengusung konsep bahwa cinta dan musik dapat menciptakan samudra di mana saja, bahkan di tengah daratan. Terdiri dari lima anggota yang terinspirasi oleh pesona hewan laut, mereka siap mengajakmu menyelami lautan dukungan dan semangat yang tak terbatas."
   },
   "images": {
-    "hero_background": "https://via.placeholder.com/1500x800.png?text=Ganti+dengan+Foto+Grup"
+    "hero_background": "img/member/grup2.jpg"
   },
   "members": [
     {
       "id": "runa",
       "name": "Runa (ルナ)",
-      "image": "https://via.placeholder.com/300x400.png?text=Runa",
+      "image": "img/member/chartRuna.jpg",
       "role": "Sang Ubur-Ubur Panggung",
       "price": 35000,
       "details": {
@@ -24,7 +24,7 @@
     {
       "id": "hina",
       "name": "Hina (ヒナ)",
-      "image": "https://via.placeholder.com/300x400.png?text=Hina",
+      "image": "img/member/chartHina.jpg",
       "role": "Si Berang-Berang Laut Penuh Energi",
       "price": 35000,
       "details": {
@@ -36,7 +36,7 @@
     {
       "id": "ami",
       "name": "Ami (アミ)",
-      "image": "https://via.placeholder.com/300x400.png?text=Ami",
+      "image": "img/member/chartAmi.jpg",
       "role": "Axolotl yang Selalu Tersenyum",
       "price": 35000,
       "details": {
@@ -48,7 +48,7 @@
     {
       "id": "marina",
       "name": "Marina (マリナ)",
-      "image": "https://via.placeholder.com/300x400.png?text=Marina",
+      "image": "img/member/chartRina.jpg",
       "role": "Sang Lumba-Lumba Karismatik",
       "price": 35000,
       "details": {
@@ -60,7 +60,7 @@
     {
       "id": "anzu",
       "name": "Anzu (アンズ)",
-      "image": "https://via.placeholder.com/300x400.png?text=Anzu",
+      "image": "img/member/chartAnzu.jpg",
       "role": "Ikan Badut Pemberani",
       "price": 35000,
       "details": {
@@ -88,7 +88,7 @@
     }
   ],
   "gallery": [
-    { "src": "https://via.placeholder.com/400x400.png?text=Grup+Foto+1", "alt": "Foto Grup 1" },
+    { "src": "img/member/group.jpg", "alt": "Foto Grup 1" },
     { "src": "https://via.placeholder.com/400x300.png?text=Runa+di+Panggung", "alt": "Runa" },
     { "src": "https://via.placeholder.com/400x500.png?text=Hina+dengan+Fans", "alt": "Hina" },
     { "src": "https://via.placeholder.com/400x400.png?text=Ami+Cosplay", "alt": "Ami" },
