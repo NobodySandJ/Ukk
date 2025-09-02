@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pesan Cheki - Mujōken no Umi (無条件の海)</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <h1><a href="index.html" class="logo-link">Mujōken no Umi</a></h1>
+            </div>
+            <ul class="nav-links">
+                <li><a href="index.html#about">Tentang Kami</a></li>
+                <li><a href="index.html#members">Member</a></li>
+                <li><a href="gallery.html">Galeri</a></li>
+                <li><a href="cheki.html">Cheki</a></li>
+            </ul>
+            <button id="submit-button" class="cta-button">
+    <i class="fas fa-paper-plane"></i> Kirim Pesanan
+</button>
+        </nav>
+    </header>
+
+    <main>
+        <section id="cheki-page">
+            <div class="container">
+                <h2>Pesan Cheki Digital</h2>
+                <p class="page-intro">Dapatkan momen spesial bersama member favoritmu! Setiap cheki akan ditandatangani secara digital.</p>
+                
+                <div class="cheki-grid" id="cheki-list">
+                    </div>
+
+                <div class="order-summary-container">
+                    <h3>Ringkasan Pesanan Anda</h3>
+                    <div id="order-summary">
+                        <p>Total Item: <span id="total-items">0</span></p>
+                        <p>Total Harga: <span id="total-price">Rp 0</span></p>
+                    </div>
+                    <div id="customer-form">
+                        <input type="text" id="customer-name" placeholder="Nama Lengkap Anda" required>
+                        <input type="text" id="customer-social" placeholder="Username Instagram / X (Twitter)" required>
+                    </div>
+                    <button id="whatsapp-button" class="cta-button">
+                        <i class="fab fa-whatsapp"></i> Pesan via WhatsApp
+                    </button>
+                    <p id="form-error" class="error-message"></p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="social-media">
+                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#"><i class="fab fa-instagram"></i></a>
+                <a href="#"><i class="fab fa-youtube"></i></a>
+                <a href="#"><i class="fab fa-tiktok"></i></a>
+            </div>
+            <p>&copy; 2025 Mujōken no Umi. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+    <script src="cheki.js"></script> 
+
+</body>
+</html>

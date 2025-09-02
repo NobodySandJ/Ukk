@@ -1,5 +1,23 @@
 document.addEventListener('DOMContentLoaded', function() {
     
+    // --- KODE UNTUK MENU HAMBURGER MOBILE ---
+    const hamburger = document.getElementById('hamburger-menu');
+    const navLinks = document.querySelector('.nav-links'); // Menggunakan class
+
+    if (hamburger && navLinks) {
+        // Buka/Tutup menu saat hamburger di klik
+        hamburger.addEventListener('click', () => {
+            navLinks.classList.toggle('active');
+        });
+
+        // Tutup menu saat salah satu link di klik (untuk navigasi di halaman yang sama)
+        navLinks.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => {
+                navLinks.classList.remove('active');
+            });
+        });
+    }
+    
     // --- FUNGSI SMOOTH SCROLL ---
     function smoothScrollTo(targetId) {
         const targetElement = document.getElementById(targetId);
@@ -45,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 100);
     }
 
-    // --- KODE UNTUK LIGHTBOX GALERI (TETAP SAMA, SUDAH AMAN) ---
+    // --- KODE UNTUK LIGHTBOX GALERI ---
     const galleryItems = document.querySelectorAll('.gallery-item img');
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightbox-img');
@@ -55,7 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
         galleryItems.forEach(item => {
             item.addEventListener('click', () => {
                 lightbox.style.display = 'block';
-                lightboxImg.src = item.src;
+                lightboxImg.src = item.src; // Pastikan src gambar diatur
             });
         });
 
