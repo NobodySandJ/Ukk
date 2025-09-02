@@ -1,7 +1,7 @@
 // api/get-stock.js
-import { getConnection } from '../../lib/db';
+const { getConnection } = require('../../lib/db');
 
-export default async function handler(req, res) {
+module.exports = async (req, res) => {
     if (req.method !== 'GET') {
         return res.status(405).json({ message: 'Method Not Allowed' });
     }
@@ -17,10 +17,10 @@ export default async function handler(req, res) {
             const stock = parseInt(rows[0].setting_value, 10);
             res.status(200).json({ stock: stock });
         } else {
-            // Jika key belum ada, default ke 0
             res.status(200).json({ stock: 0 });
         }
     } catch (error) {
+        console.error('Error fetching stock:', error);
         res.status(500).json({ message: 'Internal Server Error', error: error.message });
     }
-}
+};

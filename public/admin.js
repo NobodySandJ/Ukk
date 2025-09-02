@@ -1,7 +1,5 @@
 // public/admin.js
-
 document.addEventListener('DOMContentLoaded', () => {
-    // === DOM Elements ===
     const loginSection = document.getElementById('login-section');
     const adminPanel = document.getElementById('admin-panel');
     const loginForm = document.getElementById('login-form');
@@ -13,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const API_TOKEN_KEY = 'admin_api_token';
 
-    // === Functions ===
     function showAdminPanel() {
         loginSection.classList.add('hidden');
         adminPanel.classList.remove('hidden');
@@ -42,7 +39,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
-    // === Event Listeners ===
     loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         loginError.textContent = '';
@@ -55,17 +51,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
             });
-
             const result = await response.json();
-
             if (!response.ok) {
                 throw new Error(result.message || 'Username atau password salah.');
             }
-            
-            // Simpan token ke session storage (lebih aman dari local storage)
-            sessionStorage.setItem(API_TOKEN_KEY, result.token);
+            localStorage.setItem(API_TOKEN_KEY, result.token);
             showAdminPanel();
-
         } catch (error) {
             loginError.textContent = error.message;
         }
@@ -77,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateStatusEl.className = 'text-yellow-400 text-center mt-4';
 
         const stockToAdd = parseInt(e.target['stock-to-add'].value);
-        const token = sessionStorage.getItem(API_TOKEN_KEY);
+        const token = localStorage.getItem(API_TOKEN_KEY);
 
         if (isNaN(stockToAdd) || stockToAdd <= 0) {
             updateStatusEl.textContent = 'Harap masukkan jumlah yang valid.';
@@ -90,22 +81,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}` // Kirim token untuk otorisasi
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({ add: stockToAdd })
             });
-
             const result = await response.json();
-
             if (!response.ok) {
                 throw new Error(result.message || 'Gagal memperbarui stok.');
             }
-
             updateStatusEl.textContent = 'Stok berhasil diperbarui!';
             updateStatusEl.className = 'text-green-400 text-center mt-4';
             stockForm.reset();
-            fetchCurrentStock(); // Ambil ulang stok terbaru
-
+            fetchCurrentStock();
         } catch (error) {
             updateStatusEl.textContent = error.message;
             updateStatusEl.className = 'text-red-400 text-center mt-4';
@@ -113,13 +100,11 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     logoutBtn.addEventListener('click', () => {
-        sessionStorage.removeItem(API_TOKEN_KEY);
+        localStorage.removeItem(API_TOKEN_KEY);
         showLoginSection();
     });
 
-    // === Initial Check ===
-    // Cek jika sudah ada token di session storage saat halaman dimuat
-    if (sessionStorage.getItem(API_TOKEN_KEY)) {
+    if (localStorage.getItem(API_TOKEN_KEY)) {
         showAdminPanel();
     } else {
         showLoginSection();
