@@ -15,19 +15,20 @@
                 <h1><a href="index.html" class="logo-link">Mujōken no Umi</a></h1>
             </div>
             <ul class="nav-links">
-                <li><a href="index.html#about">Tentang Kami</a></li>
-                <li><a href="index.html#members">Member</a></li>
-                <li><a href="gallery.html">Galeri</a></li>
-                <li><a href="cheki.html">Cheki</a></li>
-            </ul>
-            <button id="submit-button" class="cta-button">
-    <i class="fas fa-paper-plane"></i> Kirim Pesanan
-</button>
+    <li><a href="index.html#about">Tentang Kami</a></li>
+    <li><a href="index.html#members">Member</a></li>
+    <li><a href="index.html#news">Berita</a></li>
+    <li><a href="gallery.html">Galeri</a></li>
+    <li><a href="cheki.html">Pesan Cheki</a></li>
+</ul>
+             <button class="hamburger" id="hamburger-menu">
+                <i class="fas fa-bars"></i>
+            </button>
         </nav>
     </header>
 
     <main>
-        <section id="cheki-page">
+        <section id="cheki-page" class="reveal">
             <div class="container">
                 <h2>Pesan Cheki Digital</h2>
                 <p class="page-intro">Dapatkan momen spesial bersama member favoritmu! Setiap cheki akan ditandatangani secara digital.</p>
@@ -35,7 +36,7 @@
                 <div class="cheki-grid" id="cheki-list">
                     </div>
 
-                <div class="order-summary-container">
+                <div class="order-summary-container reveal">
                     <h3>Ringkasan Pesanan Anda</h3>
                     <div id="order-summary">
                         <p>Total Item: <span id="total-items">0</span></p>
@@ -45,8 +46,8 @@
                         <input type="text" id="customer-name" placeholder="Nama Lengkap Anda" required>
                         <input type="text" id="customer-social" placeholder="Username Instagram / X (Twitter)" required>
                     </div>
-                    <button id="whatsapp-button" class="cta-button">
-                        <i class="fab fa-whatsapp"></i> Pesan via WhatsApp
+                    <button id="submit-button" class="cta-button">
+                        <i class="fas fa-paper-plane"></i> Kirim Pesanan
                     </button>
                     <p id="form-error" class="error-message"></p>
                 </div>
@@ -68,6 +69,5 @@
 
     <script src="script.js"></script>
     <script src="cheki.js"></script> 
-
 </body>
 </html>

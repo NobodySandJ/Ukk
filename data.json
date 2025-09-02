@@ -1,0 +1,100 @@
+{
+  "group": {
+    "name": "Mujōken no Umi",
+    "name_japanese": "無条件の海",
+    "tagline": "Menyelami lautan dukungan dan semangat yang tak terbatas bersama kami.",
+    "about": "<strong>Mujōken no Umi (無条件の海)</strong>, atau \"Lautan Tanpa Syarat,\" adalah grup idola yang mengusung konsep bahwa cinta dan musik dapat menciptakan samudra di mana saja, bahkan di tengah daratan. Terdiri dari lima anggota yang terinspirasi oleh pesona hewan laut, mereka siap mengajakmu menyelami lautan dukungan dan semangat yang tak terbatas."
+  },
+  "images": {
+    "hero_background": "https://via.placeholder.com/1500x800.png?text=Ganti+dengan+Foto+Grup"
+  },
+  "members": [
+    {
+      "id": "runa",
+      "name": "Runa (ルナ)",
+      "image": "https://via.placeholder.com/300x400.png?text=Runa",
+      "role": "Sang Ubur-Ubur Panggung",
+      "price": 35000,
+      "details": {
+        "sifat": "Tenang, anggun, dan sedikit misterius. Tipe *cool beauty* yang memancarkan aura etereal.",
+        "hobi": "Makeup Artistry, Melukis dengan Cat Air, Menulis Puisi.",
+        "jiko": "<i>\"Melayang-layang di lautan cinta kalian, aku datang untuk menyengat hatimu dengan pesonaku yang lembut. Jangan berkedip, nanti aku menghilang! Aku Runa, sang ubur-ubur panggung!\"</i>"
+      }
+    },
+    {
+      "id": "hina",
+      "name": "Hina (ヒナ)",
+      "image": "https://via.placeholder.com/300x400.png?text=Hina",
+      "role": "Si Berang-Berang Laut Penuh Energi",
+      "price": 35000,
+      "details": {
+        "sifat": "Ceria, super energik, dan sangat ramah. *Mood maker* di dalam grup.",
+        "hobi": "Memasak, Mengoleksi Benda-benda Kecil, Vlogging.",
+        "jiko": "<i>\"Dengan cangkang kerang di satu tangan dan hatimu di tangan lainnya, aku siap memecahkan keheningan! Tok tok tok! Siap menyemangatimu hari ini! Aku Hina, berang-berang laut kesayanganmu!\"</i>"
+      }
+    },
+    {
+      "id": "ami",
+      "name": "Ami (アミ)",
+      "image": "https://via.placeholder.com/300x400.png?text=Ami",
+      "role": "Axolotl yang Selalu Tersenyum",
+      "price": 35000,
+      "details": {
+        "sifat": "Unik, quirky, dan selalu tersenyum. Sangat optimis dan tahan banting.",
+        "hobi": "Cosplay, Bermain Rhythm Game, Merawat Ikan Hias.",
+        "jiko": "<i>\"Walaupun terjatuh, aku akan tumbuh dan tersenyum lagi! Siap meregenerasi semangatmu kapan pun kamu butuh! Senyumku hanya untukmu, aku Ami, axolotl-mu yang abadi!\"</i>"
+      }
+    },
+    {
+      "id": "marina",
+      "name": "Marina (マリナ)",
+      "image": "https://via.placeholder.com/300x400.png?text=Marina",
+      "role": "Sang Lumba-Lumba Karismatik",
+      "price": 35000,
+      "details": {
+        "sifat": "Cerdas, karismatik, dan komunikator yang hebat. Berjiwa pemimpin alami.",
+        "hobi": "Mancing, Belajar Bahasa Asing, Menari Gaya Bebas.",
+        "jiko": "<i>\"Melompat lebih tinggi dari ombak, aku akan memandumu melewati lautan tak bersyarat ini! Dengarkan baik-baik, sonar hatiku memanggil namamu! Aku Marina!\"</i>"
+      }
+    },
+    {
+      "id": "anzu",
+      "name": "Anzu (アンズ)",
+      "image": "https://via.placeholder.com/300x400.png?text=Anzu",
+      "role": "Ikan Badut Pemberani",
+      "price": 35000,
+      "details": {
+        "sifat": "Pemalu pada awalnya, namun menjadi sangat berani dan protektif jika menyangkut member lain.",
+        "hobi": "Merajut, Menonton Film Horor, Mendekorasi.",
+        "jiko": "<i>\"Dari balik anemon panggung, aku mengintip untuk menemukanmu! Mungkin aku kecil dan suka bersembunyi, tapi aku akan selalu ada untuk melindungimu! Namaku Anzu, ikan badut penjagamu!\"</i>"
+      }
+    }
+  ],
+  "news": [
+    {
+      "title": "Debut Mujōken no Umi!",
+      "content": "Saksikan penampilan pertama kami pada tanggal 20 Oktober 2025. Informasi lebih lanjut akan segera diumumkan!",
+      "date": "15 September 2025"
+    },
+    {
+      "title": "Jadwal Teater Bulan Ini",
+      "content": "Jadwal pertunjukan teater untuk bulan Oktober kini telah dirilis. Cek halaman jadwal untuk detail lengkap.",
+      "date": "10 September 2025"
+    },
+    {
+      "title": "Pengumuman Member Baru!",
+      "content": "Nantikan kejutan spesial dengan perkenalan member baru di acara live kami bulan depan!",
+      "date": "01 September 2025"
+    }
+  ],
+  "gallery": [
+    { "src": "https://via.placeholder.com/400x400.png?text=Grup+Foto+1", "alt": "Foto Grup 1" },
+    { "src": "https://via.placeholder.com/400x300.png?text=Runa+di+Panggung", "alt": "Runa" },
+    { "src": "https://via.placeholder.com/400x500.png?text=Hina+dengan+Fans", "alt": "Hina" },
+    { "src": "https://via.placeholder.com/400x400.png?text=Ami+Cosplay", "alt": "Ami" },
+    { "src": "https://via.placeholder.com/400x600.png?text=Marina+Freestyle", "alt": "Marina" },
+    { "src": "https://via.placeholder.com/400x350.png?text=Anzu+Merajut", "alt": "Anzu" },
+    { "src": "https://via.placeholder.com/400x400.png?text=Foto+Grup+2", "alt": "Foto Grup 2" },
+    { "src": "https://via.placeholder.com/400x550.png?text=Debut+Stage", "alt": "Debut Stage" }
+  ]
+}
