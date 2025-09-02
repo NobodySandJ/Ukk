@@ -1,9 +1,0 @@
-{
-  "name": "mujoken-cheki-website",
-  "version": "1.0.0",
-  "private": true,
-  "dependencies": {
-    "jsonwebtoken": "^9.0.2",
-    "mysql2": "^3.6.5"
-  }
-}
