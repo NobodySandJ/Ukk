@@ -1,8 +1,6 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Memastikan kode hanya berjalan di halaman cheki
     if (document.getElementById('cheki-page')) {
         
-        // GANTI DENGAN URL GOOGLE SCRIPT ANDA
         const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyvolmRVcvvoB1zrI-Nh18n1K7LqYY6LEJzIkiKPWOOxXP1LUY1MG7L7M8XyZKL3s-ZQA/exec';
         
         const chekiListContainer = document.getElementById('cheki-list');
@@ -13,8 +11,12 @@ document.addEventListener('DOMContentLoaded', function() {
         const customerSocialEl = document.getElementById('customer-social');
         const formErrorEl = document.getElementById('form-error');
         const orderSummaryContainer = document.querySelector('.order-summary-container');
-        const chekiFormWrapper = document.getElementById('cheki-form-wrapper'); // Butuh wrapper baru di HTML
+        const chekiFormWrapper = document.getElementById('cheki-form-wrapper');
         
+        // [BARU] Elemen Mobile
+        const mobileCart = document.getElementById('mobile-cart');
+        const mobileCartTotal = document.getElementById('mobile-cart-total');
+
         let membersData = [];
         let cart = {};
 
@@ -51,21 +53,13 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         function showToast(message) {
-            // Hapus toast lama jika ada
             const oldToast = document.querySelector('.toast-notification');
             if (oldToast) oldToast.remove();
-
             const toast = document.createElement('div');
             toast.className = 'toast-notification';
             toast.textContent = message;
             document.body.appendChild(toast);
-
-            // Tampilkan toast
-            setTimeout(() => {
-                toast.classList.add('show');
-            }, 100);
-
-            // Sembunyikan dan hapus setelah 3 detik
+            setTimeout(() => toast.classList.add('show'), 100);
             setTimeout(() => {
                 toast.classList.remove('show');
                 toast.addEventListener('transitionend', () => toast.remove());
@@ -74,10 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         function giveFeedback() {
             orderSummaryContainer.classList.add('item-added');
-            // Hapus class setelah animasi selesai agar bisa di-trigger lagi
-            setTimeout(() => {
-                orderSummaryContainer.classList.remove('item-added');
-            }, 500);
+            setTimeout(() => orderSummaryContainer.classList.remove('item-added'), 500);
         }
         
         function updateQuantity(memberId, action) {
@@ -113,17 +104,32 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
             totalItemsEl.textContent = totalItems;
-            totalPriceEl.textContent = `Rp ${totalPrice.toLocaleString('id-ID')}`;
+            const formattedPrice = `Rp ${totalPrice.toLocaleString('id-ID')}`;
+            totalPriceEl.textContent = formattedPrice;
+
+            // [BARU] Update Mobile Cart
+            if (totalItems > 0) {
+                mobileCart.classList.add('visible');
+                mobileCartTotal.textContent = formattedPrice;
+            } else {
+                mobileCart.classList.remove('visible');
+            }
         }
         
         function showSuccessMessage(name, social) {
-            orderSummaryContainer.innerHTML = `
-                <div id="order-success-message">
-                    <h3><i class="fas fa-check-circle"></i> Pesanan Berhasil Terkirim!</h3>
-                    <p>Terima kasih, <strong>${name}</strong>! Kami akan segera menghubungimu melalui <strong>${social}</strong> untuk instruksi pembayaran.</p>
-                    <button id="order-again-btn" class="cta-button">Pesan Lagi</button>
-                </div>
+            // Sembunyikan form dan tampilkan pesan sukses
+            chekiFormWrapper.style.display = 'none';
+            mobileCart.style.display = 'none'; // Sembunyikan juga cart mobile
+
+            const successMessage = document.createElement('div');
+            successMessage.id = 'order-success-message';
+            successMessage.innerHTML = `
+                <h3><i class="fas fa-check-circle"></i> Pesanan Berhasil Terkirim!</h3>
+                <p>Terima kasih, <strong>${name}</strong>! Kami akan segera menghubungimu melalui <strong>${social}</strong> untuk instruksi pembayaran.</p>
+                <button id="order-again-btn" class="cta-button">Pesan Lagi</button>
             `;
+            orderSummaryContainer.appendChild(successMessage);
+            
             document.getElementById('order-again-btn').addEventListener('click', () => {
                 window.location.reload();
             });
@@ -135,10 +141,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
+        // [BARU] Klik pada floating cart akan scroll ke form
+        mobileCart.addEventListener('click', () => {
+            orderSummaryContainer.scrollIntoView({ behavior: 'smooth' });
+        });
+
         submitButton.addEventListener('click', e => {
             e.preventDefault();
             
-            if (GOOGLE_SCRIPT_URL === 'PASTE_YOUR_GOOGLE_SCRIPT_URL_HERE') {
+            if (GOOGLE_SCRIPT_URL === '') {
                 formErrorEl.textContent = 'URL Google Script belum diatur.';
                 return;
             }
@@ -178,9 +189,6 @@ document.addEventListener('DOMContentLoaded', function() {
             fetch(GOOGLE_SCRIPT_URL, {
                 method: 'POST',
                 mode: 'no-cors', 
-                headers: {
-                    'Content-Type': 'application/json',
-                },
                 body: JSON.stringify(orderData)
             })
             .then(() => {

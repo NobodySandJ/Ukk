@@ -15,13 +15,13 @@
                 <h1><a href="index.html" class="logo-link">Mujōken no Umi</a></h1>
             </div>
             <ul class="nav-links">
-    <li><a href="index.html#about">Tentang Kami</a></li>
-    <li><a href="index.html#members">Member</a></li>
-    <li><a href="index.html#news">Berita</a></li>
-    <li><a href="gallery.html">Galeri</a></li>
-    <li><a href="cheki.html">Pesan Cheki</a></li>
-</ul>
-             <button class="hamburger" id="hamburger-menu">
+                <li><a href="index.html#about">Tentang Kami</a></li>
+                <li><a href="index.html#members">Member</a></li>
+                <li><a href="index.html#news">Berita</a></li>
+                <li><a href="gallery.html">Galeri</a></li>
+                <li><a href="cheki.html">Pesan Cheki</a></li>
+            </ul>
+             <button class="hamburger" id="hamburger-menu" aria-label="Buka menu navigasi">
                 <i class="fas fa-bars"></i>
             </button>
         </nav>
@@ -37,23 +37,33 @@
                     </div>
 
                 <div class="order-summary-container reveal">
-                    <h3>Ringkasan Pesanan Anda</h3>
-                    <div id="order-summary">
-                        <p>Total Item: <span id="total-items">0</span></p>
-                        <p>Total Harga: <span id="total-price">Rp 0</span></p>
+                    <div id="cheki-form-wrapper">
+                        <h3>Ringkasan Pesanan Anda</h3>
+                        <div id="order-summary">
+                            <p>Total Item: <span id="total-items">0</span></p>
+                            <p>Total Harga: <span id="total-price">Rp 0</span></p>
+                        </div>
+                        <div id="customer-form">
+                            <input type="text" id="customer-name" placeholder="Nama Lengkap Anda" required>
+                            <input type="text" id="customer-social" placeholder="Username Instagram / No Whatsapp" required>
+                        </div>
+                        <button id="submit-button" class="cta-button">
+                            <i class="fas fa-paper-plane"></i> Kirim Pesanan
+                        </button>
+                        <p id="form-error" class="error-message"></p>
                     </div>
-                    <div id="customer-form">
-                        <input type="text" id="customer-name" placeholder="Nama Lengkap Anda" required>
-                        <input type="text" id="customer-social" placeholder="Username Instagram / No Whatsapp" required>
-                    </div>
-                    <button id="submit-button" class="cta-button">
-                        <i class="fas fa-paper-plane"></i> Kirim Pesanan
-                    </button>
-                    <p id="form-error" class="error-message"></p>
                 </div>
             </div>
         </section>
     </main>
+
+    <div id="mobile-cart" class="mobile-cart-summary">
+        <div class="mobile-cart-content">
+            <span>🛒 Lihat Pesanan</span>
+            <span id="mobile-cart-total">Rp 0</span>
+        </div>
+    </div>
+
 
     <footer>
         <div class="container">

@@ -26,7 +26,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function populateIndexPage(data) {
         // Data Grup
         document.title = `${data.group.name} (${data.group.name_japanese}) - Official Website`;
-        const logoTitle = document.querySelector('.logo-link');
+        const logoTitle = document.querySelector('#logo-title a');
         if (logoTitle) logoTitle.textContent = data.group.name;
 
         document.getElementById('hero-title').textContent = data.group.name;
@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('about-title').innerHTML = `Tentang ${data.group.name} (${data.group.name_japanese})`;
         document.getElementById('about-content').innerHTML = data.group.about;
         
-        const footerText = document.querySelector('footer p');
+        const footerText = document.querySelector('#footer-text');
         if (footerText) footerText.innerHTML = `&copy; 2025 ${data.group.name}. All Rights Reserved.`;
 
 
@@ -90,17 +90,14 @@ document.addEventListener('DOMContentLoaded', function() {
             data.gallery.forEach((image, index) => {
                 const galleryItem = document.createElement('div');
                 galleryItem.className = 'gallery-item';
-                // Tambahkan data-index untuk navigasi lightbox
                 galleryItem.setAttribute('data-index', index);
                 galleryItem.innerHTML = `<img src="${image.src}" alt="${image.alt}">`;
                 galleryGrid.appendChild(galleryItem);
             });
         }
-        // Kirim data galeri ke fungsi inisialisasi lightbox
         initializeLightbox(data.gallery);
     }
 
-    // Panggil fungsi untuk memuat data saat halaman dimuat
     loadWebsiteData();
 
     // --- KODE UNTUK MENU HAMBURGER MOBILE ---
@@ -118,10 +115,10 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // --- [MODIFIKASI] KODE LIGHTBOX DENGAN FITUR BARU ---
+    // --- [MODIFIKASI] LIGHTBOX DENGAN SWIPE ---
     function initializeLightbox(galleryData) {
         const lightbox = document.getElementById('lightbox');
-        if (!lightbox) return; // Keluar jika tidak ada lightbox di halaman
+        if (!lightbox) return;
 
         const lightboxImg = document.getElementById('lightbox-img');
         const lightboxCaption = document.getElementById('lightbox-caption');
@@ -132,6 +129,7 @@ document.addEventListener('DOMContentLoaded', function() {
         let currentIndex = 0;
 
         function showImage(index) {
+            if (!galleryData || galleryData.length === 0) return;
             if (index >= galleryData.length) index = 0;
             if (index < 0) index = galleryData.length - 1;
             
@@ -158,8 +156,12 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         if (closeBtn) closeBtn.addEventListener('click', closeLightbox);
-        if (prevBtn) prevBtn.addEventListener('click', () => showImage(currentIndex - 1));
-        if (nextBtn) nextBtn.addEventListener('click', () => showImage(currentIndex + 1));
+        
+        const showNext = () => showImage(currentIndex + 1);
+        const showPrev = () => showImage(currentIndex - 1);
+
+        if (prevBtn) prevBtn.addEventListener('click', showPrev);
+        if (nextBtn) nextBtn.addEventListener('click', showNext);
         
         lightbox.addEventListener('click', (e) => {
             if (e.target === lightbox) {
@@ -167,14 +169,31 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Navigasi dengan keyboard
         document.addEventListener('keydown', (e) => {
             if (lightbox.classList.contains('active')) {
-                if (e.key === 'ArrowLeft') showImage(currentIndex - 1);
-                if (e.key === 'ArrowRight') showImage(currentIndex + 1);
+                if (e.key === 'ArrowLeft') showPrev();
+                if (e.key === 'ArrowRight') showNext();
                 if (e.key === 'Escape') closeLightbox();
             }
         });
+        
+        // --- [BARU] Logika Swipe ---
+        let touchstartX = 0;
+        let touchendX = 0;
+
+        function handleGesture() {
+            if (touchendX < touchstartX - 50) showNext();
+            if (touchendX > touchstartX + 50) showPrev();
+        }
+
+        lightbox.addEventListener('touchstart', e => {
+            touchstartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+
+        lightbox.addEventListener('touchend', e => {
+            touchendX = e.changedTouches[0].screenX;
+            handleGesture();
+        }, { passive: true });
     }
 
     // --- FUNGSI UNTUK ANIMASI ON SCROLL ---
