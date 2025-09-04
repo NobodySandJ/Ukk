@@ -9,6 +9,7 @@
     --text-color: #212529;
     --secondary-text-color: #6c7d;
     --light-text-color: #FFFFFF;
+    --success-color: #28a745;
 
     /* === PROPERTI DESAIN GLOBAL === */
     --shadow-light: 0 5px 15px rgba(0, 0, 0, 0.05);
@@ -199,7 +200,7 @@ section h2::after {
     color: var(--accent-color); 
 }
 
-/* BERITA */
+/* BERITA (UPDATED) */
 .news-grid { display: grid; grid-template-columns: 1fr; gap: 1.5rem; max-width: 800px; margin: 0 auto; }
 .news-item {
     background: var(--card-bg); padding: 1.5rem 2rem; border-radius: var(--border-radius);
@@ -208,8 +209,36 @@ section h2::after {
     display: flex; justify-content: space-between; align-items: center;
 }
 .news-item:hover { transform: translateY(-5px); box-shadow: var(--shadow-light); }
-.news-item h3 { font-family: 'Poppins', sans-serif; font-size: 1.2rem; font-weight: 600; color: var(--text-color); margin: 0; }
-.news-item .date { color: var(--accent-color); font-weight: 500; white-space: nowrap; margin-left: 2rem; }
+.news-item-content {
+    flex-grow: 1;
+}
+.news-item-content h3 { 
+    font-family: 'Poppins', sans-serif; 
+    font-size: 1.3rem; /* Sedikit lebih besar */
+    font-weight: 700; /* Lebih tebal */
+    color: var(--text-color); 
+    margin: 0 0 0.25rem 0;
+}
+.news-item-content p {
+    margin: 0;
+    color: #555;
+}
+.news-item .date { 
+    color: var(--primary-color); 
+    font-weight: 500; 
+    white-space: nowrap; 
+    margin-left: 2rem;
+    background-color: #eaf6ff;
+    padding: 0.3rem 0.8rem;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+}
+.news-item .date i {
+    margin-right: 0.5rem;
+}
+
 
 /* FOOTER */
 footer { background: var(--primary-color); color: var(--light-text-color); text-align: center; padding: 3rem 0; margin-top: 4rem; }
@@ -224,6 +253,7 @@ footer p { margin-top: 1.5rem; opacity: 0.7; font-size: 0.9rem; }
     background: var(--primary-color); color: white; border: none;
     box-shadow: 0 4px 15px rgba(51, 161, 224, 0.3);
     padding: 0.9rem 2.5rem; border-radius: 50px; font-weight: 500;
+    cursor: pointer;
     transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
 }
 .cta-button:hover {
@@ -231,38 +261,178 @@ footer p { margin-top: 1.5rem; opacity: 0.7; font-size: 0.9rem; }
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(51, 161, 224, 0.4);
 }
+.cta-button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
 .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; }
-.gallery-item { overflow: hidden; border-radius: var(--border-radius); box-shadow: var(--shadow-light); position: relative; cursor: pointer; }
+.gallery-item { 
+    overflow: hidden; 
+    border-radius: var(--border-radius); 
+    box-shadow: var(--shadow-light); 
+    position: relative; 
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Transisi untuk hover */
+}
+.gallery-item:hover {
+    transform: translateY(-8px); /* Efek terangkat */
+    box-shadow: var(--shadow-hover);
+}
 .gallery-item img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform 0.4s ease; }
 .gallery-item:hover img { transform: scale(1.1); }
-.lightbox { display: none; position: fixed; z-index: 2000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(33, 37, 41, 0.95); backdrop-filter: blur(5px); }
-.lightbox-content { margin: 8% auto; display: block; max-width: 90%; max-height: 80vh; border-radius: var(--border-radius); }
-.close-btn { position: absolute; top: 20px; right: 35px; color: #fff; font-size: 45px; font-weight: bold; cursor: pointer; transition: 0.3s; z-index: 1002; }
+
+/* Lightbox (UPDATED) */
+.lightbox { 
+    display: none; 
+    position: fixed; 
+    z-index: 2000; 
+    left: 0; top: 0; 
+    width: 100%; height: 100%; 
+    background-color: rgba(33, 37, 41, 0.95); 
+    backdrop-filter: blur(5px); 
+    -webkit-backdrop-filter: blur(5px);
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+.lightbox.active {
+    display: flex;
+}
+.lightbox-content { 
+    display: block; 
+    max-width: 85vw; 
+    max-height: 75vh; 
+    border-radius: var(--border-radius);
+    animation: zoomIn 0.5s ease;
+}
+@keyframes zoomIn {
+    from { transform: scale(0.8); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+.lightbox-caption {
+    margin-top: 1rem;
+    color: #f1f1f1;
+    font-size: 1.2rem;
+    text-align: center;
+    width: 80%;
+}
+.close-btn { 
+    position: absolute; 
+    top: 20px; 
+    right: 35px; 
+    color: #fff; 
+    font-size: 45px; 
+    font-weight: bold; 
+    cursor: pointer; 
+    transition: 0.3s; 
+    z-index: 2002; 
+}
+.nav-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 3rem;
+    color: #fff;
+    cursor: pointer;
+    z-index: 2001;
+    padding: 1rem;
+    user-select: none;
+    transition: color 0.3s ease;
+}
+.nav-arrow:hover {
+    color: var(--primary-color);
+}
+.prev-btn { left: 20px; }
+.next-btn { right: 20px; }
 .close-btn:hover { color: var(--primary-color); transform: rotate(180deg); }
+
 .cheki-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 2rem; margin-bottom: 4rem; }
 .cheki-card { background: var(--card-bg); border-radius: var(--border-radius); box-shadow: var(--shadow-light); text-align: center; padding: 1.5rem; transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease; }
 .cheki-card:hover { transform: translateY(-8px); box-shadow: var(--shadow-hover); border-color: var(--primary-color); }
 
-/* --- KODE CSS YANG DIPERBARUI UNTUK GAMBAR CHEKI --- */
 .cheki-card img { 
     width: 100%; 
-    height: auto; /* Mengikuti rasio asli */
-    object-fit: contain; /* Memastikan gambar sepenuhnya terlihat */
+    height: auto;
+    object-fit: contain;
     border-radius: 4px; 
     margin-bottom: 1rem; 
 }
-/* --- AKHIR PERUBAHAN --- */
 
 .cheki-card h3 { font-family: 'Playfair Display', serif; color: var(--text-color); font-size: 1.5rem; margin-bottom: 0.5rem; }
 .cheki-card .price { font-size: 1.1rem; font-weight: 500; color: var(--primary-color); margin-bottom: 1rem; }
 .quantity-selector { display: flex; justify-content: center; align-items: center; gap: 0.5rem; }
 .quantity-btn { background-color: var(--primary-color); color: white; border: none; width: 35px; height: 35px; border-radius: 50%; font-size: 1.5rem; font-weight: bold; cursor: pointer; transition: background-color 0.3s ease, transform 0.2s ease; }
 .quantity-btn:hover { background-color: var(--accent-color); transform: scale(1.05); }
-.quantity-input { width: 50px; text-align: center; font-size: 1.2rem; font-weight: 600; border: 1px solid #ddd; border-radius: 8px; padding: 0.3rem; }
-.order-summary-container { max-width: 600px; margin: 2rem auto; padding: 2rem; background: var(--card-bg); border-radius: var(--border-radius); box-shadow: var(--shadow-hover); text-align: center; }
+.quantity-input { width: 50px; text-align: center; font-size: 1.2rem; font-weight: 600; border: 1px solid #ddd; border-radius: 8px; padding: 0.3rem; -moz-appearance: textfield; }
+.quantity-input::-webkit-outer-spin-button, .quantity-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+.order-summary-container { 
+    max-width: 600px; 
+    margin: 2rem auto; 
+    padding: 2rem; 
+    background: var(--card-bg); 
+    border-radius: var(--border-radius); 
+    box-shadow: var(--shadow-hover); 
+    text-align: center; 
+    transition: border-color 0.4s ease; /* Transisi untuk umpan balik */
+}
+.order-summary-container.item-added {
+    border: 2px solid var(--primary-color);
+    animation: pulse 0.5s;
+}
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
+}
+
 #customer-form { margin: 1.5rem 0; display: flex; flex-direction: column; gap: 1rem; }
 #customer-form input { width: 100%; padding: 0.8rem 1rem; border: 1px solid #ccc; border-radius: 8px; font-size: 1rem; }
 .error-message { color: #D33333; margin-top: 1rem; font-weight: 500; min-height: 1.2em; }
+
+/* Notifikasi Toast */
+.toast-notification {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--text-color);
+    color: var(--light-text-color);
+    padding: 1rem 1.5rem;
+    border-radius: 8px;
+    z-index: 3000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.4s ease, transform 0.4s ease, visibility 0.4s;
+    font-weight: 500;
+}
+.toast-notification.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -10px);
+}
+
+/* Pesan Sukses */
+#order-success-message {
+    display: none;
+    text-align: center;
+    padding: 2rem;
+    border: 2px solid var(--success-color);
+    border-radius: var(--border-radius);
+    background-color: #f0fff4;
+}
+#order-success-message h3 {
+    color: var(--success-color);
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+}
+#order-success-message p {
+    font-size: 1.1rem;
+    margin-bottom: 1.5rem;
+}
+
 
 /* RESPONSIVE & MOBILE MINIMALIS */
 @media (max-width: 768px) {
@@ -272,7 +442,6 @@ footer p { margin-top: 1.5rem; opacity: 0.7; font-size: 0.9rem; }
     section h2 { font-size: 1.8rem; }
     #about p { font-size: 1rem; }
     .member-card h3 { font-size: 1.4rem; }
-    .news-item h3 { font-size: 1rem; }
 
     /* Layout & Spacing Mobile */
     .container { padding: 0 1rem; }
@@ -293,6 +462,26 @@ footer p { margin-top: 1.5rem; opacity: 0.7; font-size: 0.9rem; }
     nav ul.nav-links.active li { transform: translateX(0); opacity: 1; transition-delay: calc(0.1s * var(--i)); }
     #hero { min-height: 80vh; }
     .member-grid, .gallery-grid, .cheki-grid { grid-template-columns: 1fr; }
-    .news-item { flex-direction: column; align-items: flex-start; padding: 1.2rem; }
-    .news-item .date { margin-left: 0; margin-top: 0.5rem; font-size: 0.9rem; }
+    
+    .news-item { 
+        flex-direction: column; 
+        align-items: flex-start; 
+        padding: 1.2rem; 
+    }
+    .news-item-content h3 {
+        font-size: 1.1rem;
+    }
+    .news-item .date { 
+        margin-left: 0; 
+        margin-top: 0.8rem; 
+        font-size: 0.85rem; 
+    }
+
+    .lightbox-content {
+        max-width: 90vw;
+        max-height: 70vh;
+    }
+    .nav-arrow {
+        font-size: 2rem;
+    }
 }

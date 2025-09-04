@@ -26,12 +26,17 @@ document.addEventListener('DOMContentLoaded', function() {
     function populateIndexPage(data) {
         // Data Grup
         document.title = `${data.group.name} (${data.group.name_japanese}) - Official Website`;
-        document.querySelector('#logo-title a').textContent = data.group.name;
+        const logoTitle = document.querySelector('.logo-link');
+        if (logoTitle) logoTitle.textContent = data.group.name;
+
         document.getElementById('hero-title').textContent = data.group.name;
         document.getElementById('hero-tagline').textContent = data.group.tagline;
         document.getElementById('about-title').innerHTML = `Tentang ${data.group.name} (${data.group.name_japanese})`;
         document.getElementById('about-content').innerHTML = data.group.about;
-        document.getElementById('footer-text').innerHTML = `&copy; 2025 ${data.group.name}. All Rights Reserved.`;
+        
+        const footerText = document.querySelector('footer p');
+        if (footerText) footerText.innerHTML = `&copy; 2025 ${data.group.name}. All Rights Reserved.`;
+
 
         // Set Latar Belakang Hero
         const heroSection = document.getElementById('hero');
@@ -45,7 +50,6 @@ document.addEventListener('DOMContentLoaded', function() {
         data.members.forEach(member => {
             const card = document.createElement('div');
             card.className = 'member-card reveal';
-            // --- KODE HTML YANG DIPERBARUI UNTUK STRUKTUR KARTU ---
             card.innerHTML = `
                 <img src="${member.image}" alt="${member.name}">
                 <div class="member-card-header">
@@ -58,39 +62,42 @@ document.addEventListener('DOMContentLoaded', function() {
                     <p class="jiko">${member.details.jiko}</p>
                 </div>
             `;
-            // --- AKHIR PERUBAHAN ---
             memberGrid.appendChild(card);
         });
 
-        // Data Berita
+        // Data Berita (UPDATED)
         const newsGrid = document.getElementById('news-grid');
         newsGrid.innerHTML = '';
         data.news.forEach(item => {
             const newsItem = document.createElement('div');
             newsItem.className = 'news-item reveal';
             newsItem.innerHTML = `
-                <h3>${item.title}</h3>
-                <p>${item.content}</p>
-                <span class="date">${item.date}</span>
+                <div class="news-item-content">
+                    <h3>${item.title}</h3>
+                    <p>${item.content}</p>
+                </div>
+                <span class="date"><i class="fas fa-calendar-alt"></i>${item.date}</span>
             `;
             newsGrid.appendChild(newsItem);
         });
     }
 
-    // --- [BARU] FUNGSI UNTUK MENGISI KONTEN HALAMAN GALERI ---
+    // --- FUNGSI UNTUK MENGISI KONTEN HALAMAN GALERI ---
     function populateGalleryPage(data) {
         const galleryGrid = document.getElementById('gallery-grid');
-        galleryGrid.innerHTML = ''; // Kosongkan dulu
+        galleryGrid.innerHTML = '';
         if (data.gallery && Array.isArray(data.gallery)) {
-            data.gallery.forEach(image => {
+            data.gallery.forEach((image, index) => {
                 const galleryItem = document.createElement('div');
                 galleryItem.className = 'gallery-item';
+                // Tambahkan data-index untuk navigasi lightbox
+                galleryItem.setAttribute('data-index', index);
                 galleryItem.innerHTML = `<img src="${image.src}" alt="${image.alt}">`;
                 galleryGrid.appendChild(galleryItem);
             });
         }
-        // Setelah galeri dibuat, inisialisasi lagi lightbox
-        initializeLightbox();
+        // Kirim data galeri ke fungsi inisialisasi lightbox
+        initializeLightbox(data.gallery);
     }
 
     // Panggil fungsi untuk memuat data saat halaman dimuat
@@ -111,34 +118,64 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // --- [MODIFIKASI] KODE LIGHTBOX DIPISAHKAN KE FUNGSI SENDIRI ---
-    function initializeLightbox() {
-        const galleryItems = document.querySelectorAll('.gallery-item');
+    // --- [MODIFIKASI] KODE LIGHTBOX DENGAN FITUR BARU ---
+    function initializeLightbox(galleryData) {
         const lightbox = document.getElementById('lightbox');
+        if (!lightbox) return; // Keluar jika tidak ada lightbox di halaman
+
         const lightboxImg = document.getElementById('lightbox-img');
+        const lightboxCaption = document.getElementById('lightbox-caption');
         const closeBtn = document.querySelector('.close-btn');
+        const prevBtn = document.querySelector('.prev-btn');
+        const nextBtn = document.querySelector('.next-btn');
+        const galleryItems = document.querySelectorAll('.gallery-item');
+        let currentIndex = 0;
 
-        if (galleryItems.length > 0 && lightbox) {
-            galleryItems.forEach(item => {
-                item.addEventListener('click', () => {
-                    const img = item.querySelector('img');
-                    if(img) {
-                        lightbox.style.display = 'block';
-                        lightboxImg.src = img.src; 
-                    }
-                });
-            });
-            if (closeBtn) {
-                closeBtn.addEventListener('click', () => { lightbox.style.display = 'none'; });
-            }
-            lightbox.addEventListener('click', (e) => {
-                if (e.target === lightbox) { lightbox.style.display = 'none'; }
-            });
+        function showImage(index) {
+            if (index >= galleryData.length) index = 0;
+            if (index < 0) index = galleryData.length - 1;
+            
+            const image = galleryData[index];
+            lightboxImg.src = image.src;
+            lightboxCaption.textContent = image.alt;
+            currentIndex = index;
         }
-    }
+        
+        function openLightbox(index) {
+            lightbox.classList.add('active');
+            showImage(index);
+        }
 
-    // Panggil lightbox untuk halaman non-galeri (jika ada)
-    initializeLightbox();
+        function closeLightbox() {
+            lightbox.classList.remove('active');
+        }
+
+        galleryItems.forEach(item => {
+            item.addEventListener('click', () => {
+                const index = parseInt(item.getAttribute('data-index'), 10);
+                openLightbox(index);
+            });
+        });
+
+        if (closeBtn) closeBtn.addEventListener('click', closeLightbox);
+        if (prevBtn) prevBtn.addEventListener('click', () => showImage(currentIndex - 1));
+        if (nextBtn) nextBtn.addEventListener('click', () => showImage(currentIndex + 1));
+        
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) {
+                closeLightbox();
+            }
+        });
+
+        // Navigasi dengan keyboard
+        document.addEventListener('keydown', (e) => {
+            if (lightbox.classList.contains('active')) {
+                if (e.key === 'ArrowLeft') showImage(currentIndex - 1);
+                if (e.key === 'ArrowRight') showImage(currentIndex + 1);
+                if (e.key === 'Escape') closeLightbox();
+            }
+        });
+    }
 
     // --- FUNGSI UNTUK ANIMASI ON SCROLL ---
     function reveal() {
