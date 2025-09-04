@@ -6,9 +6,13 @@
     <title>Pesan Cheki - Mujōken no Umi (無条件の海)</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <script type="text/javascript"
+      src="https://app.sandbox.midtrans.com/snap/snap.js"
+      data-client-key="<Mid-client-K38u0LJForfAO_zM>"></script>
+      
 </head>
 <body>
-
     <header>
         <nav class="container">
             <div class="logo">
@@ -45,10 +49,11 @@
                         </div>
                         <div id="customer-form">
                             <input type="text" id="customer-name" placeholder="Nama Lengkap Anda" required>
+                            <input type="email" id="customer-email" placeholder="Email Anda" required>
                             <input type="text" id="customer-social" placeholder="Username Instagram / No Whatsapp" required>
                         </div>
                         <button id="submit-button" class="cta-button">
-                            <i class="fas fa-paper-plane"></i> Kirim Pesanan
+                            <i class="fas fa-credit-card"></i> Lanjut ke Pembayaran
                         </button>
                         <p id="form-error" class="error-message"></p>
                     </div>

@@ -1,19 +1,20 @@
 document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('cheki-page')) {
         
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyvolmRVcvvoB1zrI-Nh18n1K7LqYY6LEJzIkiKPWOOxXP1LUY1MG7L7M8XyZKL3s-ZQA/exec';
+        // [GANTI] URL ini harus menunjuk ke backend/server Anda untuk mendapatkan Snap Token
+        const GET_SNAP_TOKEN_URL = ''; 
         
         const chekiListContainer = document.getElementById('cheki-list');
         const totalItemsEl = document.getElementById('total-items');
         const totalPriceEl = document.getElementById('total-price');
         const submitButton = document.getElementById('submit-button');
         const customerNameEl = document.getElementById('customer-name');
+        const customerEmailEl = document.getElementById('customer-email'); // Tambahkan elemen email
         const customerSocialEl = document.getElementById('customer-social');
         const formErrorEl = document.getElementById('form-error');
         const orderSummaryContainer = document.querySelector('.order-summary-container');
         const chekiFormWrapper = document.getElementById('cheki-form-wrapper');
         
-        // [BARU] Elemen Mobile
         const mobileCart = document.getElementById('mobile-cart');
         const mobileCartTotal = document.getElementById('mobile-cart-total');
 
@@ -106,8 +107,7 @@ document.addEventListener('DOMContentLoaded', function() {
             totalItemsEl.textContent = totalItems;
             const formattedPrice = `Rp ${totalPrice.toLocaleString('id-ID')}`;
             totalPriceEl.textContent = formattedPrice;
-
-            // [BARU] Update Mobile Cart
+            
             if (totalItems > 0) {
                 mobileCart.classList.add('visible');
                 mobileCartTotal.textContent = formattedPrice;
@@ -116,16 +116,16 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
         
-        function showSuccessMessage(name, social) {
-            // Sembunyikan form dan tampilkan pesan sukses
+        function showSuccessMessage(result) {
             chekiFormWrapper.style.display = 'none';
-            mobileCart.style.display = 'none'; // Sembunyikan juga cart mobile
+            mobileCart.style.display = 'none'; 
 
             const successMessage = document.createElement('div');
             successMessage.id = 'order-success-message';
             successMessage.innerHTML = `
-                <h3><i class="fas fa-check-circle"></i> Pesanan Berhasil Terkirim!</h3>
-                <p>Terima kasih, <strong>${name}</strong>! Kami akan segera menghubungimu melalui <strong>${social}</strong> untuk instruksi pembayaran.</p>
+                <h3><i class="fas fa-check-circle"></i> Pembayaran Berhasil!</h3>
+                <p>Terima kasih! Pesanan Anda dengan ID <strong>${result.order_id}</strong> telah berhasil diproses.</p>
+                <p>Silakan cek email Anda untuk detail pembayaran.</p>
                 <button id="order-again-btn" class="cta-button">Pesan Lagi</button>
             `;
             orderSummaryContainer.appendChild(successMessage);
@@ -141,25 +141,20 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
         
-        // [BARU] Klik pada floating cart akan scroll ke form
         mobileCart.addEventListener('click', () => {
             orderSummaryContainer.scrollIntoView({ behavior: 'smooth' });
         });
 
-        submitButton.addEventListener('click', e => {
+        submitButton.addEventListener('click', async function(e) {
             e.preventDefault();
             
-            if (GOOGLE_SCRIPT_URL === '') {
-                formErrorEl.textContent = 'URL Google Script belum diatur.';
-                return;
-            }
-
             const customerName = customerNameEl.value.trim();
+            const customerEmail = customerEmailEl.value.trim();
             const customerSocial = customerSocialEl.value.trim();
             const totalItems = parseInt(totalItemsEl.textContent, 10);
             
-            if (customerName === '' || customerSocial === '') {
-                formErrorEl.textContent = 'Mohon isi Nama dan Username Anda.';
+            if (customerName === '' || customerSocial === '' || customerEmail === '') {
+                formErrorEl.textContent = 'Mohon isi semua data (Nama, Email, dan Kontak).';
                 return;
             }
             if (totalItems === 0) {
@@ -169,37 +164,82 @@ document.addEventListener('DOMContentLoaded', function() {
             
             formErrorEl.textContent = '';
             submitButton.disabled = true;
-            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
             
-            let orderSummaryText = '';
+            // Siapkan detail item untuk dikirim ke backend
+            let itemsDetails = [];
             for (const memberId in cart) {
                 if (cart[memberId] > 0) {
                     const member = membersData.find(m => m.id === memberId);
-                    if(member) orderSummaryText += `${member.name} x${cart[memberId]}; `;
+                    if (member) {
+                        itemsDetails.push({
+                            id: member.id,
+                            price: member.price,
+                            quantity: cart[memberId],
+                            name: `Cheki ${member.name}`
+                        });
+                    }
                 }
             }
-
-            const orderData = {
-                customerName: customerName,
-                customerSocial: customerSocial,
-                orderSummary: orderSummaryText.trim(),
-                totalPrice: parseInt(totalPriceEl.textContent.replace(/[^0-9]/g, ''), 10)
-            };
             
-            fetch(GOOGLE_SCRIPT_URL, {
-                method: 'POST',
-                mode: 'no-cors', 
-                body: JSON.stringify(orderData)
-            })
-            .then(() => {
-                showSuccessMessage(customerName, customerSocial);
-            })
-            .catch(error => {
-                formErrorEl.textContent = 'Terjadi kesalahan saat mengirim. Coba lagi nanti.';
+            // Data untuk dikirim ke server Anda
+            const orderData = {
+                customerDetails: {
+                    name: customerName,
+                    email: customerEmail,
+                    phone: customerSocial,
+                },
+                itemsDetails: itemsDetails
+            };
+
+            try {
+                // 1. Minta Snap Token ke server Anda
+                const response = await fetch(GET_SNAP_TOKEN_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(orderData),
+                });
+                
+                if (!response.ok) throw new Error('Gagal mendapatkan token pembayaran.');
+
+                const data = await response.json();
+                const snapToken = data.token;
+
+                if (!snapToken) throw new Error('Token tidak valid.');
+
+                // 2. Buka pop-up pembayaran Midtrans dengan token yang didapat
+                window.snap.pay(snapToken, {
+                    onSuccess: function(result){
+                      console.log('success');
+                      console.log(result);
+                      showSuccessMessage(result);
+                    },
+                    onPending: function(result){
+                      console.log('pending');
+                      console.log(result);
+                      formErrorEl.textContent = 'Pembayaran Anda sedang diproses. Silakan selesaikan.';
+                    },
+                    onError: function(result){
+                      console.log('error');
+                      console.log(result);
+                      formErrorEl.textContent = 'Pembayaran gagal. Silakan coba lagi.';
+                    },
+                    onClose: function(){
+                      console.log('customer closed the popup without finishing the payment');
+                      formErrorEl.textContent = 'Anda menutup jendela pembayaran sebelum selesai.';
+                      submitButton.disabled = false;
+                      submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
+                    }
+                });
+
+            } catch (error) {
                 console.error('Error:', error);
+                formErrorEl.textContent = 'Terjadi kesalahan. ' + error.message;
                 submitButton.disabled = false;
-                submitButton.innerHTML = '<i class="fas fa-paper-plane"></i> Kirim Pesanan';
-            });
+                submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
+            }
         });
         
         loadChekiProducts();
