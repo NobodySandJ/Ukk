@@ -45,16 +45,20 @@ document.addEventListener('DOMContentLoaded', function() {
         data.members.forEach(member => {
             const card = document.createElement('div');
             card.className = 'member-card reveal';
+            // --- KODE HTML YANG DIPERBARUI UNTUK STRUKTUR KARTU ---
             card.innerHTML = `
                 <img src="${member.image}" alt="${member.name}">
-                <h3>${member.name}</h3>
-                <p class="role">${member.role}</p>
+                <div class="member-card-header">
+                    <h3>${member.name}</h3>
+                    <p class="role">${member.role}</p>
+                </div>
                 <div class="member-details">
                     <p><strong>Sifat:</strong> ${member.details.sifat}</p>
                     <p><strong>Hobi:</strong> ${member.details.hobi}</p>
                     <p class="jiko">${member.details.jiko}</p>
                 </div>
             `;
+            // --- AKHIR PERUBAHAN ---
             memberGrid.appendChild(card);
         });
 

@@ -87,14 +87,15 @@
       "date": "01 September 2025"
     }
   ],
-  "gallery": [
-    { "src": "img/member/group.jpg", "alt": "Foto Grup 1" },
-    { "src": "https://via.placeholder.com/400x300.png?text=Runa+di+Panggung", "alt": "Runa" },
-    { "src": "https://via.placeholder.com/400x500.png?text=Hina+dengan+Fans", "alt": "Hina" },
-    { "src": "https://via.placeholder.com/400x400.png?text=Ami+Cosplay", "alt": "Ami" },
-    { "src": "https://via.placeholder.com/400x600.png?text=Marina+Freestyle", "alt": "Marina" },
-    { "src": "https://via.placeholder.com/400x350.png?text=Anzu+Merajut", "alt": "Anzu" },
-    { "src": "https://via.placeholder.com/400x400.png?text=Foto+Grup+2", "alt": "Foto Grup 2" },
-    { "src": "https://via.placeholder.com/400x550.png?text=Debut+Stage", "alt": "Debut Stage" }
+   "gallery": [
+    { "src": "img/member/group.jpg", "alt": "Mujōken no Umi Foto Grup" },
+    { "src": "img/member/hina.jpg", "alt": "Hina di Panggung" },
+    { "src": "img/member/Runa.jpg", "alt": "Runa di Panggung" },
+    { "src": "img/member/Ami.jpg", "alt": "Ami di Panggung" },
+    { "src": "img/member/Rina.jpg", "alt": "Rina di Panggung" },
+    { "src": "img/member/Anzu.jpg", "alt": "Anzu di Panggung" },
+    { "src": "img/member/grup2.jpg", "alt": "Mujōken no Umi Foto Grup 2" },
+    { "src": "img/member/Runa1.jpg", "alt": "Runa Close Up" }
   ]
+
 }
