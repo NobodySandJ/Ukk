@@ -1,15 +1,16 @@
+// js/cheki.js
+
 document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('cheki-page')) {
         
-        // [GANTI] URL ini harus menunjuk ke backend/server Anda untuk mendapatkan Snap Token
-        const GET_SNAP_TOKEN_URL = ''; 
+        const GET_SNAP_TOKEN_URL = 'http://localhost:3000/get-snap-token'; 
         
         const chekiListContainer = document.getElementById('cheki-list');
         const totalItemsEl = document.getElementById('total-items');
         const totalPriceEl = document.getElementById('total-price');
         const submitButton = document.getElementById('submit-button');
         const customerNameEl = document.getElementById('customer-name');
-        const customerEmailEl = document.getElementById('customer-email'); // Tambahkan elemen email
+        const customerEmailEl = document.getElementById('customer-email');
         const customerSocialEl = document.getElementById('customer-social');
         const formErrorEl = document.getElementById('form-error');
         const orderSummaryContainer = document.querySelector('.order-summary-container');
@@ -166,34 +167,43 @@ document.addEventListener('DOMContentLoaded', function() {
             submitButton.disabled = true;
             submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
             
-            // Siapkan detail item untuk dikirim ke backend
-            let itemsDetails = [];
+            let item_details = [];
+            let gross_amount = 0;
             for (const memberId in cart) {
                 if (cart[memberId] > 0) {
                     const member = membersData.find(m => m.id === memberId);
                     if (member) {
-                        itemsDetails.push({
+                        item_details.push({
                             id: member.id,
                             price: member.price,
                             quantity: cart[memberId],
                             name: `Cheki ${member.name}`
                         });
+                        gross_amount += member.price * cart[memberId];
                     }
                 }
             }
             
-            // Data untuk dikirim ke server Anda
             const orderData = {
-                customerDetails: {
-                    name: customerName,
+                // [REVISI] Menambahkan parameter untuk QRIS
+                payment_type: 'qris',
+                transaction_details: {
+                    order_id: 'CHEKI-' + new Date().getTime(),
+                    gross_amount: gross_amount
+                },
+                customer_details: {
+                    first_name: customerName,
                     email: customerEmail,
                     phone: customerSocial,
                 },
-                itemsDetails: itemsDetails
+                item_details: item_details,
+                // [REVISI] Menambahkan detail spesifik untuk QRIS
+                qris_specific_details: {
+                    acquirer: "gopay" // Contoh, Anda bisa juga coba 'shopeepay'
+                }
             };
 
             try {
-                // 1. Minta Snap Token ke server Anda
                 const response = await fetch(GET_SNAP_TOKEN_URL, {
                     method: 'POST',
                     headers: {
@@ -202,32 +212,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     body: JSON.stringify(orderData),
                 });
                 
-                if (!response.ok) throw new Error('Gagal mendapatkan token pembayaran.');
+                if (!response.ok) throw new Error('Gagal mendapatkan token pembayaran dari server.');
 
                 const data = await response.json();
                 const snapToken = data.token;
 
-                if (!snapToken) throw new Error('Token tidak valid.');
+                if (!snapToken) throw new Error('Token tidak valid diterima dari server.');
 
-                // 2. Buka pop-up pembayaran Midtrans dengan token yang didapat
                 window.snap.pay(snapToken, {
                     onSuccess: function(result){
-                      console.log('success');
-                      console.log(result);
                       showSuccessMessage(result);
                     },
                     onPending: function(result){
-                      console.log('pending');
-                      console.log(result);
+                      // Di sini Anda bisa log hasil 'pending' yang mungkin berisi URL QR
+                      console.log('Pembayaran tertunda (pending):', result);
                       formErrorEl.textContent = 'Pembayaran Anda sedang diproses. Silakan selesaikan.';
                     },
                     onError: function(result){
-                      console.log('error');
-                      console.log(result);
                       formErrorEl.textContent = 'Pembayaran gagal. Silakan coba lagi.';
                     },
                     onClose: function(){
-                      console.log('customer closed the popup without finishing the payment');
                       formErrorEl.textContent = 'Anda menutup jendela pembayaran sebelum selesai.';
                       submitButton.disabled = false;
                       submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
@@ -236,7 +240,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             } catch (error) {
                 console.error('Error:', error);
-                formErrorEl.textContent = 'Terjadi kesalahan. ' + error.message;
+                formErrorEl.textContent = 'Terjadi kesalahan: ' + error.message;
                 submitButton.disabled = false;
                 submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
             }
