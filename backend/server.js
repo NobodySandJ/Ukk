@@ -3,69 +3,84 @@
 const express = require('express');
 const midtransClient = require('midtrans-client');
 const cors = require('cors');
+const axios = require('axios'); // <-- [TAMBAHKAN] Import axios
+const crypto = require('crypto'); // <-- [TAMBAHKAN] Import crypto untuk verifikasi
 require('dotenv').config();
 
 const app = express();
 const port = 3000;
 
-// Middleware CORS
-app.use(cors({
-  origin: '*', 
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  preflightContinue: false,
-  optionsSuccessStatus: 204
-}));
-
+// Middleware
+app.use(cors({ origin: '*' }));
 app.use(express.json());
 
-// Inisialisasi Midtrans Snap API
-let snap = new midtransClient.Snap({
+// Inisialisasi Midtrans
+const snap = new midtransClient.Snap({
     isProduction: false,
     serverKey: process.env.MIDTRANS_SERVER_KEY,
-    clientKey: process.env.MIDTRANS_CLIENT_KEY 
+    clientKey: process.env.MIDTRANS_CLIENT_KEY
 });
 
-// Endpoint untuk membuat transaksi dan mendapatkan token
+// Endpoint untuk membuat Snap Token
 app.post('/get-snap-token', (req, res) => {
     const parameter = req.body;
-    console.log("Menerima request untuk membuat token:", JSON.stringify(parameter, null, 2));
+    snap.createTransaction(parameter)
+        .then(transaction => res.json({ token: transaction.token }))
+        .catch(e => res.status(500).json({ error: e.message }));
+});
 
-    // Gunakan CoreApi untuk mendapatkan detail QR code
-    // Ganti 'snap.createTransaction' menjadi 'coreApi.charge'
-    let coreApi = new midtransClient.CoreApi({
-        isProduction: false,
-        serverKey: process.env.MIDTRANS_SERVER_KEY,
-        clientKey: process.env.MIDTRANS_CLIENT_KEY
-    });
+// [BARU] Endpoint untuk menerima Notifikasi Pembayaran dari Midtrans
+app.post('/payment-notification', (req, res) => {
+    const notificationJson = req.body;
+    console.log('Menerima notifikasi:', JSON.stringify(notificationJson, null, 2));
 
-    coreApi.charge(parameter)
-        .then((chargeResponse) => {
-            // [PENTING] Di sinilah URL QR Code akan muncul
-            console.log('Respon dari Midtrans Core API:');
-            console.log(JSON.stringify(chargeResponse, null, 2));
+    // 1. Verifikasi notifikasi menggunakan signature key
+    const signatureKey = crypto.createHash('sha512')
+        .update(notificationJson.order_id + notificationJson.status_code + notificationJson.gross_amount + process.env.MIDTRANS_SERVER_KEY)
+        .digest('hex');
 
-            // Jika pembayaran QRIS, cari URL QR code di dalam actions
-            if (chargeResponse.actions && chargeResponse.payment_type === 'qris') {
-                const qrCodeUrl = chargeResponse.actions.find(action => action.name === 'generate-qr-code');
-                if (qrCodeUrl) {
-                    console.log('================================================');
-                    console.log('✅ QR CODE IMAGE URL DITEMUKAN:');
-                    console.log(qrCodeUrl.url);
-                    console.log('================================================');
-                }
-            }
+    if (signatureKey !== notificationJson.signature_key) {
+        console.error('Signature key tidak valid!');
+        return res.status(400).send('Invalid signature');
+    }
 
-            // Untuk pop-up di frontend, kita tetap butuh Snap Token
-            // Jadi kita buat transaksi Snap setelah mendapatkan URL
-            snap.createTransaction(parameter)
-                .then(transaction => {
-                    res.json({ token: transaction.token });
+    // 2. Cek status transaksi
+    const transactionStatus = notificationJson.transaction_status;
+    const fraudStatus = notificationJson.fraud_status;
+
+    if (transactionStatus == 'capture' || transactionStatus == 'settlement') {
+        if (fraudStatus == 'accept') {
+            console.log('Pembayaran berhasil dan aman!');
+            
+            // 3. Siapkan dan kirim data ke Google Script
+            // Anda mungkin perlu mengambil detail order dari database Anda di sini
+            // Untuk contoh ini, kita asumsikan data yang relevan ada di notifikasi
+            const orderDataForSheet = {
+                order_id: notificationJson.order_id,
+                gross_amount: notificationJson.gross_amount,
+                payment_type: notificationJson.payment_type,
+                transaction_time: notificationJson.transaction_time,
+                // Tambahkan data lain yang Anda butuhkan
+            };
+
+            const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-XC_EiQD2-0VaOIxD6d5PnnPr_WocUHh2xfZWN25pmYwmXRpDaFCI4N987igRNRRvww/exec'; // <-- Ganti dengan URL Anda
+
+            axios.post(GOOGLE_SCRIPT_URL, JSON.stringify(orderDataForSheet))
+                .then(response => {
+                    console.log('Berhasil mengirim data ke Google Sheet:', response.data);
+                })
+                .catch(error => {
+                    console.error('Gagal mengirim data ke Google Sheet:', error.message);
                 });
-        })
-        .catch((e) => {
-            console.error('Error saat charge ke Midtrans Core API:', e.message);
-            res.status(500).json({ error: e.message });
-        });
+        }
+    } else if (transactionStatus == 'cancel' || transactionStatus == 'deny' || transactionStatus == 'expire') {
+        console.log('Pembayaran dibatalkan atau gagal.');
+    } else if (transactionStatus == 'pending') {
+        console.log('Pembayaran masih menunggu.');
+    }
+
+    // Kirim respons OK ke Midtrans
+    res.status(200).send('OK');
 });
 
 app.listen(port, () => {

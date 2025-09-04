@@ -185,8 +185,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             const orderData = {
-                // [REVISI] Menambahkan parameter untuk QRIS
-                payment_type: 'qris',
+                // [REVISI] Hapus parameter spesifik agar Snap menampilkan semua metode pembayaran
                 transaction_details: {
                     order_id: 'CHEKI-' + new Date().getTime(),
                     gross_amount: gross_amount
@@ -196,11 +195,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     email: customerEmail,
                     phone: customerSocial,
                 },
-                item_details: item_details,
-                // [REVISI] Menambahkan detail spesifik untuk QRIS
-                qris_specific_details: {
-                    acquirer: "gopay" // Contoh, Anda bisa juga coba 'shopeepay'
-                }
+                item_details: item_details
             };
 
             try {
@@ -224,7 +219,6 @@ document.addEventListener('DOMContentLoaded', function() {
                       showSuccessMessage(result);
                     },
                     onPending: function(result){
-                      // Di sini Anda bisa log hasil 'pending' yang mungkin berisi URL QR
                       console.log('Pembayaran tertunda (pending):', result);
                       formErrorEl.textContent = 'Pembayaran Anda sedang diproses. Silakan selesaikan.';
                     },
