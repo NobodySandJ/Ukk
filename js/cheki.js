@@ -3,7 +3,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('cheki-page')) {
         
-        const GET_SNAP_TOKEN_URL = 'http://localhost:3000/get-snap-token'; 
+        const GET_SNAP_TOKEN_URL = '/get-snap-token'; 
         
         const chekiListContainer = document.getElementById('cheki-list');
         const totalItemsEl = document.getElementById('total-items');
