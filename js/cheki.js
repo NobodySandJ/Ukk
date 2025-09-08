@@ -187,7 +187,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             const orderData = {
-                // [REVISI] Hapus parameter spesifik agar Snap menampilkan semua metode pembayaran
                 transaction_details: {
                     order_id: 'CHEKI-' + new Date().getTime(),
                     gross_amount: gross_amount
@@ -197,7 +196,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     email: customerEmail,
                     phone: customerSocial,
                 },
-                item_details: item_details
+                item_details: item_details,
+                // [TAMBAHKAN INI] Beri tahu Midtrans ke mana harus kembali setelah pembayaran
+                callbacks: {
+                    finish: `${window.location.origin}/index.html`
+                }
             };
 
             try {
