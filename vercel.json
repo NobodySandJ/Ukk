@@ -8,7 +8,11 @@
   ],
   "routes": [
     {
-      "src": "/(.*)",
+      "src": "/get-snap-token",
+      "dest": "backend/server.js"
+    },
+    {
+      "src": "/payment-notification",
       "dest": "backend/server.js"
     }
   ]
