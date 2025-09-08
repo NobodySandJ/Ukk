@@ -11,7 +11,24 @@ const app = express();
 const port = 3000;
 
 // Middleware
-app.use(cors({ origin: '*' }));
+// backend/server.js
+
+// [REKOMENDASI] Konfigurasi CORS yang lebih aman
+const whitelist = [
+    'http://localhost:5500', // Ganti dengan port live server lokal Anda jika berbeda
+    'http://127.0.0.1:5500', // Ganti dengan port live server lokal Anda jika berbeda
+    'https://nama-project-anda.vercel.app' // Ganti dengan URL Vercel Anda setelah deploy
+];
+const corsOptions = {
+    origin: function (origin, callback) {
+        if (!origin || whitelist.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    }
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Inisialisasi Midtrans

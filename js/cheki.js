@@ -3,9 +3,11 @@
 document.addEventListener('DOMContentLoaded', function() {
     if (document.getElementById('cheki-page')) {
         
-        const GET_SNAP_TOKEN_URL = '/get-snap-token'; 
+        // [PERBAIKAN] Tentukan URL backend secara dinamis
+        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+        const GET_SNAP_TOKEN_URL = isLocal ? 'http://localhost:3000/get-snap-token' : '/get-snap-token';
         
-        const chekiListContainer = document.getElementById('cheki-list');
+        const chekiListContainer = document.getElementById('cheki-list'); 
         const totalItemsEl = document.getElementById('total-items');
         const totalPriceEl = document.getElementById('total-price');
         const submitButton = document.getElementById('submit-button');
