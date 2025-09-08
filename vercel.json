@@ -7,13 +7,11 @@
     }
   ],
   "routes": [
+    { "src": "/get-snap-token", "dest": "backend/server.js" },
+    { "src": "/payment-notification", "dest": "backend/server.js" },
     {
-      "src": "/get-snap-token",
-      "dest": "backend/server.js"
-    },
-    {
-      "src": "/payment-notification",
-      "dest": "backend/server.js"
+      "src": "/((?!get-snap-token|payment-notification).*)",
+      "dest": "/$1"
     }
   ]
 }
