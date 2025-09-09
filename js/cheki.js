@@ -226,6 +226,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     onPending: function(result){
                       console.log('Pembayaran tertunda (pending):', result);
+                      
+                      // --- [TAMBAHKAN BAGIAN INI] ---
+                      // Cek apakah metode pembayaran adalah QRIS dan apakah ada URL QR code
+                      if (result.payment_type === 'qris' && result.qr_code_url) {
+                          console.log('-------------------------------------------');
+                          console.log('✅ URL QR Code Ditemukan:');
+                          console.log(result.qr_code_url);
+                          console.log('-------------------------------------------');
+                      }
+                      // --------------------------------
+
                       formErrorEl.textContent = 'Pembayaran Anda sedang diproses. Silakan selesaikan.';
                     },
                     onError: function(result){
