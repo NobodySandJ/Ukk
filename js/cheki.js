@@ -187,21 +187,22 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             
             const orderData = {
-                transaction_details: {
-                    order_id: 'CHEKI-' + new Date().getTime(),
-                    gross_amount: gross_amount
-                },
-                customer_details: {
-                    first_name: customerName,
-                    email: customerEmail,
-                    phone: customerSocial,
-                },
-                item_details: item_details,
-                // [TAMBAHKAN INI] Beri tahu Midtrans ke mana harus kembali setelah pembayaran
-                callbacks: {
-                    finish: `${window.location.origin}/index.html`
-                }
-            };
+    transaction_details: {
+        order_id: 'CHEKI-' + new Date().getTime(),
+        gross_amount: gross_amount
+    },
+    customer_details: {
+        first_name: customerName,
+        email: customerEmail,
+        phone: customerSocial,
+    },
+    item_details: item_details,
+    // --- [TAMBAHKAN BAGIAN INI] ---
+    callbacks: {
+        finish: `${window.location.origin}/index.html`
+    }
+    // --------------------------------
+};
 
             try {
                 const response = await fetch(GET_SNAP_TOKEN_URL, {
