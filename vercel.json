@@ -4,14 +4,16 @@
     {
       "src": "backend/server.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "." }
     }
   ],
   "routes": [
-    { "src": "/get-snap-token", "dest": "backend/server.js" },
-    { "src": "/payment-notification", "dest": "backend/server.js" },
-    {
-      "src": "/((?!get-snap-token|payment-notification).*)",
-      "dest": "/$1"
-    }
+    { "src": "/get-snap-token", "dest": "/backend/server.js" },
+    { "src": "/payment-notification", "dest": "/backend/server.js" },
+    { "src": "/(.*)", "dest": "/$1" }
   ]
 }

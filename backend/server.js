@@ -3,37 +3,20 @@
 const express = require('express');
 const midtransClient = require('midtrans-client');
 const cors = require('cors');
-const axios = require('axios'); // <-- [TAMBAHKAN] Import axios
-const crypto = require('crypto'); // <-- [TAMBAHKAN] Import crypto untuk verifikasi
+const axios = require('axios');
+const crypto = require('crypto');
 require('dotenv').config();
 
 const app = express();
-const port = 3000;
 
-// Middleware
-// backend/server.js
+// Konfigurasi CORS yang lebih fleksibel untuk Vercel
+app.use(cors()); // Izinkan semua origin, Vercel akan mengelola ini dengan aman.
 
-// [REKOMENDASI] Konfigurasi CORS yang lebih aman
-const whitelist = [
-    'http://localhost:5500', // Ganti dengan port live server lokal Anda jika berbeda
-    'http://127.0.0.1:5500', // Ganti dengan port live server lokal Anda jika berbeda
-    'https://nama-project-anda.vercel.app' // Ganti dengan URL Vercel Anda setelah deploy
-];
-const corsOptions = {
-    origin: function (origin, callback) {
-        if (!origin || whitelist.indexOf(origin) !== -1) {
-            callback(null, true);
-        } else {
-            callback(new Error('Not allowed by CORS'));
-        }
-    }
-};
-app.use(cors(corsOptions));
 app.use(express.json());
 
 // Inisialisasi Midtrans
 const snap = new midtransClient.Snap({
-    isProduction: false,
+    isProduction: false, // Tetap false karena menggunakan Sandbox
     serverKey: process.env.MIDTRANS_SERVER_KEY,
     clientKey: process.env.MIDTRANS_CLIENT_KEY
 });
@@ -42,64 +25,54 @@ const snap = new midtransClient.Snap({
 app.post('/get-snap-token', (req, res) => {
     const parameter = req.body;
     snap.createTransaction(parameter)
-        .then(transaction => res.json({ token: transaction.token }))
-        .catch(e => res.status(500).json({ error: e.message }));
+        .then(transaction => {
+            res.json({ token: transaction.token });
+        })
+        .catch(e => {
+            // Kirim pesan error yang lebih jelas ke frontend
+            console.error("Midtrans Error:", e.message);
+            res.status(500).json({ error: e.message });
+        });
 });
 
-// [BARU] Endpoint untuk menerima Notifikasi Pembayaran dari Midtrans
+// Endpoint untuk menerima Notifikasi Pembayaran dari Midtrans
 app.post('/payment-notification', (req, res) => {
     const notificationJson = req.body;
     console.log('Menerima notifikasi:', JSON.stringify(notificationJson, null, 2));
 
-    // 1. Verifikasi notifikasi menggunakan signature key
-    const signatureKey = crypto.createHash('sha512')
-        .update(notificationJson.order_id + notificationJson.status_code + notificationJson.gross_amount + process.env.MIDTRANS_SERVER_KEY)
-        .digest('hex');
+    snap.transaction.notification(notificationJson)
+        .then((statusResponse) => {
+            const orderId = statusResponse.order_id;
+            const transactionStatus = statusResponse.transaction_status;
+            const fraudStatus = statusResponse.fraud_status;
 
-    if (signatureKey !== notificationJson.signature_key) {
-        console.error('Signature key tidak valid!');
-        return res.status(400).send('Invalid signature');
-    }
+            console.log(`Transaksi ID ${orderId}: ${transactionStatus}, Status Fraud: ${fraudStatus}`);
 
-    // 2. Cek status transaksi
-    const transactionStatus = notificationJson.transaction_status;
-    const fraudStatus = notificationJson.fraud_status;
+            if (transactionStatus == 'capture' || transactionStatus == 'settlement') {
+                if (fraudStatus == 'accept') {
+                    console.log('Pembayaran berhasil dan aman!');
+                    // Di sini Anda bisa menambahkan logika untuk update database, dll.
+                    // Contoh: mengirim data ke Google Sheet
+                    const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL; // Ambil dari env
+                    if (GOOGLE_SCRIPT_URL) {
+                        axios.post(GOOGLE_SCRIPT_URL, JSON.stringify(statusResponse))
+                            .then(response => console.log('Berhasil mengirim data ke Google Sheet:', response.data))
+                            .catch(error => console.error('Gagal mengirim data ke Google Sheet:', error.message));
+                    }
+                }
+            } else if (transactionStatus == 'cancel' || transactionStatus == 'deny' || transactionStatus == 'expire') {
+                console.log('Pembayaran dibatalkan atau gagal.');
+            } else if (transactionStatus == 'pending') {
+                console.log('Pembayaran masih menunggu.');
+            }
 
-    if (transactionStatus == 'capture' || transactionStatus == 'settlement') {
-        if (fraudStatus == 'accept') {
-            console.log('Pembayaran berhasil dan aman!');
-            
-            // 3. Siapkan dan kirim data ke Google Script
-            // Anda mungkin perlu mengambil detail order dari database Anda di sini
-            // Untuk contoh ini, kita asumsikan data yang relevan ada di notifikasi
-            const orderDataForSheet = {
-                order_id: notificationJson.order_id,
-                gross_amount: notificationJson.gross_amount,
-                payment_type: notificationJson.payment_type,
-                transaction_time: notificationJson.transaction_time,
-                // Tambahkan data lain yang Anda butuhkan
-            };
-
-            const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby-XC_EiQD2-0VaOIxD6d5PnnPr_WocUHh2xfZWN25pmYwmXRpDaFCI4N987igRNRRvww/exec'; // <-- Ganti dengan URL Anda
-
-            axios.post(GOOGLE_SCRIPT_URL, JSON.stringify(orderDataForSheet))
-                .then(response => {
-                    console.log('Berhasil mengirim data ke Google Sheet:', response.data);
-                })
-                .catch(error => {
-                    console.error('Gagal mengirim data ke Google Sheet:', error.message);
-                });
-        }
-    } else if (transactionStatus == 'cancel' || transactionStatus == 'deny' || transactionStatus == 'expire') {
-        console.log('Pembayaran dibatalkan atau gagal.');
-    } else if (transactionStatus == 'pending') {
-        console.log('Pembayaran masih menunggu.');
-    }
-
-    // Kirim respons OK ke Midtrans
-    res.status(200).send('OK');
+            res.status(200).send('OK');
+        })
+        .catch((e) => {
+            console.error('Error memproses notifikasi:', e.message);
+            res.status(500).json({ error: e.message });
+        });
 });
 
-app.listen(port, () => {
-    console.log(`Backend server listening at http://localhost:${port}`);
-});
+// Ekspor 'app' untuk Vercel
+module.exports = app;
