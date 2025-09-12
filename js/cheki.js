@@ -23,6 +23,47 @@ document.addEventListener('DOMContentLoaded', function () {
         let membersData = [];
         let cart = {};
 
+        // --- FUNGSI BARU UNTUK MEMPROSES PEMBAYARAN SUKSES DARI URL ---
+        async function checkUrlForSuccess() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const orderId = urlParams.get('order_id');
+            const transactionStatus = urlParams.get('transaction_status');
+
+            // Jika pembayaran berhasil (settlement atau capture)
+            if (orderId && (transactionStatus === 'settlement' || transactionStatus === 'capture')) {
+                // Buat objek result palsu untuk ditampilkan
+                const result = {
+                    order_id: orderId,
+                    transaction_status: transactionStatus,
+                    // Kita tidak mendapatkan payment_type dari URL, jadi ini opsional
+                    payment_type: 'Tidak diketahui' 
+                };
+                
+                // Tampilkan pesan sukses
+                showSuccessMessage(result);
+                
+                // Kirim pembaruan ke server sebagai alternatif
+                try {
+                    await fetch('/update-order-status', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            order_id: result.order_id,
+                            transaction_status: result.transaction_status,
+                            payment_type: urlParams.get('payment_type') || result.payment_type
+                        }),
+                    });
+                    console.log('Status berhasil diupdate dari URL redirect.');
+                } catch (error) {
+                    console.error('Gagal mengirim konfirmasi status dari URL:', error);
+                }
+
+                // Hapus parameter dari URL agar pesan tidak muncul lagi saat di-reload
+                window.history.replaceState({}, document.title, window.location.pathname);
+            }
+        }
+
+
         async function loadChekiProducts() {
             try {
                 const response = await fetch('data.json');
@@ -201,9 +242,7 @@ document.addEventListener('DOMContentLoaded', function () {
             try {
                 const response = await fetch(GET_SNAP_TOKEN_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(orderData),
                 });
 
@@ -215,27 +254,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!snapToken) throw new Error('Token tidak valid diterima dari server.');
 
                 window.snap.pay(snapToken, {
-                    onSuccess: async function (result) {
-                        // Tampilkan pesan sukses ke pengguna secepatnya
-                        showSuccessMessage(result);
-
-                        // Kirim konfirmasi ke server kita sebagai alternatif
-                        try {
-                            await fetch('/update-order-status', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                    order_id: result.order_id,
-                                    transaction_status: result.transaction_status,
-                                    payment_type: result.payment_type
-                                }),
-                            });
-                        } catch (error) {
-                            console.error('Gagal mengirim konfirmasi status ke server:', error);
-                            // Tidak perlu menampilkan error ke pengguna karena pembayaran sudah berhasil
-                        }
+                    // onSuccess sekarang kosong karena kita menangani dari URL
+                    onSuccess: function (result) {
+                        // sengaja dikosongkan
                     },
                     onPending: function (result) {
                         console.log('Pembayaran tertunda (pending):', result);
@@ -259,6 +280,8 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
+        // --- PANGGIL FUNGSI-FUNGSI UTAMA ---
+        checkUrlForSuccess(); // Periksa URL saat halaman dimuat
         loadChekiProducts();
     }
 });
