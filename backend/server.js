@@ -3,7 +3,7 @@
 const express = require('express');
 const midtransClient = require('midtrans-client');
 const cors = require('cors');
-const { createClient } = require('@supabase/supabase-js'); // <-- Import Supabase
+const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
 const app = express();
@@ -26,19 +26,19 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 app.post('/get-snap-token', async (req, res) => {
     const parameter = req.body;
     
-    // Sebelum membuat transaksi Midtrans, simpan dulu data awal ke Supabase
     try {
+        // [PERBAIKAN] Menggunakan nama kolom Bahasa Indonesia sesuai database
         const { data, error } = await supabase
-            .from('orders')
+            .from('orders') // Pastikan 'orders' adalah nama tabel Anda
             .insert([
                 {
-                    order_id: parameter.transaction_details.order_id,
-                    gross_amount: parameter.transaction_details.gross_amount,
-                    customer_name: parameter.customer_details.first_name,
-                    customer_email: parameter.customer_details.email,
-                    customer_social: parameter.customer_details.phone,
-                    items: parameter.item_details, // Simpan detail item sebagai JSON
-                    transaction_status: 'pending' // Status awal
+                    id_pesanan: parameter.transaction_details.order_id,
+                    total_harga: parameter.transaction_details.gross_amount,
+                    nama_pelanggan: parameter.customer_details.first_name,
+                    email_pelanggan: parameter.customer_details.email,
+                    kontak_pelanggan: parameter.customer_details.phone,
+                    detail_item: parameter.item_details,
+                    status_transaksi: 'pending'
                 }
             ])
             .select();
@@ -49,7 +49,6 @@ app.post('/get-snap-token', async (req, res) => {
 
         console.log('Pesanan awal berhasil disimpan ke Supabase:', data);
 
-        // Lanjutkan membuat token Midtrans
         const transaction = await snap.createTransaction(parameter);
         res.json({ token: transaction.token });
 
@@ -67,26 +66,20 @@ app.post('/payment-notification', (req, res) => {
         .then(async (statusResponse) => {
             const orderId = statusResponse.order_id;
             const transactionStatus = statusResponse.transaction_status;
-            const fraudStatus = statusResponse.fraud_status;
+            
+            // [PERBAIKAN] Menggunakan nama kolom Bahasa Indonesia sesuai database
+            const { data, error } = await supabase
+                .from('orders') // Pastikan 'orders' adalah nama tabel Anda
+                .update({ 
+                    status_transaksi: transactionStatus,
+                    tipe_pembayaran: statusResponse.payment_type
+                })
+                .eq('id_pesanan', orderId);
 
-            console.log(`Transaksi ID ${orderId}: ${transactionStatus}, Status Fraud: ${fraudStatus}`);
-
-            if (transactionStatus == 'capture' || transactionStatus == 'settlement' || transactionStatus == 'cancel' || transactionStatus == 'expire') {
-                
-                // Update status transaksi di tabel Supabase
-                const { data, error } = await supabase
-                    .from('orders')
-                    .update({ 
-                        transaction_status: transactionStatus,
-                        payment_type: statusResponse.payment_type
-                    })
-                    .eq('order_id', orderId);
-
-                if (error) {
-                    console.error('Gagal update status ke Supabase:', error);
-                } else {
-                    console.log('Status pesanan berhasil diupdate di Supabase:', data);
-                }
+            if (error) {
+                console.error('Gagal update status ke Supabase:', error);
+            } else {
+                console.log('Status pesanan berhasil diupdate di Supabase');
             }
             
             res.status(200).send('OK');
