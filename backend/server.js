@@ -53,9 +53,13 @@ app.post('/get-snap-token', async (req, res) => {
         res.json({ token: transaction.token });
 
     } catch (e) {
-        console.error("Error:", e.message);
-        res.status(500).json({ error: e.message });
-    }
+    // [MODIFIKASI UNTUK DEBUGGING]
+    console.error("GAGAL MEMBUAT TOKEN, ERROR LENGKAP:", e); 
+    res.status(500).json({ 
+        message: "Terjadi kesalahan pada server.",
+        error: e.message // Mengirim pesan error yang lebih jelas ke frontend
+    });
+}
 });
 
 // Endpoint untuk menerima Notifikasi Pembayaran dari Midtrans
