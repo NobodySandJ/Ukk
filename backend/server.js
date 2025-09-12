@@ -27,9 +27,8 @@ app.post('/get-snap-token', async (req, res) => {
     const parameter = req.body;
     
     try {
-        // [PERBAIKAN] Menggunakan nama kolom Bahasa Indonesia sesuai database
         const { data, error } = await supabase
-            .from('orders') // Pastikan 'orders' adalah nama tabel Anda
+            .from('orders')
             .insert([
                 {
                     id_pesanan: parameter.transaction_details.order_id,
@@ -53,16 +52,15 @@ app.post('/get-snap-token', async (req, res) => {
         res.json({ token: transaction.token });
 
     } catch (e) {
-    // [MODIFIKASI UNTUK DEBUGGING]
-    console.error("GAGAL MEMBUAT TOKEN, ERROR LENGKAP:", e); 
-    res.status(500).json({ 
-        message: "Terjadi kesalahan pada server.",
-        error: e.message // Mengirim pesan error yang lebih jelas ke frontend
-    });
-}
+        console.error("GAGAL MEMBUAT TOKEN, ERROR LENGKAP:", e); 
+        res.status(500).json({ 
+            message: "Terjadi kesalahan pada server.",
+            error: e.message
+        });
+    }
 });
 
-// Endpoint untuk menerima Notifikasi Pembayaran dari Midtrans
+// Endpoint untuk menerima Notifikasi Pembayaran dari Midtrans (tetap ada jika nanti berhasil)
 app.post('/payment-notification', (req, res) => {
     const notificationJson = req.body;
     
@@ -71,9 +69,8 @@ app.post('/payment-notification', (req, res) => {
             const orderId = statusResponse.order_id;
             const transactionStatus = statusResponse.transaction_status;
             
-            // [PERBAIKAN] Menggunakan nama kolom Bahasa Indonesia sesuai database
             const { data, error } = await supabase
-                .from('orders') // Pastikan 'orders' adalah nama tabel Anda
+                .from('orders')
                 .update({ 
                     status_transaksi: transactionStatus,
                     tipe_pembayaran: statusResponse.payment_type
@@ -92,6 +89,36 @@ app.post('/payment-notification', (req, res) => {
             console.error('Error memproses notifikasi:', e.message);
             res.status(500).json({ error: e.message });
         });
+});
+
+// [ALTERNATIF] Endpoint untuk update status dari sisi client
+app.post('/update-order-status', async (req, res) => {
+    try {
+        const { order_id, transaction_status, payment_type } = req.body;
+
+        if (!order_id || !transaction_status) {
+            return res.status(400).json({ error: 'Order ID dan status transaksi diperlukan.' });
+        }
+
+        const { data, error } = await supabase
+            .from('orders')
+            .update({ 
+                status_transaksi: transaction_status,
+                tipe_pembayaran: payment_type 
+            })
+            .eq('id_pesanan', order_id);
+
+        if (error) {
+            throw error;
+        }
+
+        console.log(`Status pesanan ${order_id} berhasil diupdate dari client.`);
+        res.status(200).json({ message: 'Status berhasil diupdate.' });
+
+    } catch (e) {
+        console.error('Gagal update status dari client:', e.message);
+        res.status(500).json({ error: e.message });
+    }
 });
 
 module.exports = app;

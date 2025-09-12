@@ -3,7 +3,6 @@
 document.addEventListener('DOMContentLoaded', function () {
     if (document.getElementById('cheki-page')) {
 
-        // [PERBAIKAN] Tentukan URL backend secara dinamis
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const GET_SNAP_TOKEN_URL = isLocal ? 'http://localhost:3000/get-snap-token' : '/get-snap-token';
 
@@ -216,8 +215,27 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!snapToken) throw new Error('Token tidak valid diterima dari server.');
 
                 window.snap.pay(snapToken, {
-                    onSuccess: function (result) {
+                    onSuccess: async function (result) {
+                        // Tampilkan pesan sukses ke pengguna secepatnya
                         showSuccessMessage(result);
+
+                        // Kirim konfirmasi ke server kita sebagai alternatif
+                        try {
+                            await fetch('/update-order-status', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    order_id: result.order_id,
+                                    transaction_status: result.transaction_status,
+                                    payment_type: result.payment_type
+                                }),
+                            });
+                        } catch (error) {
+                            console.error('Gagal mengirim konfirmasi status ke server:', error);
+                            // Tidak perlu menampilkan error ke pengguna karena pembayaran sudah berhasil
+                        }
                     },
                     onPending: function (result) {
                         console.log('Pembayaran tertunda (pending):', result);

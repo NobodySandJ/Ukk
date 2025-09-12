@@ -29,6 +29,7 @@
   "routes": [
     { "src": "/get-snap-token", "dest": "/backend/server.js" },
     { "src": "/payment-notification", "dest": "/backend/server.js" },
+    { "src": "/update-order-status", "dest": "/backend/server.js" },
     { "src": "/(.*)", "dest": "/$1" }
   ]
 }
