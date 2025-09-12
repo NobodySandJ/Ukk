@@ -1,13 +1,13 @@
 // js/cheki.js
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     if (document.getElementById('cheki-page')) {
-        
+
         // [PERBAIKAN] Tentukan URL backend secara dinamis
         const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
         const GET_SNAP_TOKEN_URL = isLocal ? 'http://localhost:3000/get-snap-token' : '/get-snap-token';
-        
-        const chekiListContainer = document.getElementById('cheki-list'); 
+
+        const chekiListContainer = document.getElementById('cheki-list');
         const totalItemsEl = document.getElementById('total-items');
         const totalPriceEl = document.getElementById('total-price');
         const submitButton = document.getElementById('submit-button');
@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const formErrorEl = document.getElementById('form-error');
         const orderSummaryContainer = document.querySelector('.order-summary-container');
         const chekiFormWrapper = document.getElementById('cheki-form-wrapper');
-        
+
         const mobileCart = document.getElementById('mobile-cart');
         const mobileCartTotal = document.getElementById('mobile-cart-total');
 
@@ -29,14 +29,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 const response = await fetch('data.json');
                 if (!response.ok) throw new Error('Data member tidak ditemukan');
                 const data = await response.json();
-                membersData = data.members; 
+                membersData = data.members;
                 renderProducts();
             } catch (error) {
                 console.error("Gagal memuat produk cheki:", error);
                 chekiListContainer.innerHTML = "<p>Gagal memuat produk. Coba segarkan halaman.</p>";
             }
         }
-        
+
         function renderProducts() {
             chekiListContainer.innerHTML = '';
             membersData.forEach(member => {
@@ -55,7 +55,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 chekiListContainer.appendChild(card);
             });
         }
-        
+
         function showToast(message) {
             const oldToast = document.querySelector('.toast-notification');
             if (oldToast) oldToast.remove();
@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', function() {
             orderSummaryContainer.classList.add('item-added');
             setTimeout(() => orderSummaryContainer.classList.remove('item-added'), 500);
         }
-        
+
         function updateQuantity(memberId, action) {
             const member = membersData.find(m => m.id === memberId);
             if (!member) return;
@@ -89,19 +89,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 cart[memberId]--;
                 showToast(`${member.name} Cheki dikurangi.`);
             }
-            
+
             const inputEl = document.querySelector(`.quantity-input[data-id="${memberId}"]`);
             if (inputEl) inputEl.value = cart[memberId];
-            
+
             updateTotals();
         }
-        
+
         function updateTotals() {
             let totalItems = 0, totalPrice = 0;
             for (const memberId in cart) {
                 if (cart[memberId] > 0) {
                     const member = membersData.find(m => m.id === memberId);
-                    if(member) {
+                    if (member) {
                         totalItems += cart[memberId];
                         totalPrice += cart[memberId] * member.price;
                     }
@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
             totalItemsEl.textContent = totalItems;
             const formattedPrice = `Rp ${totalPrice.toLocaleString('id-ID')}`;
             totalPriceEl.textContent = formattedPrice;
-            
+
             if (totalItems > 0) {
                 mobileCart.classList.add('visible');
                 mobileCartTotal.textContent = formattedPrice;
@@ -118,10 +118,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 mobileCart.classList.remove('visible');
             }
         }
-        
+
         function showSuccessMessage(result) {
             chekiFormWrapper.style.display = 'none';
-            mobileCart.style.display = 'none'; 
+            mobileCart.style.display = 'none';
 
             const successMessage = document.createElement('div');
             successMessage.id = 'order-success-message';
@@ -132,7 +132,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <button id="order-again-btn" class="cta-button">Pesan Lagi</button>
             `;
             orderSummaryContainer.appendChild(successMessage);
-            
+
             document.getElementById('order-again-btn').addEventListener('click', () => {
                 window.location.reload();
             });
@@ -143,19 +143,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateQuantity(e.target.dataset.id, e.target.dataset.action);
             }
         });
-        
+
         mobileCart.addEventListener('click', () => {
             orderSummaryContainer.scrollIntoView({ behavior: 'smooth' });
         });
 
-        submitButton.addEventListener('click', async function(e) {
+        submitButton.addEventListener('click', async function (e) {
             e.preventDefault();
-            
+
             const customerName = customerNameEl.value.trim();
             const customerEmail = customerEmailEl.value.trim();
             const customerSocial = customerSocialEl.value.trim();
             const totalItems = parseInt(totalItemsEl.textContent, 10);
-            
+
             if (customerName === '' || customerSocial === '' || customerEmail === '') {
                 formErrorEl.textContent = 'Mohon isi semua data (Nama, Email, dan Kontak).';
                 return;
@@ -164,11 +164,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 formErrorEl.textContent = 'Anda belum memilih cheki.';
                 return;
             }
-            
+
             formErrorEl.textContent = '';
             submitButton.disabled = true;
             submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
-            
+
             let item_details = [];
             let gross_amount = 0;
             for (const memberId in cart) {
@@ -185,24 +185,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     }
                 }
             }
-            
+
             const orderData = {
-    transaction_details: {
-        order_id: 'CHEKI-' + new Date().getTime(),
-        gross_amount: gross_amount
-    },
-    customer_details: {
-        first_name: customerName,
-        email: customerEmail,
-        phone: customerSocial,
-    },
-    item_details: item_details,
-    // --- [TAMBAHKAN BAGIAN INI] ---
-    callbacks: {
-        finish: `${window.location.origin}/index.html`
-    }
-    // --------------------------------
-};
+                transaction_details: {
+                    order_id: 'CHEKI-' + new Date().getTime(),
+                    gross_amount: gross_amount
+                },
+                customer_details: {
+                    first_name: customerName,
+                    email: customerEmail,
+                    phone: customerSocial,
+                },
+                item_details: item_details,
+                // --- [TAMBAHKAN BAGIAN INI] ---
+                callbacks: {
+                    finish: `${window.location.origin}/index.html`
+                }
+                // --------------------------------
+            };
 
             try {
                 const response = await fetch(GET_SNAP_TOKEN_URL, {
@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     body: JSON.stringify(orderData),
                 });
-                
+
                 if (!response.ok) throw new Error('Gagal mendapatkan token pembayaran dari server.');
 
                 const data = await response.json();
@@ -221,31 +221,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!snapToken) throw new Error('Token tidak valid diterima dari server.');
 
                 window.snap.pay(snapToken, {
-                    onSuccess: function(result){
-                      showSuccessMessage(result);
+                    onSuccess: function (result) {
+                        showSuccessMessage(result);
                     },
-                    onPending: function(result){
-                      console.log('Pembayaran tertunda (pending):', result);
-                      
-                      // --- [TAMBAHKAN BAGIAN INI] ---
-                      // Cek apakah metode pembayaran adalah QRIS dan apakah ada URL QR code
-                      if (result.payment_type === 'qris' && result.qr_code_url) {
-                          console.log('-------------------------------------------');
-                          console.log('✅ URL QR Code Ditemukan:');
-                          console.log(result.qr_code_url);
-                          console.log('-------------------------------------------');
-                      }
-                      // --------------------------------
+                    onPending: function (result) {
+                        console.log('Pembayaran tertunda (pending):', result);
 
-                      formErrorEl.textContent = 'Pembayaran Anda sedang diproses. Silakan selesaikan.';
+                        // --- [TAMBAHKAN BAGIAN INI] ---
+                        // Cek apakah metode pembayaran adalah QRIS dan apakah ada URL QR code
+                        if (result.payment_type === 'qris' && result.qr_code_url) {
+                            console.log('-------------------------------------------');
+                            console.log('✅ URL QR Code Ditemukan:');
+                            console.log(result.qr_code_url);
+                            console.log('-------------------------------------------');
+                        }
+                        // --------------------------------
+
+                        formErrorEl.textContent = 'Pembayaran Anda sedang diproses. Silakan selesaikan.';
                     },
-                    onError: function(result){
-                      formErrorEl.textContent = 'Pembayaran gagal. Silakan coba lagi.';
+                    onError: function (result) {
+                        formErrorEl.textContent = 'Pembayaran gagal. Silakan coba lagi.';
                     },
-                    onClose: function(){
-                      formErrorEl.textContent = 'Anda menutup jendela pembayaran sebelum selesai.';
-                      submitButton.disabled = false;
-                      submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
+                    onClose: function () {
+                        formErrorEl.textContent = 'Anda menutup jendela pembayaran sebelum selesai.';
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
                     }
                 });
 
@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
             }
         });
-        
+
         loadChekiProducts();
     }
 });
