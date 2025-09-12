@@ -3,69 +3,92 @@
 const express = require('express');
 const midtransClient = require('midtrans-client');
 const cors = require('cors');
-const axios = require('axios');
-const crypto = require('crypto');
+const { createClient } = require('@supabase/supabase-js'); // <-- Import Supabase
 require('dotenv').config();
 
 const app = express();
-
-// Konfigurasi CORS yang lebih fleksibel untuk Vercel
-app.use(cors()); // Izinkan semua origin, Vercel akan mengelola ini dengan aman.
-
+app.use(cors());
 app.use(express.json());
 
 // Inisialisasi Midtrans
 const snap = new midtransClient.Snap({
-    isProduction: false, // Tetap false karena menggunakan Sandbox
+    isProduction: false,
     serverKey: process.env.MIDTRANS_SERVER_KEY,
     clientKey: process.env.MIDTRANS_CLIENT_KEY
 });
 
+// Inisialisasi Supabase
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_ANON_KEY;
+const supabase = createClient(supabaseUrl, supabaseKey);
+
 // Endpoint untuk membuat Snap Token
-app.post('/get-snap-token', (req, res) => {
+app.post('/get-snap-token', async (req, res) => {
     const parameter = req.body;
-    snap.createTransaction(parameter)
-        .then(transaction => {
-            res.json({ token: transaction.token });
-        })
-        .catch(e => {
-            // Kirim pesan error yang lebih jelas ke frontend
-            console.error("Midtrans Error:", e.message);
-            res.status(500).json({ error: e.message });
-        });
+    
+    // Sebelum membuat transaksi Midtrans, simpan dulu data awal ke Supabase
+    try {
+        const { data, error } = await supabase
+            .from('orders')
+            .insert([
+                {
+                    order_id: parameter.transaction_details.order_id,
+                    gross_amount: parameter.transaction_details.gross_amount,
+                    customer_name: parameter.customer_details.first_name,
+                    customer_email: parameter.customer_details.email,
+                    customer_social: parameter.customer_details.phone,
+                    items: parameter.item_details, // Simpan detail item sebagai JSON
+                    transaction_status: 'pending' // Status awal
+                }
+            ])
+            .select();
+
+        if (error) {
+            throw error;
+        }
+
+        console.log('Pesanan awal berhasil disimpan ke Supabase:', data);
+
+        // Lanjutkan membuat token Midtrans
+        const transaction = await snap.createTransaction(parameter);
+        res.json({ token: transaction.token });
+
+    } catch (e) {
+        console.error("Error:", e.message);
+        res.status(500).json({ error: e.message });
+    }
 });
 
 // Endpoint untuk menerima Notifikasi Pembayaran dari Midtrans
 app.post('/payment-notification', (req, res) => {
     const notificationJson = req.body;
-    console.log('Menerima notifikasi:', JSON.stringify(notificationJson, null, 2));
-
+    
     snap.transaction.notification(notificationJson)
-        .then((statusResponse) => {
+        .then(async (statusResponse) => {
             const orderId = statusResponse.order_id;
             const transactionStatus = statusResponse.transaction_status;
             const fraudStatus = statusResponse.fraud_status;
 
             console.log(`Transaksi ID ${orderId}: ${transactionStatus}, Status Fraud: ${fraudStatus}`);
 
-            if (transactionStatus == 'capture' || transactionStatus == 'settlement') {
-                if (fraudStatus == 'accept') {
-                    console.log('Pembayaran berhasil dan aman!');
-                    // Di sini Anda bisa menambahkan logika untuk update database, dll.
-                    // Contoh: mengirim data ke Google Sheet
-                    const GOOGLE_SCRIPT_URL = process.env.GOOGLE_SCRIPT_URL; // Ambil dari env
-                    if (GOOGLE_SCRIPT_URL) {
-                        axios.post(GOOGLE_SCRIPT_URL, JSON.stringify(statusResponse))
-                            .then(response => console.log('Berhasil mengirim data ke Google Sheet:', response.data))
-                            .catch(error => console.error('Gagal mengirim data ke Google Sheet:', error.message));
-                    }
-                }
-            } else if (transactionStatus == 'cancel' || transactionStatus == 'deny' || transactionStatus == 'expire') {
-                console.log('Pembayaran dibatalkan atau gagal.');
-            } else if (transactionStatus == 'pending') {
-                console.log('Pembayaran masih menunggu.');
-            }
+            if (transactionStatus == 'capture' || transactionStatus == 'settlement' || transactionStatus == 'cancel' || transactionStatus == 'expire') {
+                
+                // Update status transaksi di tabel Supabase
+                const { data, error } = await supabase
+                    .from('orders')
+                    .update({ 
+                        transaction_status: transactionStatus,
+                        payment_type: statusResponse.payment_type
+                    })
+                    .eq('order_id', orderId);
 
+                if (error) {
+                    console.error('Gagal update status ke Supabase:', error);
+                } else {
+                    console.log('Status pesanan berhasil diupdate di Supabase:', data);
+                }
+            }
+            
             res.status(200).send('OK');
         })
         .catch((e) => {
@@ -74,5 +97,4 @@ app.post('/payment-notification', (req, res) => {
         });
 });
 
-// Ekspor 'app' untuk Vercel
 module.exports = app;
