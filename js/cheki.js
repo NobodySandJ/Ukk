@@ -22,27 +22,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
         let membersData = [];
         let cart = {};
-
-        // --- FUNGSI BARU UNTUK MEMPROSES PEMBAYARAN SUKSES DARI URL ---
+        
         async function checkUrlForSuccess() {
             const urlParams = new URLSearchParams(window.location.search);
             const orderId = urlParams.get('order_id');
             const transactionStatus = urlParams.get('transaction_status');
 
-            // Jika pembayaran berhasil (settlement atau capture)
             if (orderId && (transactionStatus === 'settlement' || transactionStatus === 'capture')) {
-                // Buat objek result palsu untuk ditampilkan
                 const result = {
                     order_id: orderId,
                     transaction_status: transactionStatus,
-                    // Kita tidak mendapatkan payment_type dari URL, jadi ini opsional
-                    payment_type: 'Tidak diketahui' 
+                    payment_type: urlParams.get('payment_type') || 'Tidak diketahui'
                 };
                 
-                // Tampilkan pesan sukses
                 showSuccessMessage(result);
                 
-                // Kirim pembaruan ke server sebagai alternatif
                 try {
                     await fetch('/update-order-status', {
                         method: 'POST',
@@ -50,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         body: JSON.stringify({
                             order_id: result.order_id,
                             transaction_status: result.transaction_status,
-                            payment_type: urlParams.get('payment_type') || result.payment_type
+                            payment_type: result.payment_type
                         }),
                     });
                     console.log('Status berhasil diupdate dari URL redirect.');
@@ -58,11 +52,9 @@ document.addEventListener('DOMContentLoaded', function () {
                     console.error('Gagal mengirim konfirmasi status dari URL:', error);
                 }
 
-                // Hapus parameter dari URL agar pesan tidak muncul lagi saat di-reload
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
-
 
         async function loadChekiProducts() {
             try {
@@ -159,24 +151,33 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
+        // ===== [REVISI] FUNGSI UNTUK MENAMPILKAN TIKET DIGITAL =====
         function showSuccessMessage(result) {
             chekiFormWrapper.style.display = 'none';
             mobileCart.style.display = 'none';
+            
+            const digitalTicket = document.getElementById('digital-ticket');
+            const ticketCustomerName = document.getElementById('ticket-customer-name');
+            const ticketOrderId = document.getElementById('ticket-order-id');
+            const qrCanvas = document.getElementById('qrcode-canvas');
 
-            const successMessage = document.createElement('div');
-            successMessage.id = 'order-success-message';
-            successMessage.innerHTML = `
-                <h3><i class="fas fa-check-circle"></i> Pembayaran Berhasil!</h3>
-                <p>Terima kasih! Pesanan Anda dengan ID <strong>${result.order_id}</strong> telah berhasil diproses.</p>
-                <p>Silakan cek email Anda untuk detail pembayaran.</p>
-                <button id="order-again-btn" class="cta-button">Pesan Lagi</button>
-            `;
-            orderSummaryContainer.appendChild(successMessage);
+            const customerName = localStorage.getItem('customerNameForTicket') || 'Pembeli';
+            ticketCustomerName.textContent = customerName;
+            ticketOrderId.textContent = result.order_id;
+            
+            digitalTicket.style.display = 'block';
+
+            QRCode.toCanvas(qrCanvas, result.order_id, { width: 220 }, function (error) {
+                if (error) console.error(error);
+                console.log('QR code berhasil dibuat!');
+            });
 
             document.getElementById('order-again-btn').addEventListener('click', () => {
-                window.location.reload();
+                localStorage.removeItem('customerNameForTicket'); // Hapus nama dari storage
+                window.location.href = window.location.pathname;
             });
         }
+        // ===== AKHIR DARI REVISI =====
 
         chekiListContainer.addEventListener('click', e => {
             if (e.target.classList.contains('quantity-btn')) {
@@ -204,6 +205,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 formErrorEl.textContent = 'Anda belum memilih cheki.';
                 return;
             }
+            
+            // Simpan nama customer untuk ditampilkan di tiket nanti
+            localStorage.setItem('customerNameForTicket', customerName);
 
             formErrorEl.textContent = '';
             submitButton.disabled = true;
@@ -254,9 +258,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!snapToken) throw new Error('Token tidak valid diterima dari server.');
 
                 window.snap.pay(snapToken, {
-                    // onSuccess sekarang kosong karena kita menangani dari URL
                     onSuccess: function (result) {
-                        // sengaja dikosongkan
+                        // Dikosongkan karena ditangani oleh redirect
                     },
                     onPending: function (result) {
                         console.log('Pembayaran tertunda (pending):', result);
@@ -280,8 +283,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // --- PANGGIL FUNGSI-FUNGSI UTAMA ---
-        checkUrlForSuccess(); // Periksa URL saat halaman dimuat
+        checkUrlForSuccess();
         loadChekiProducts();
     }
 });

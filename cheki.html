@@ -57,7 +57,20 @@
                         </button>
                         <p id="form-error" class="error-message"></p>
                     </div>
-                </div>
+
+                    <div id="digital-ticket" style="display: none; text-align: center;">
+                        <h3><i class="fas fa-check-circle"></i> Pembayaran Berhasil!</h3>
+                        <p>Terima kasih! Tunjukkan tiket ini untuk penukaran di lokasi.</p>
+                        <div id="ticket-details" style="margin: 20px 0; padding: 15px; border: 1px dashed #ccc; border-radius: 8px;">
+                            <p><strong>Nama:</strong> <span id="ticket-customer-name"></span></p>
+                            <p><strong>ID Pesanan:</strong> <span id="ticket-order-id"></span></p>
+                        </div>
+                        <canvas id="qrcode-canvas" style="margin: 0 auto;"></canvas>
+                        <p style="margin-top: 20px;">
+                            <button id="order-again-btn" class="cta-button">Pesan Lagi</button>
+                        </p>
+                    </div>
+                    </div>
             </div>
         </section>
     </main>
@@ -68,7 +81,6 @@
             <span id="mobile-cart-total">Rp 0</span>
         </div>
     </div>
-
 
     <footer>
         <div class="container">
@@ -84,8 +96,10 @@
 
     <script src="js/script.js"></script>
     <script src="js/cheki.js"></script> 
+    
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1/build/qrcode.min.js"></script>
     <script type="text/javascript"
-  src="https://app.sandbox.midtrans.com/snap/snap.js"
-  data-client-key="Mid-client-K38u0LJForfAO_zM"></script>
+      src="https://app.sandbox.midtrans.com/snap/snap.js"
+      data-client-key="Mid-client-K38u0LJForfAO_zM"></script>
 </body>
 </html>
