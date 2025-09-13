@@ -24,7 +24,7 @@
                 <li><a href="index.html#news">Berita</a></li>
                 <li><a href="gallery.html">Galeri</a></li>
                 <li><a href="cheki.html">Pesan Cheki</a></li>
-            </ul>
+                </ul>
              <button class="hamburger" id="hamburger-menu" aria-label="Buka menu navigasi">
                 <i class="fas fa-bars"></i>
             </button>
@@ -35,7 +35,7 @@
         <section id="cheki-page" class="reveal">
             <div class="container">
                 <h2>Pesan Cheki Digital</h2>
-                <p class="page-intro">Dapatkan momen spesial bersama member favoritmu! Setiap cheki akan ditandatangani secara digital.</p>
+                <p class="page-intro">Dapatkan momen spesial bersama member favoritmu! Silakan login terlebih dahulu untuk melakukan pemesanan.</p>
                 
                 <div class="cheki-grid" id="cheki-list">
                     </div>
@@ -47,29 +47,13 @@
                             <p>Total Item: <span id="total-items">0</span></p>
                             <p>Total Harga: <span id="total-price">Rp 0</span></p>
                         </div>
-                        <div id="customer-form">
-                            <input type="text" id="customer-name" placeholder="Nama Lengkap Anda" required>
-                            <input type="email" id="customer-email" placeholder="Email Anda" required>
-                            <input type="text" id="customer-social" placeholder="Username Instagram / No Whatsapp" required>
-                        </div>
+                        
                         <button id="submit-button" class="cta-button">
                             <i class="fas fa-credit-card"></i> Lanjut ke Pembayaran
                         </button>
                         <p id="form-error" class="error-message"></p>
                     </div>
 
-                    <div id="digital-ticket" style="display: none; text-align: center;">
-                        <h3><i class="fas fa-check-circle"></i> Pembayaran Berhasil!</h3>
-                        <p>Terima kasih! Tunjukkan tiket ini untuk penukaran di lokasi.</p>
-                        <div id="ticket-details" style="margin: 20px 0; padding: 15px; border: 1px dashed #ccc; border-radius: 8px;">
-                            <p><strong>Nama:</strong> <span id="ticket-customer-name"></span></p>
-                            <p><strong>ID Pesanan:</strong> <span id="ticket-order-id"></span></p>
-                        </div>
-                        <canvas id="qrcode-canvas" style="margin: 0 auto;"></canvas>
-                        <p style="margin-top: 20px;">
-                            <button id="order-again-btn" class="cta-button">Pesan Lagi</button>
-                        </p>
-                    </div>
                     </div>
             </div>
         </section>
@@ -98,8 +82,5 @@
     <script src="js/cheki.js"></script> 
     
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1/build/qrcode.min.js"></script>
-    <script type="text/javascript"
-      src="https://app.sandbox.midtrans.com/snap/snap.js"
-      data-client-key="Mid-client-K38u0LJForfAO_zM"></script>
 </body>
 </html>
