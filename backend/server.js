@@ -1,4 +1,4 @@
-// backend/server.js (Versi Final & Lengkap)
+// backend/server.js (Perbaikan Final)
 
 const express = require('express');
 const midtransClient = require('midtrans-client');
@@ -35,7 +35,7 @@ app.post('/api/register', async (req, res) => {
         const password_hash = await bcrypt.hash(password, salt);
         const { data, error } = await supabase
             .from('users')
-            .insert([{ username, email, password_hash, whatsapp_number, instagram_username }])
+            .insert([{ username, email, password_hash, whatsapp_number, instagram_username, role: 'user' }])
             .select()
             .single();
         if (error) {
@@ -102,6 +102,7 @@ app.post('/get-snap-token', authenticateToken, async (req, res) => {
             return res.status(400).json({ message: "Data pesanan tidak ditemukan." });
         }
 
+        // [PERBAIKAN] Menambahkan semua kolom yang relevan saat membuat pesanan
         const { data, error } = await supabase.from('orders').insert([{
             id_pesanan: parameter.transaction_details.order_id,
             total_harga: parameter.transaction_details.gross_amount,
@@ -109,7 +110,8 @@ app.post('/get-snap-token', authenticateToken, async (req, res) => {
             email_pelanggan: parameter.customer_details.email,
             kontak_pelanggan: parameter.customer_details.phone,
             detail_item: parameter.item_details,
-            user_id: user.userId
+            user_id: user.userId,
+            status_tiket: 'pending' // Status awal tiket saat dibuat
         }]).select();
         
         if (error) throw error;
@@ -118,26 +120,8 @@ app.post('/get-snap-token', authenticateToken, async (req, res) => {
         res.json({ token: transaction.token });
 
     } catch (e) {
-        console.error("GAGAL MEMBUAT TOKEN:", e.message);
+        console.error("GAGAL MEMBUAT TOKEN:", e);
         res.status(500).json({ message: "Terjadi kesalahan pada server.", error: e.message });
-    }
-});
-
-
-// Endpoint untuk mengambil riwayat pesanan PENGGUNA
-app.get('/api/my-orders', authenticateToken, async (req, res) => {
-    try {
-        const userId = req.user.userId;
-        const { data, error } = await supabase
-            .from('orders')
-            .select('*')
-            .eq('user_id', userId)
-            .order('created_at', { ascending: false });
-        if (error) throw error;
-        res.json(data);
-    } catch (e) {
-        console.error('Gagal mengambil pesanan:', e.message);
-        res.status(500).json({ message: 'Terjadi kesalahan pada server.', error: e.message });
     }
 });
 
@@ -148,10 +132,12 @@ app.post('/update-order-status', async (req, res) => {
         if (!order_id || !transaction_status) {
             return res.status(400).json({ error: 'Order ID dan status transaksi diperlukan.' });
         }
+        
+        // Hanya update jika pembayaran sukses (settlement atau capture)
         if (transaction_status === 'settlement' || transaction_status === 'capture') {
             const { data: updatedOrder, error } = await supabase
                 .from('orders')
-                .update({ status_tiket: 'berlaku' })
+                .update({ status_tiket: 'berlaku' }) // Ubah status tiket menjadi 'berlaku'
                 .eq('id_pesanan', order_id)
                 .select()
                 .single();
@@ -160,13 +146,17 @@ app.post('/update-order-status', async (req, res) => {
             console.log(`Status tiket untuk pesanan ${order_id} berhasil diaktifkan.`);
             res.status(200).json({ message: 'Status tiket berhasil diupdate.' });
         } else {
-            res.status(200).json({ message: 'Status pembayaran diterima, tidak ada aksi tiket.' });
+            // Untuk status lain (pending, expire, dll), kita tidak perlu melakukan apa-apa di DB kita
+            res.status(200).json({ message: 'Status pembayaran diterima, tidak ada aksi tiket yang diperlukan.' });
         }
     } catch (e) {
         console.error('Gagal update status tiket dari client:', e.message);
         res.status(500).json({ error: e.message });
     }
 });
+
+
+// --- BAGIAN ADMIN ---
 
 // Middleware untuk otentikasi ADMIN
 async function authenticateAdmin(req, res, next) {
@@ -175,11 +165,13 @@ async function authenticateAdmin(req, res, next) {
     if (token == null) return res.sendStatus(401);
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
         const { data: user, error } = await supabase
             .from('users')
             .select('role')
             .eq('id', decoded.userId)
             .single();
+
         if (error || !user || user.role !== 'admin') {
             return res.status(403).json({ message: 'Akses ditolak: Wajib admin.' });
         }
