@@ -1,11 +1,12 @@
-// js/auth.js
+// js/auth.js (Versi Optimal)
 
 document.addEventListener('DOMContentLoaded', function() {
     const navLinksContainer = document.getElementById('nav-links');
     const token = localStorage.getItem('userToken');
 
-    // --- 1. PENGATURAN NAVIGASI DENGAN IKON ---
-    function setupNavigation() {
+    // Fungsi ini akan dijalankan untuk membuat navigasi dan memasang semua event listener
+    function initializeNavigationAndAuth() {
+        // 1. Buat HTML navigasi berdasarkan status login
         let navHTML = `
             <li><a href="index.html#about">Tentang Kami</a></li>
             <li><a href="index.html#members">Member</a></li>
@@ -15,70 +16,77 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
 
         if (token) {
-            // Jika pengguna sudah login, tampilkan ikon profil dan logout
             navHTML += `
                 <li><a href="dashboard.html" title="Akun Saya"><i class="fas fa-user-circle" style="font-size: 1.5rem;"></i></a></li>
                 <li><a href="#" id="logout-btn" title="Logout"><i class="fas fa-sign-out-alt" style="font-size: 1.5rem;"></i></a></li>
             `;
         } else {
-            // Jika belum login, tampilkan ikon untuk membuka modal
             navHTML += `
                 <li><a href="#" id="auth-icon-btn" title="Login/Daftar"><i class="fas fa-user-circle" style="font-size: 1.5rem;"></i></a></li>
             `;
         }
         navLinksContainer.innerHTML = navHTML;
+
+        // 2. SETELAH HTML dibuat, cari tombol-tombolnya dan pasang listener
+        const authIconBtn = document.getElementById('auth-icon-btn');
+        const logoutBtn = document.getElementById('logout-btn');
+        const authModal = document.getElementById('auth-modal');
+
+        // Pasang listener untuk BUKA MODAL
+        if (authIconBtn && authModal) {
+            authIconBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                authModal.classList.add('active');
+            });
+        }
+
+        // Pasang listener untuk LOGOUT
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                localStorage.removeItem('userToken');
+                localStorage.removeItem('userData');
+                window.location.href = 'index.html';
+            });
+        }
     }
+    
+    // --- Logika untuk mengelola Pop-up Modal itu sendiri ---
+    function setupModal() {
+        const authModal = document.getElementById('auth-modal');
+        if (!authModal) return;
 
-    // --- 2. LOGIKA MODAL (POP-UP) ---
-    const authModal = document.getElementById('auth-modal');
-    const authIconBtn = document.getElementById('auth-icon-btn');
-    const closeModalBtn = document.getElementById('modal-close-btn');
+        const closeModalBtn = document.getElementById('modal-close-btn');
+        const loginView = document.getElementById('login-view');
+        const registerView = document.getElementById('register-view');
+        const showRegisterLink = document.getElementById('show-register-link');
+        const showLoginLink = document.getElementById('show-login-link');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
 
-    // Tampilan & Link untuk beralih
-    const loginView = document.getElementById('login-view');
-    const registerView = document.getElementById('register-view');
-    const showRegisterLink = document.getElementById('show-register-link');
-    const showLoginLink = document.getElementById('show-login-link');
-
-    // Buka modal saat ikon diklik
-    if (authIconBtn) {
-        authIconBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            authModal.classList.add('active');
-        });
-    }
-
-    // Tutup modal saat tombol X atau area luar diklik
-    if (authModal) {
+        // Tutup modal
         closeModalBtn.addEventListener('click', () => authModal.classList.remove('active'));
         authModal.addEventListener('click', (e) => {
             if (e.target === authModal) {
                 authModal.classList.remove('active');
             }
         });
-    }
 
-    // Beralih ke tampilan Register
-    if (showRegisterLink) {
+        // Beralih ke Register
         showRegisterLink.addEventListener('click', (e) => {
             e.preventDefault();
             loginView.style.display = 'none';
             registerView.style.display = 'block';
         });
-    }
-    
-    // Beralih ke tampilan Login
-    if (showLoginLink) {
+
+        // Beralih ke Login
         showLoginLink.addEventListener('click', (e) => {
             e.preventDefault();
             registerView.style.display = 'none';
             loginView.style.display = 'block';
         });
-    }
-
-    // --- 3. LOGIKA FORM SUBMISSION (TETAP SAMA, HANYA ID ELEMENT BERBEDA) ---
-    const loginForm = document.getElementById('login-form');
-    if (loginForm) {
+        
+        // Handle form login
         loginForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formError = document.getElementById('login-error');
@@ -102,7 +110,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 localStorage.setItem('userToken', result.token);
                 localStorage.setItem('userData', JSON.stringify(result.user));
-                window.location.reload(); // Muat ulang halaman agar navigasi berubah
+                window.location.reload();
             } catch (error) {
                 formError.textContent = error.message;
             } finally {
@@ -110,10 +118,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitButton.textContent = 'Login';
             }
         });
-    }
 
-    const registerForm = document.getElementById('register-form');
-    if (registerForm) {
+        // Handle form register
         registerForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formError = document.getElementById('register-error');
@@ -140,8 +146,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (!response.ok) throw new Error(result.message || 'Gagal mendaftar.');
                 
                 alert('Pendaftaran berhasil! Silakan login.');
-                loginView.style.display = 'block'; // Tampilkan form login
-                registerView.style.display = 'none'; // Sembunyikan form register
+                loginView.style.display = 'block';
+                registerView.style.display = 'none';
             } catch (error) {
                 formError.textContent = error.message;
             } finally {
@@ -151,17 +157,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // --- 4. LOGIKA LOGOUT ---
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.removeItem('userToken');
-            localStorage.removeItem('userData');
-            window.location.href = 'index.html';
-        });
-    }
-
-    // Panggil fungsi inisialisasi
-    setupNavigation();
+    // --- PANGGIL SEMUA FUNGSI INISIALISASI ---
+    initializeNavigationAndAuth();
+    setupModal();
 });
