@@ -71,44 +71,33 @@ app.post('/api/register', async (req, res) => {
 // ===== [BARU] Endpoint Login Pengguna =====
 app.post('/api/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password } = req.body; // Kita tetap sebut 'email' dari frontend
         if (!email || !password) {
-            return res.status(400).json({ message: 'Email dan password wajib diisi.' });
+            return res.status(400).json({ message: 'Input tidak boleh kosong.' });
         }
 
-        // 1. Cari pengguna berdasarkan email
+        // 1. Cari pengguna berdasarkan email ATAU username
         const { data: user, error } = await supabase
             .from('users')
             .select('*')
-            .eq('email', email)
+            .or(`email.eq.${email},username.eq.${email}`) // <-- LOGIKA BARU DI SINI
             .single();
 
         if (error || !user) {
-            return res.status(404).json({ message: 'Email tidak ditemukan.' });
+            return res.status(404).json({ message: 'Username atau email tidak ditemukan.' });
         }
 
-        // 2. Bandingkan password yang diinput dengan hash di database
+        // ... (sisa logika login tetap sama)
         const isMatch = await bcrypt.compare(password, user.password_hash);
         if (!isMatch) {
             return res.status(401).json({ message: 'Password salah.' });
         }
+        
+        const payload = { userId: user.id, username: user.username, email: user.email, role: user.role };
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
 
-        // 3. Buat Token Sesi (JWT)
-        const payload = {
-            userId: user.id,
-            username: user.username,
-            email: user.email
-        };
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' }); // Token berlaku 1 hari
-
-        // Hapus hash password dari data yang dikirim kembali
         delete user.password_hash;
-
-        res.json({
-            message: 'Login berhasil!',
-            token,
-            user
-        });
+        res.json({ message: 'Login berhasil!', token, user });
 
     } catch (e) {
         console.error('Gagal saat login:', e.message);
@@ -184,6 +173,94 @@ app.get('/api/my-orders', authenticateToken, async (req, res) => {
 // Endpoint update status (tidak berubah, tetap publik)
 app.post('/update-order-status', async (req, res) => {
     // ... kode tetap sama ...
+});
+
+module.exports = app;
+
+// ===== [BARU] Middleware untuk otentikasi ADMIN =====
+async function authenticateAdmin(req, res, next) {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+    if (token == null) return res.sendStatus(401);
+
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        
+        const { data: user, error } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', decoded.userId)
+            .single();
+
+        if (error || !user || user.role !== 'admin') {
+            return res.status(403).json({ message: 'Akses ditolak: Wajib admin.' });
+        }
+        
+        req.user = decoded;
+        next();
+    } catch (err) {
+        return res.status(403).json({ message: 'Token tidak valid.' });
+    }
+}
+
+// ===== [BARU] Endpoint Admin: Mengambil SEMUA pesanan =====
+app.get('/api/admin/all-orders', authenticateAdmin, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('orders')
+            .select('*')
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        res.json(data);
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
+// ===== [BARU] Endpoint Admin: Mengubah status tiket =====
+app.post('/api/admin/update-ticket-status', authenticateAdmin, async (req, res) => {
+    const { order_id, new_status } = req.body;
+    if (!order_id || !new_status) {
+        return res.status(400).json({ message: 'Order ID dan status baru diperlukan.' });
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from('orders')
+            .update({ status_tiket: new_status })
+            .eq('id_pesanan', order_id)
+            .select();
+        if (error) throw error;
+        res.json({ message: 'Status tiket berhasil diupdate!', updatedOrder: data });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
+// ===== [BARU] Endpoint Admin: Statistik =====
+app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
+    try {
+        const { data: orders, error } = await supabase.from('orders').select('total_harga, detail_item');
+        if (error) throw error;
+
+        let totalRevenue = 0;
+        let totalCheki = 0;
+        const chekiPerMember = {};
+
+        orders.forEach(order => {
+            totalRevenue += order.total_harga;
+            order.detail_item.forEach(item => {
+                totalCheki += item.quantity;
+                const memberName = item.name.replace('Cheki ', '');
+                chekiPerMember[memberName] = (chekiPerMember[memberName] || 0) + item.quantity;
+            });
+        });
+
+        res.json({ totalRevenue, totalCheki, chekiPerMember });
+
+    } catch(e) {
+        res.status(500).json({ message: e.message });
+    }
 });
 
 module.exports = app;
