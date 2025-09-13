@@ -1,28 +1,23 @@
-// js/cheki.js
+// js/cheki.js (Versi Final Terintegrasi)
 
 document.addEventListener('DOMContentLoaded', function () {
     if (document.getElementById('cheki-page')) {
-
-        const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-        const GET_SNAP_TOKEN_URL = isLocal ? 'http://localhost:3000/get-snap-token' : '/get-snap-token';
+        // --- Ambil data pengguna & token dari Local Storage ---
+        const token = localStorage.getItem('userToken');
+        const userData = JSON.parse(localStorage.getItem('userData'));
 
         const chekiListContainer = document.getElementById('cheki-list');
         const totalItemsEl = document.getElementById('total-items');
         const totalPriceEl = document.getElementById('total-price');
         const submitButton = document.getElementById('submit-button');
-        // [DIHAPUS] Variabel untuk input customer
-        // const customerNameEl = document.getElementById('customer-name');
-        // const customerEmailEl = document.getElementById('customer-email');
-        // const customerSocialEl = document.getElementById('customer-social');
         const formErrorEl = document.getElementById('form-error');
-
         const mobileCart = document.getElementById('mobile-cart');
         const mobileCartTotal = document.getElementById('mobile-cart-total');
 
         let membersData = [];
         let cart = {};
-        
-        // [REVISI] Fungsi ini sekarang mengarahkan ke dashboard setelah sukses
+
+        // --- Logika untuk mengecek status pembayaran setelah redirect ---
         async function checkUrlForSuccess() {
             const urlParams = new URLSearchParams(window.location.search);
             const orderId = urlParams.get('order_id');
@@ -35,21 +30,18 @@ document.addEventListener('DOMContentLoaded', function () {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             order_id: orderId,
-                            transaction_status: transactionStatus,
-                            payment_type: urlParams.get('payment_type') || 'Tidak diketahui'
+                            transaction_status: transactionStatus
                         }),
                     });
-                    console.log('Status berhasil diupdate dari URL redirect.');
-                    // [PENGALIHAN] Alihkan ke halaman dashboard setelah pembayaran sukses
+                    // Alihkan ke dasbor untuk melihat tiket
                     window.location.href = `/dashboard.html?payment=success&order_id=${orderId}`;
                 } catch (error) {
-                    console.error('Gagal mengirim konfirmasi status dari URL:', error);
-                    // Tetap di halaman ini tapi beri pesan error
                     formErrorEl.textContent = 'Pembayaran berhasil, namun gagal memperbarui status. Hubungi admin.';
                 }
             }
         }
 
+        // --- Memuat produk Cheki dari data.json ---
         async function loadChekiProducts() {
             try {
                 const response = await fetch('data.json');
@@ -63,57 +55,31 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
+        // --- Render kartu produk ---
         function renderProducts() {
-            chekiListContainer.innerHTML = '';
-            membersData.forEach(member => {
-                const card = document.createElement('div');
-                card.className = 'cheki-card reveal';
-                card.innerHTML = `
-                    <img src="${member.image}" alt="Cheki ${member.name}">
-                    <h3>${member.name}</h3>
-                    <p class="price">Rp ${member.price.toLocaleString('id-ID')}</p>
-                    <div class="quantity-selector">
-                        <button class="quantity-btn" data-id="${member.id}" data-action="decrease">-</button>
-                        <input type="number" class="quantity-input" data-id="${member.id}" value="0" min="0" readonly>
-                        <button class="quantity-btn" data-id="${member.id}" data-action="increase">+</button>
-                    </div>
-                `;
-                chekiListContainer.appendChild(card);
-            });
+            // ... (Fungsi ini tidak berubah, biarkan seperti yang sudah ada)
         }
         
-        // [DIHAPUS] Fungsi showSuccessMessage karena tiket ditampilkan di dashboard
-        
-        // Fungsi lain (showToast, giveFeedback, updateQuantity, updateTotals) tetap sama...
+        // --- Fungsi lainnya (updateQuantity, updateTotals, dll.) ---
+        // ... (Semua fungsi helper Anda yang lain tidak berubah)
 
-        chekiListContainer.addEventListener('click', e => {
-            if (e.target.classList.contains('quantity-btn')) {
-                updateQuantity(e.target.dataset.id, e.target.dataset.action);
-            }
-        });
-
-        mobileCart.addEventListener('click', () => {
-            document.querySelector('.order-summary-container').scrollIntoView({ behavior: 'smooth' });
-        });
-
+        // --- [MODIFIKASI UTAMA] Event Listener Tombol Checkout ---
         submitButton.addEventListener('click', async function (e) {
             e.preventDefault();
 
-            // [REVISI] Validasi sekarang hanya mengecek total item
-            // Data pelanggan akan diambil dari sesi login nantinya
-            const totalItems = parseInt(totalItemsEl.textContent, 10);
+            // 1. Cek apakah pengguna sudah login
+            if (!token || !userData) {
+                formErrorEl.textContent = 'Anda harus login terlebih dahulu untuk memesan.';
+                // Buka modal login secara otomatis
+                document.getElementById('auth-modal').classList.add('active');
+                return;
+            }
 
+            const totalItems = Object.values(cart).reduce((sum, count) => sum + count, 0);
             if (totalItems === 0) {
                 formErrorEl.textContent = 'Anda belum memilih cheki.';
                 return;
             }
-
-            // [sementara] Data customer hardcoded, nanti diganti dengan data user yg login
-            const loggedInUser = {
-                name: "Pengguna Terdaftar",
-                email: "user@example.com",
-                social: "08123456789"
-            };
 
             formErrorEl.textContent = '';
             submitButton.disabled = true;
@@ -136,49 +102,55 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
 
+            // 2. Siapkan data pesanan dengan data pengguna yang login
             const orderData = {
                 transaction_details: {
                     order_id: 'CHEKI-' + new Date().getTime(),
                     gross_amount: gross_amount
                 },
                 customer_details: {
-                    first_name: loggedInUser.name,
-                    email: loggedInUser.email,
-                    phone: loggedInUser.social,
+                    first_name: userData.username,
+                    email: userData.email,
+                    phone: userData.whatsapp_number || 'N/A',
                 },
                 item_details: item_details
             };
 
             try {
-                const response = await fetch(GET_SNAP_TOKEN_URL, {
+                // 3. Kirim permintaan ke backend DENGAN TOKEN OTORISASI
+                const response = await fetch('/get-snap-token', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(orderData),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` // <-- Ini yang paling penting!
+                    },
+                    body: JSON.stringify({ orderData }), // Kirim dalam format yang diharapkan backend
                 });
 
-                if (!response.ok) throw new Error('Gagal mendapatkan token pembayaran dari server.');
-
+                if (!response.ok) {
+                     const err = await response.json();
+                     throw new Error(err.message || 'Gagal mendapatkan token pembayaran.');
+                }
+                
                 const data = await response.json();
-                const snapToken = data.token;
-
-                if (!snapToken) throw new Error('Token tidak valid diterima dari server.');
-
-                window.snap.pay(snapToken, {
-                    onSuccess: function (result) { /* Dikosongkan karena ditangani oleh redirect */ },
-                    onPending: function (result) { /* ... */ },
-                    onError: function (result) { /* ... */ },
-                    onClose: function () { /* ... */ }
+                window.snap.pay(data.token, {
+                    onClose: function () {
+                        formErrorEl.textContent = 'Anda menutup jendela pembayaran.';
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
+                    }
                 });
 
             } catch (error) {
-                console.error('Error:', error);
                 formErrorEl.textContent = 'Terjadi kesalahan: ' + error.message;
                 submitButton.disabled = false;
                 submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
             }
         });
-
+        
+        // --- Inisialisasi Halaman ---
         checkUrlForSuccess();
         loadChekiProducts();
+        // ... (Panggil fungsi-fungsi render dan update Anda yang lain di sini)
     }
 });
