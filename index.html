@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mujōken no Umi (無条件の海) - Official Website</title>
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/modal.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 </head>
 <body>
@@ -59,6 +60,49 @@
             </div>
         </section>
     </main>
+    <div class="modal-overlay" id="auth-modal">
+        <div class="modal-container">
+            <button class="modal-close-btn" id="modal-close-btn">&times;</button>
+            
+            <div id="login-view">
+                <div class="modal-form-container">
+                    <h2>Login Akun</h2>
+                    <form id="login-form" class="modal-form">
+                        <input type="email" id="login-email" placeholder="Email" required>
+                        <input type="password" id="login-password" placeholder="Password" required>
+                        <button type="submit" class="cta-button">Login</button>
+                        <p id="login-error" class="error-message" style="text-align: center;"></p>
+                    </form>
+                    <p class="modal-switch-link">
+                        Belum punya akun? <a id="show-register-link">Daftar di sini</a>
+                    </p>
+                </div>
+            </div>
+
+            <div id="register-view">
+                <div class="modal-form-container">
+                    <h2>Buat Akun Baru</h2>
+                    <form id="register-form" class="modal-form">
+                        <input type="text" id="register-username" placeholder="Username" required>
+                        <input type="email" id="register-email" placeholder="Email Aktif" required>
+                        <input type="password" id="register-password" placeholder="Password" required>
+                        <input type="text" id="register-whatsapp" placeholder="No. WhatsApp" required>
+                        <input type="text" id="register-instagram" placeholder="Username Instagram" required>
+                        <div class="sk-agreement">
+                            <input type="checkbox" id="sk-checkbox" required>
+                            <label for="sk-checkbox">Saya setuju dengan <a href="sk.html" target="_blank">Syarat & Ketentuan</a>.</label>
+                        </div>
+                        <button type="submit" class="cta-button">Daftar</button>
+                        <p id="register-error" class="error-message" style="text-align: center;"></p>
+                    </form>
+                    <p class="modal-switch-link">
+                        Sudah punya akun? <a id="show-login-link">Login di sini</a>
+                    </p>
+                </div>
+            </div>
+
+        </div>
+    </div>
 
     <footer>
         <div class="container">

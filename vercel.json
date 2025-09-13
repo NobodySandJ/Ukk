@@ -27,6 +27,9 @@
     }
   ],
   "routes": [
+    { "src": "/api/register", "dest": "/backend/server.js" },
+    { "src": "/api/login", "dest": "/backend/server.js" },
+    { "src": "/api/my-orders", "dest": "/backend/server.js" },
     { "src": "/get-snap-token", "dest": "/backend/server.js" },
     { "src": "/payment-notification", "dest": "/backend/server.js" },
     { "src": "/update-order-status", "dest": "/backend/server.js" },
