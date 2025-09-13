@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daftar Akun - Mujōken no Umi</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        /* Gaya khusus untuk form login/register */
+        .auth-form-container {
+            max-width: 500px;
+            margin: 2rem auto;
+            padding: 2.5rem;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-hover);
+            text-align: center;
+        }
+        .auth-form-container h2 {
+            margin-bottom: 2rem;
+        }
+        .auth-form {
+            display: flex;
+            flex-direction: column;
+            gap: 1.2rem;
+            text-align: left;
+        }
+        .auth-form input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .auth-form .sk-agreement {
+            display: flex;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+        .auth-form .sk-agreement input {
+            width: auto;
+            margin-right: 0.5rem;
+        }
+        .auth-form .cta-button {
+            margin-top: 1rem;
+        }
+        .form-link {
+            margin-top: 1.5rem;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <h1><a href="index.html" class="logo-link">Mujōken no Umi</a></h1>
+            </div>
+            <ul class="nav-links" id="nav-links">
+                </ul>
+            <button class="hamburger" id="hamburger-menu" aria-label="Buka menu navigasi">
+                <i class="fas fa-bars"></i>
+            </button>
+        </nav>
+    </header>
+
+    <main>
+        <section id="register-page">
+            <div class="container">
+                <div class="auth-form-container reveal">
+                    <h2>Buat Akun Baru</h2>
+                    <form id="register-form" class="auth-form">
+                        <input type="text" id="username" placeholder="Username" required>
+                        <input type="email" id="email" placeholder="Email Aktif" required>
+                        <input type="password" id="password" placeholder="Password" required>
+                        <input type="text" id="whatsapp" placeholder="No. WhatsApp (Contoh: 08123456789)" required>
+                        <input type="text" id="instagram" placeholder="Username Instagram (Contoh: @username)" required>
+                        
+                        <div class="sk-agreement">
+                            <input type="checkbox" id="sk-checkbox" required>
+                            <label for="sk-checkbox">Saya setuju dengan <a href="sk.html" target="_blank">Syarat & Ketentuan</a>.</label>
+                        </div>
+
+                        <button type="submit" class="cta-button">Daftar</button>
+                        <p id="form-error" class="error-message"></p>
+                    </form>
+                    <p class="form-link">Sudah punya akun? <a href="login.html">Login di sini</a></p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer style="margin-top: 0;">
+        <div class="container">
+            <p>&copy; 2025 Mujōken no Umi. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+    <script src="js/auth.js"></script>
+</body>
+</html>
