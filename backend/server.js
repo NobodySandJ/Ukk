@@ -1,4 +1,4 @@
-// backend/server.js
+// backend/server.js (Versi Final & Lengkap)
 
 const express = require('express');
 const midtransClient = require('midtrans-client');
@@ -97,6 +97,11 @@ app.post('/get-snap-token', authenticateToken, async (req, res) => {
     try {
         const parameter = req.body.orderData;
         const user = req.user;
+
+        if (!parameter) {
+            return res.status(400).json({ message: "Data pesanan tidak ditemukan." });
+        }
+
         const { data, error } = await supabase.from('orders').insert([{
             id_pesanan: parameter.transaction_details.order_id,
             total_harga: parameter.transaction_details.gross_amount,
@@ -106,14 +111,18 @@ app.post('/get-snap-token', authenticateToken, async (req, res) => {
             detail_item: parameter.item_details,
             user_id: user.userId
         }]).select();
+        
         if (error) throw error;
+        
         const transaction = await snap.createTransaction(parameter);
         res.json({ token: transaction.token });
+
     } catch (e) {
-        console.error("GAGAL MEMBUAT TOKEN:", e);
+        console.error("GAGAL MEMBUAT TOKEN:", e.message);
         res.status(500).json({ message: "Terjadi kesalahan pada server.", error: e.message });
     }
 });
+
 
 // Endpoint untuk mengambil riwayat pesanan PENGGUNA
 app.get('/api/my-orders', authenticateToken, async (req, res) => {
@@ -223,12 +232,16 @@ app.get('/api/admin/stats', authenticateAdmin, async (req, res) => {
         let totalCheki = 0;
         const chekiPerMember = {};
         orders.forEach(order => {
-            totalRevenue += order.total_harga;
-            order.detail_item.forEach(item => {
-                totalCheki += item.quantity;
-                const memberName = item.name.replace('Cheki ', '');
-                chekiPerMember[memberName] = (chekiPerMember[memberName] || 0) + item.quantity;
-            });
+            if(order.total_harga) {
+                totalRevenue += order.total_harga;
+            }
+            if(order.detail_item) {
+                order.detail_item.forEach(item => {
+                    totalCheki += item.quantity;
+                    const memberName = item.name.replace('Cheki ', '');
+                    chekiPerMember[memberName] = (chekiPerMember[memberName] || 0) + item.quantity;
+                });
+            }
         });
         res.json({ totalRevenue, totalCheki, chekiPerMember });
     } catch(e) {
