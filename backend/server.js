@@ -172,7 +172,36 @@ app.get('/api/my-orders', authenticateToken, async (req, res) => {
 
 // Endpoint update status (tidak berubah, tetap publik)
 app.post('/update-order-status', async (req, res) => {
-    // ... kode tetap sama ...
+    try {
+        const { order_id, transaction_status } = req.body;
+        if (!order_id || !transaction_status) {
+            return res.status(400).json({ error: 'Order ID dan status transaksi diperlukan.' });
+        }
+
+        // Jika pembayaran sukses, update status tiket menjadi "berlaku"
+        // Kita tidak lagi menyimpan status transaksi dari midtrans
+        if (transaction_status === 'settlement' || transaction_status === 'capture') {
+            const { data: updatedOrder, error } = await supabase
+                .from('orders')
+                .update({ status_tiket: 'berlaku' }) // Langsung set status tiket
+                .eq('id_pesanan', order_id)
+                .select()
+                .single();
+
+            if (error) throw error;
+            if (!updatedOrder) throw new Error('Pesanan tidak ditemukan untuk diupdate.');
+
+            console.log(`Status tiket untuk pesanan ${order_id} berhasil diaktifkan.`);
+            res.status(200).json({ message: 'Status tiket berhasil diupdate.' });
+        } else {
+            // Untuk status lain (pending, expire, dll) kita tidak melakukan apa-apa di DB kita
+            res.status(200).json({ message: 'Status pembayaran diterima, tidak ada aksi tiket.' });
+        }
+
+    } catch (e) {
+        console.error('Gagal update status tiket dari client:', e.message);
+        res.status(500).json({ error: e.message });
+    }
 });
 
 module.exports = app;
