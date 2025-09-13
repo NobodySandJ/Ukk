@@ -1,4 +1,4 @@
-// js/cheki.js (Versi Final Terintegrasi)
+// js/cheki.js (Perbaikan Lengkap)
 
 document.addEventListener('DOMContentLoaded', function () {
     if (document.getElementById('cheki-page')) {
@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const formErrorEl = document.getElementById('form-error');
         const mobileCart = document.getElementById('mobile-cart');
         const mobileCartTotal = document.getElementById('mobile-cart-total');
+        const orderSummaryContainer = document.querySelector('.order-summary-container');
+
 
         let membersData = [];
         let cart = {};
@@ -54,23 +56,110 @@ document.addEventListener('DOMContentLoaded', function () {
                 chekiListContainer.innerHTML = "<p>Gagal memuat produk. Coba segarkan halaman.</p>";
             }
         }
-
-        // --- Render kartu produk ---
+        
+        // ===== [FUNGSI YANG HILANG 1] Render kartu produk =====
         function renderProducts() {
-            // ... (Fungsi ini tidak berubah, biarkan seperti yang sudah ada)
+            chekiListContainer.innerHTML = '';
+            membersData.forEach(member => {
+                const card = document.createElement('div');
+                card.className = 'cheki-card reveal';
+                card.innerHTML = `
+                    <img src="${member.image}" alt="Cheki ${member.name}">
+                    <h3>${member.name}</h3>
+                    <p class="price">Rp ${member.price.toLocaleString('id-ID')}</p>
+                    <div class="quantity-selector">
+                        <button class="quantity-btn" data-id="${member.id}" data-action="decrease">-</button>
+                        <input type="number" class="quantity-input" data-id="${member.id}" value="0" min="0" readonly>
+                        <button class="quantity-btn" data-id="${member.id}" data-action="increase">+</button>
+                    </div>
+                `;
+                chekiListContainer.appendChild(card);
+            });
         }
         
-        // --- Fungsi lainnya (updateQuantity, updateTotals, dll.) ---
-        // ... (Semua fungsi helper Anda yang lain tidak berubah)
+        // ===== [FUNGSI YANG HILANG 2 & 3] Fungsi helper untuk interaksi =====
+        function showToast(message) {
+            const oldToast = document.querySelector('.toast-notification');
+            if (oldToast) oldToast.remove();
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.classList.add('show'), 100);
+            setTimeout(() => {
+                toast.classList.remove('show');
+                toast.addEventListener('transitionend', () => toast.remove());
+            }, 3000);
+        }
 
-        // --- [MODIFIKASI UTAMA] Event Listener Tombol Checkout ---
+        function giveFeedback() {
+            orderSummaryContainer.classList.add('item-added');
+            setTimeout(() => orderSummaryContainer.classList.remove('item-added'), 500);
+        }
+
+        // ===== [FUNGSI YANG HILANG 4] Update kuantitas item =====
+        function updateQuantity(memberId, action) {
+            const member = membersData.find(m => m.id === memberId);
+            if (!member) return;
+
+            if (!cart[memberId]) cart[memberId] = 0;
+
+            if (action === 'increase') {
+                cart[memberId]++;
+                showToast(`${member.name} Cheki ditambahkan!`);
+                giveFeedback();
+            } else if (action === 'decrease' && cart[memberId] > 0) {
+                cart[memberId]--;
+                showToast(`${member.name} Cheki dikurangi.`);
+            }
+
+            const inputEl = document.querySelector(`.quantity-input[data-id="${memberId}"]`);
+            if (inputEl) inputEl.value = cart[memberId];
+
+            updateTotals();
+        }
+
+        // ===== [FUNGSI YANG HILANG 5] Update total harga dan item =====
+        function updateTotals() {
+            let totalItems = 0, totalPrice = 0;
+            for (const memberId in cart) {
+                if (cart[memberId] > 0) {
+                    const member = membersData.find(m => m.id === memberId);
+                    if (member) {
+                        totalItems += cart[memberId];
+                        totalPrice += cart[memberId] * member.price;
+                    }
+                }
+            }
+            totalItemsEl.textContent = totalItems;
+            const formattedPrice = `Rp ${totalPrice.toLocaleString('id-ID')}`;
+            totalPriceEl.textContent = formattedPrice;
+
+            if (totalItems > 0) {
+                mobileCart.classList.add('visible');
+                mobileCartTotal.textContent = formattedPrice;
+            } else {
+                mobileCart.classList.remove('visible');
+            }
+        }
+
+        // --- Event Listener untuk tombol +, -, dan cart mobile ---
+        chekiListContainer.addEventListener('click', e => {
+            if (e.target.classList.contains('quantity-btn')) {
+                updateQuantity(e.target.dataset.id, e.target.dataset.action);
+            }
+        });
+
+        mobileCart.addEventListener('click', () => {
+            orderSummaryContainer.scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // --- Event Listener Tombol Checkout ---
         submitButton.addEventListener('click', async function (e) {
             e.preventDefault();
 
-            // 1. Cek apakah pengguna sudah login
             if (!token || !userData) {
                 formErrorEl.textContent = 'Anda harus login terlebih dahulu untuk memesan.';
-                // Buka modal login secara otomatis
                 document.getElementById('auth-modal').classList.add('active');
                 return;
             }
@@ -102,7 +191,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             }
 
-            // 2. Siapkan data pesanan dengan data pengguna yang login
             const orderData = {
                 transaction_details: {
                     order_id: 'CHEKI-' + new Date().getTime(),
@@ -117,14 +205,13 @@ document.addEventListener('DOMContentLoaded', function () {
             };
 
             try {
-                // 3. Kirim permintaan ke backend DENGAN TOKEN OTORISASI
                 const response = await fetch('/get-snap-token', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}` // <-- Ini yang paling penting!
+                        'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ orderData }), // Kirim dalam format yang diharapkan backend
+                    body: JSON.stringify({ orderData }),
                 });
 
                 if (!response.ok) {
@@ -151,6 +238,5 @@ document.addEventListener('DOMContentLoaded', function () {
         // --- Inisialisasi Halaman ---
         checkUrlForSuccess();
         loadChekiProducts();
-        // ... (Panggil fungsi-fungsi render dan update Anda yang lain di sini)
     }
 });
