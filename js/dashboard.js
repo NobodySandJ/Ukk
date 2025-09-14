@@ -1,3 +1,5 @@
+// js/dashboard.js (Perbaikan Final)
+
 document.addEventListener('DOMContentLoaded', function() {
     const token = localStorage.getItem('userToken');
     const userData = JSON.parse(localStorage.getItem('userData'));
@@ -5,12 +7,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const orderContainer = document.getElementById('order-history-container');
 
     if (!token || !userData) {
-        // Jika tidak login, paksa kembali ke halaman utama
         window.location.href = 'index.html';
         return;
     }
 
-    welcomeMessage.textContent = `Selamat Datang, ${userData.username}!`;
+    // FIX 1: Menggunakan 'nama_pengguna' sesuai dengan data dari database
+    welcomeMessage.textContent = `Selamat Datang, ${userData.nama_pengguna}!`;
 
     async function fetchOrders() {
         try {
@@ -43,19 +45,35 @@ document.addEventListener('DOMContentLoaded', function() {
         orders.forEach(order => {
             const card = document.createElement('div');
             card.className = 'order-card';
-
-            const statusClass = order.status_tiket === 'berlaku' ? 'status-berlaku' : 'status-hangus';
-            const statusText = order.status_tiket === 'berlaku' ? 'Masih Berlaku' : 'Sudah Dipakai / Hangus';
             
-            // Format tanggal menjadi lebih mudah dibaca
-            const orderDate = new Date(order.created_at).toLocaleDateString('id-ID', {
+            // Mengubah status_tiket menjadi lebih user-friendly
+            let statusClass = '';
+            let statusText = '';
+            switch(order.status_tiket) {
+                case 'berlaku':
+                    statusClass = 'status-berlaku';
+                    statusText = 'Masih Berlaku';
+                    break;
+                case 'hangus':
+                    statusClass = 'status-hangus';
+                    statusText = 'Sudah Dipakai / Hangus';
+                    break;
+                default:
+                    statusClass = 'status-pending'; // Anda bisa menambahkan style untuk ini di CSS
+                    statusText = 'Menunggu Pembayaran';
+            }
+            
+            // FIX 2: Menggunakan 'dibuat_pada' sesuai dengan nama kolom di database
+            const orderDate = new Date(order.dibuat_pada).toLocaleDateString('id-ID', {
                 day: 'numeric', month: 'long', year: 'numeric'
             });
 
             let itemsHTML = '<ul>';
-            order.detail_item.forEach(item => {
-                itemsHTML += `<li>${item.quantity}x ${item.name}</li>`;
-            });
+            if(order.detail_item) {
+                order.detail_item.forEach(item => {
+                    itemsHTML += `<li>${item.quantity}x ${item.name}</li>`;
+                });
+            }
             itemsHTML += '</ul>';
 
             card.innerHTML = `
@@ -68,17 +86,22 @@ document.addEventListener('DOMContentLoaded', function() {
                     ${itemsHTML}
                 </div>
                 <div class="order-qr">
-                    <p>Tunjukkan QR ini di lokasi</p>
-                    <canvas id="qr-${order.id_pesanan}"></canvas>
+                    ${order.status_tiket === 'berlaku' ? 
+                        `<p>Tunjukkan QR ini di lokasi</p>
+                         <canvas id="qr-${order.id_pesanan}"></canvas>` :
+                        '<p style="opacity: 0.6;">QR Code tidak tersedia untuk tiket ini.</p>'
+                    }
                 </div>
             `;
             orderContainer.appendChild(card);
-
-            // Generate QR Code untuk setiap kartu
-            const qrCanvas = document.getElementById(`qr-${order.id_pesanan}`);
-            QRCode.toCanvas(qrCanvas, order.id_pesanan, { width: 150 }, function (error) {
-                if (error) console.error(error);
-            });
+            
+            // Hanya generate QR Code jika tiketnya berlaku
+            if (order.status_tiket === 'berlaku') {
+                const qrCanvas = document.getElementById(`qr-${order.id_pesanan}`);
+                QRCode.toCanvas(qrCanvas, order.id_pesanan, { width: 150 }, function (error) {
+                    if (error) console.error(error);
+                });
+            }
         });
     }
 
