@@ -69,7 +69,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const showLoginLink = document.getElementById('show-login-link');
         
         // Listener untuk menutup modal
-        closeModalBtn.addEventListener('click', () => authModal.classList.remove('active'));
+        // **FIX:** Only add listeners if the elements exist
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', () => authModal.classList.remove('active'));
+        }
         authModal.addEventListener('click', (e) => {
             if (e.target === authModal) {
                 authModal.classList.remove('active');
@@ -77,16 +80,20 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         // Listener untuk beralih form
-        showRegisterLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginView.style.display = 'none';
-            registerView.style.display = 'block';
-        });
-        showLoginLink.addEventListener('click', (e) => {
-            e.preventDefault();
-            registerView.style.display = 'none';
-            loginView.style.display = 'block';
-        });
+        if (showRegisterLink && loginView && registerView) {
+            showRegisterLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                loginView.style.display = 'none';
+                registerView.style.display = 'block';
+            });
+        }
+        if (showLoginLink && loginView && registerView) {
+            showLoginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                registerView.style.display = 'none';
+                loginView.style.display = 'block';
+            });
+        }
     }
 
     // --- Fungsi untuk menangani submit form ---
@@ -97,7 +104,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (loginForm) {
             loginForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                // ... (sisa logika form login Anda, sudah benar)
                 const formError = document.getElementById('login-error');
                 const submitButton = loginForm.querySelector('button');
                 const loginData = {
@@ -137,7 +143,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (registerForm) {
             registerForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
-                // ... (sisa logika form register Anda, sudah benar)
                 const formError = document.getElementById('register-error');
                 const submitButton = registerForm.querySelector('button');
                 const userData = {
@@ -162,8 +167,13 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (!response.ok) throw new Error(result.message || 'Gagal mendaftar.');
                     
                     alert('Pendaftaran berhasil! Silakan login.');
-                    document.getElementById('login-view').style.display = 'block';
-                    document.getElementById('register-view').style.display = 'none';
+                    // Switch to login view after successful registration
+                    const loginView = document.getElementById('login-view');
+                    const registerView = document.getElementById('register-view');
+                    if(loginView && registerView) {
+                        loginView.style.display = 'block';
+                        registerView.style.display = 'none';
+                    }
                 } catch (error) {
                     formError.textContent = error.message;
                 } finally {

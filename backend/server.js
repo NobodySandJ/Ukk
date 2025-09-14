@@ -128,8 +128,8 @@ app.post("/get-snap-token", authenticateToken, async (req, res) => {
         if (!parameter) {
             return res.status(400).json({ message: "Data pesanan tidak ditemukan." });
         }
-
-        // [PERBAIKAN] Menambahkan semua kolom yang relevan saat membuat pesanan
+        
+        // **FIX:** Re-added user_id to link the order with the user
         const { data, error } = await supabase
             .from("orders")
             .insert([
@@ -140,12 +140,11 @@ app.post("/get-snap-token", authenticateToken, async (req, res) => {
                     email_pelanggan: parameter.customer_details.email,
                     kontak_pelanggan: parameter.customer_details.phone,
                     detail_item: parameter.item_details,
-                    // user_id: user.userId, // Dihapus karena kolom tidak ada di DB
-                    status_tiket: "pending", // Status awal tiket saat dibuat
+                    user_id: user.userId, // This now correctly links the order
+                    status_tiket: "pending", 
                 },
             ])
             .select();
-        //...
 
         if (error) throw error;
 
@@ -159,6 +158,24 @@ app.post("/get-snap-token", authenticateToken, async (req, res) => {
     }
 });
 
+// **NEW:** Endpoint for users to fetch their own orders
+app.get("/api/my-orders", authenticateToken, async (req, res) => {
+    try {
+        const userId = req.user.userId;
+        const { data, error } = await supabase
+            .from("orders")
+            .select("*")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false });
+
+        if (error) throw error;
+        res.json(data);
+    } catch (e) {
+        console.error("Gagal mengambil pesanan pengguna:", e.message);
+        res.status(500).json({ message: "Terjadi kesalahan pada server." });
+    }
+});
+
 // Endpoint update status tiket setelah pembayaran
 app.post("/update-order-status", async (req, res) => {
     try {
@@ -169,14 +186,13 @@ app.post("/update-order-status", async (req, res) => {
                 .json({ error: "Order ID dan status transaksi diperlukan." });
         }
 
-        // Hanya update jika pembayaran sukses (settlement atau capture)
         if (
             transaction_status === "settlement" ||
             transaction_status === "capture"
         ) {
             const { data: updatedOrder, error } = await supabase
                 .from("orders")
-                .update({ status_tiket: "berlaku" }) // Ubah status tiket menjadi 'berlaku'
+                .update({ status_tiket: "berlaku" }) 
                 .eq("id_pesanan", order_id)
                 .select()
                 .single();
@@ -188,7 +204,6 @@ app.post("/update-order-status", async (req, res) => {
             );
             res.status(200).json({ message: "Status tiket berhasil diupdate." });
         } else {
-            // Untuk status lain (pending, expire, dll), kita tidak perlu melakukan apa-apa di DB kita
             res
                 .status(200)
                 .json({
@@ -201,6 +216,7 @@ app.post("/update-order-status", async (req, res) => {
         res.status(500).json({ error: e.message });
     }
 });
+
 
 // --- BAGIAN ADMIN ---
 
