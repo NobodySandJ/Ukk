@@ -68,6 +68,18 @@
         "hobi": "Merajut, Menonton Film Horor, Mendekorasi.",
         "jiko": "<i>\"Dari balik anemon panggung, aku mengintip untuk menemukanmu! Mungkin aku kecil dan suka bersembunyi, tapi aku akan selalu ada untuk melindungimu! Namaku Anzu, ikan badut penjagamu!\"</i>"
       }
+    },
+    {
+      "id": "group",
+      "name": "Group Cheki",
+      "image": "img/member/group.jpg",
+      "role": "Foto Bersama Semua Member",
+      "price": 50000,
+      "details": {
+        "sifat": "Momen kebersamaan seluruh member.",
+        "hobi": "Menyebarkan kebahagiaan bersama.",
+        "jiko": "<i>\"Lautan tanpa syarat tidak akan lengkap tanpa kita semua! Dapatkan momen spesial bersama seluruh member Mujōken no Umi!\"</i>"
+      }
     }
   ],
   "news": [
@@ -97,5 +109,4 @@
     { "src": "img/member/grup2.jpg", "alt": "Mujōken no Umi Foto Grup 2" },
     { "src": "img/member/Runa1.jpg", "alt": "Runa Close Up" }
   ]
-
 }
