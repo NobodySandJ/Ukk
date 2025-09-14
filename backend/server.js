@@ -142,7 +142,7 @@ app.post("/get-snap-token", authenticateToken, async (req, res) => {
                 {
                     id_pesanan: parameter.transaction_details.order_id,
                     total_harga: parameter.transaction_details.gross_amount,
-                    nama_pelanggan: parameter.customer_details.first_name,
+                    nama_pelanggan: user.username, // Mengambil nama dari token yang terotentikasi
                     email_pelanggan: parameter.customer_details.email,
                     kontak_pelanggan: parameter.customer_details.phone,
                     detail_item: parameter.item_details,
