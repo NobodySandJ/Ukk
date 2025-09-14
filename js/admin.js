@@ -3,7 +3,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const userData = JSON.parse(localStorage.getItem('userData'));
 
     // Keamanan: Cek apakah pengguna adalah admin
-    if (!token || !userData || userData.role !== 'admin') {
+    // Menggunakan kolom 'peran' sesuai dengan database Bahasa Indonesia
+    if (!token || !userData || userData.peran !== 'admin') {
         alert('Akses ditolak. Anda bukan admin.');
         window.location.href = 'index.html';
         return;
@@ -11,6 +12,12 @@ document.addEventListener('DOMContentLoaded', function() {
     
     const statsGrid = document.getElementById('stats-grid');
     const ordersTbody = document.getElementById('orders-tbody');
+    const adminWelcome = document.getElementById('admin-welcome');
+
+    // Menampilkan nama admin
+    if(adminWelcome && userData.nama_pengguna) {
+        adminWelcome.textContent = `Selamat Datang, ${userData.nama_pengguna}!`;
+    }
 
     // Mengambil dan menampilkan statistik
     async function fetchStats() {
@@ -18,6 +25,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch('/api/admin/stats', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+            if (!response.ok) throw new Error('Gagal memuat statistik.');
+            
             const stats = await response.json();
 
             statsGrid.innerHTML = `
@@ -35,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
             memberCard.innerHTML += memberStatsHTML;
             statsGrid.appendChild(memberCard);
         } catch (error) {
-            statsGrid.innerHTML = `<p>Gagal memuat statistik: ${error.message}</p>`;
+            statsGrid.innerHTML = `<p>${error.message}</p>`;
         }
     }
 
@@ -45,14 +54,16 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch('/api/admin/all-orders', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
+            if (!response.ok) throw new Error('Gagal memuat pesanan.');
+            
             const orders = await response.json();
             renderOrders(orders);
         } catch (error) {
-            ordersTbody.innerHTML = `<tr><td colspan="5">Gagal memuat pesanan: ${error.message}</td></tr>`;
+            ordersTbody.innerHTML = `<tr><td colspan="5">${error.message}</td></tr>`;
         }
     }
 
-    // Merender tabel pesanan
+    // Merender tabel pesanan (sudah disesuaikan dengan kolom Bahasa Indonesia)
     function renderOrders(orders) {
         ordersTbody.innerHTML = '';
         if (orders.length === 0) {
@@ -61,12 +72,30 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         orders.forEach(order => {
             const row = document.createElement('tr');
-            let items = order.detail_item.map(item => `${item.quantity}x ${item.name}`).join('<br>');
+            let items = order.detail_item ? order.detail_item.map(item => `${item.quantity}x ${item.name}`).join('<br>') : 'Tidak ada detail';
+            
+            // Mengubah status_tiket menjadi lebih user-friendly
+            let statusClass = '';
+            let statusText = '';
+            switch(order.status_tiket) {
+                case 'berlaku':
+                    statusClass = 'status-berlaku';
+                    statusText = 'Berlaku';
+                    break;
+                case 'hangus':
+                    statusClass = 'status-hangus';
+                    statusText = 'Hangus';
+                    break;
+                default:
+                    statusClass = 'status-pending';
+                    statusText = 'Pending';
+            }
+
             row.innerHTML = `
                 <td>${order.id_pesanan}</td>
                 <td>${order.nama_pelanggan}<br><small>${order.email_pelanggan}</small></td>
                 <td>${items}</td>
-                <td><span class="status-badge ${order.status_tiket === 'berlaku' ? 'status-berlaku' : 'status-hangus'}">${order.status_tiket}</span></td>
+                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
                 <td><button class="action-btn btn-use" data-orderid="${order.id_pesanan}" ${order.status_tiket !== 'berlaku' ? 'disabled' : ''}>Gunakan</button></td>
             `;
             ordersTbody.appendChild(row);
@@ -79,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const button = e.target;
             const orderId = button.dataset.orderid;
             
-            if (confirm(`Anda yakin ingin menggunakan tiket untuk pesanan ${orderId}? Aksi ini tidak bisa dibatalkan.`)) {
+            if (confirm(`Anda yakin ingin MENGGUNAKAN tiket untuk pesanan ${orderId}? Aksi ini akan mengubah statusnya menjadi HANGUS.`)) {
                 try {
                     const response = await fetch('/api/admin/update-ticket-status', {
                         method: 'POST',
@@ -89,12 +118,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         },
                         body: JSON.stringify({ order_id: orderId, new_status: 'hangus' })
                     });
-                    if (!response.ok) throw new Error('Gagal update status.');
+                    if (!response.ok) throw new Error('Gagal memperbarui status tiket.');
                     
                     alert('Status tiket berhasil diubah menjadi hangus.');
-                    fetchAllOrders(); // Muat ulang data tabel
+                    fetchAllOrders(); // Muat ulang data tabel untuk menampilkan perubahan
                 } catch (error) {
-                    alert('Error: ' + error.message);
+                    alert('Terjadi kesalahan: ' + error.message);
                 }
             }
         }
