@@ -1,4 +1,4 @@
-// backend/server.js (Perbaikan Final)
+// backend/server.js (Versi disesuaikan dengan DB Bahasa Indonesia)
 
 const express = require("express");
 const midtransClient = require("midtrans-client");
@@ -36,20 +36,23 @@ app.post("/api/register", async (req, res) => {
         }
         const salt = await bcrypt.genSalt(10);
         const password_hash = await bcrypt.hash(password, salt);
+
+        // Menggunakan tabel "pengguna" dan kolom Bahasa Indonesia
         const { data, error } = await supabase
-            .from("users")
+            .from("pengguna")
             .insert([
                 {
-                    username,
-                    email,
-                    password_hash,
-                    whatsapp_number,
-                    instagram_username,
-                    role: "user",
+                    nama_pengguna: username,
+                    email: email,
+                    kata_sandi: password_hash,
+                    nomor_whatsapp: whatsapp_number,
+                    instagram: instagram_username,
+                    peran: "user",
                 },
             ])
             .select()
             .single();
+
         if (error) {
             if (error.code === "23505") {
                 return res
@@ -67,37 +70,40 @@ app.post("/api/register", async (req, res) => {
     }
 });
 
-// Endpoint Login Pengguna (Bisa pakai Username atau Email)
+// Endpoint Login Pengguna
 app.post("/api/login", async (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) {
             return res.status(400).json({ message: "Input tidak boleh kosong." });
         }
+        // Menggunakan tabel "pengguna"
         const { data: user, error } = await supabase
-            .from("users")
+            .from("pengguna")
             .select("*")
-            .or(`email.eq.${email},username.eq.${email}`)
+            .or(`email.eq.${email},nama_pengguna.eq.${email}`)
             .single();
+
         if (error || !user) {
             return res
                 .status(404)
                 .json({ message: "Username atau email tidak ditemukan." });
         }
-        const isMatch = await bcrypt.compare(password, user.password_hash);
+        // Mencocokkan dengan kolom "kata_sandi"
+        const isMatch = await bcrypt.compare(password, user.kata_sandi);
         if (!isMatch) {
             return res.status(401).json({ message: "Password salah." });
         }
         const payload = {
             userId: user.id,
-            username: user.username,
+            username: user.nama_pengguna, // Menggunakan "nama_pengguna"
             email: user.email,
-            role: user.role,
+            role: user.peran, // Menggunakan "peran"
         };
         const token = jwt.sign(payload, process.env.JWT_SECRET, {
             expiresIn: "1d",
         });
-        delete user.password_hash;
+        delete user.kata_sandi; // Menghapus "kata_sandi"
         res.json({ message: "Login berhasil!", token, user });
     } catch (e) {
         console.error("Gagal saat login:", e.message);
@@ -107,7 +113,7 @@ app.post("/api/login", async (req, res) => {
     }
 });
 
-// Middleware untuk memverifikasi token pengguna biasa
+// Middleware otentikasi
 function authenticateToken(req, res, next) {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
@@ -119,7 +125,7 @@ function authenticateToken(req, res, next) {
     });
 }
 
-// Endpoint get-snap-token (dilindungi)
+// Endpoint membuat token pembayaran Midtrans
 app.post("/get-snap-token", authenticateToken, async (req, res) => {
     try {
         const parameter = req.body.orderData;
@@ -129,9 +135,9 @@ app.post("/get-snap-token", authenticateToken, async (req, res) => {
             return res.status(400).json({ message: "Data pesanan tidak ditemukan." });
         }
         
-        // **FIX:** Re-added user_id to link the order with the user
+        // Menggunakan tabel "pesanan" dan kolom Bahasa Indonesia
         const { data, error } = await supabase
-            .from("orders")
+            .from("pesanan")
             .insert([
                 {
                     id_pesanan: parameter.transaction_details.order_id,
@@ -140,8 +146,8 @@ app.post("/get-snap-token", authenticateToken, async (req, res) => {
                     email_pelanggan: parameter.customer_details.email,
                     kontak_pelanggan: parameter.customer_details.phone,
                     detail_item: parameter.item_details,
-                    user_id: user.userId, // This now correctly links the order
-                    status_tiket: "pending", 
+                    id_pengguna: user.userId, // Menghubungkan ke pengguna
+                    status_tiket: "pending",
                 },
             ])
             .select();
@@ -158,15 +164,16 @@ app.post("/get-snap-token", authenticateToken, async (req, res) => {
     }
 });
 
-// **NEW:** Endpoint for users to fetch their own orders
+// Endpoint untuk pengguna mengambil riwayat pesanannya
 app.get("/api/my-orders", authenticateToken, async (req, res) => {
     try {
         const userId = req.user.userId;
+        // Menggunakan tabel "pesanan" dan kolom "id_pengguna"
         const { data, error } = await supabase
-            .from("orders")
+            .from("pesanan")
             .select("*")
-            .eq("user_id", userId)
-            .order("created_at", { ascending: false });
+            .eq("id_pengguna", userId)
+            .order("dibuat_pada", { ascending: false });
 
         if (error) throw error;
         res.json(data);
@@ -190,9 +197,10 @@ app.post("/update-order-status", async (req, res) => {
             transaction_status === "settlement" ||
             transaction_status === "capture"
         ) {
+            // Menggunakan tabel "pesanan"
             const { data: updatedOrder, error } = await supabase
-                .from("orders")
-                .update({ status_tiket: "berlaku" }) 
+                .from("pesanan")
+                .update({ status_tiket: "berlaku" })
                 .eq("id_pesanan", order_id)
                 .select()
                 .single();
@@ -217,24 +225,24 @@ app.post("/update-order-status", async (req, res) => {
     }
 });
 
-
 // --- BAGIAN ADMIN ---
 
-// Middleware untuk otentikasi ADMIN
+// Middleware otentikasi ADMIN
 async function authenticateAdmin(req, res, next) {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
     if (token == null) return res.sendStatus(401);
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
+        
+        // Menggunakan tabel "pengguna" dan kolom "peran"
         const { data: user, error } = await supabase
-            .from("users")
-            .select("role")
+            .from("pengguna")
+            .select("peran")
             .eq("id", decoded.userId)
             .single();
 
-        if (error || !user || user.role !== "admin") {
+        if (error || !user || user.peran !== "admin") {
             return res.status(403).json({ message: "Akses ditolak: Wajib admin." });
         }
         req.user = decoded;
@@ -247,10 +255,11 @@ async function authenticateAdmin(req, res, next) {
 // Endpoint Admin: Mengambil SEMUA pesanan
 app.get("/api/admin/all-orders", authenticateAdmin, async (req, res) => {
     try {
+        // Menggunakan tabel "pesanan"
         const { data, error } = await supabase
-            .from("orders")
+            .from("pesanan")
             .select("*")
-            .order("created_at", { ascending: false });
+            .order("dibuat_pada", { ascending: false });
         if (error) throw error;
         res.json(data);
     } catch (e) {
@@ -270,8 +279,9 @@ app.post(
                 .json({ message: "Order ID dan status baru diperlukan." });
         }
         try {
+            // Menggunakan tabel "pesanan"
             const { data, error } = await supabase
-                .from("orders")
+                .from("pesanan")
                 .update({ status_tiket: new_status })
                 .eq("id_pesanan", order_id)
                 .select();
@@ -289,8 +299,9 @@ app.post(
 // Endpoint Admin: Statistik
 app.get("/api/admin/stats", authenticateAdmin, async (req, res) => {
     try {
+        // Menggunakan tabel "pesanan"
         const { data: orders, error } = await supabase
-            .from("orders")
+            .from("pesanan")
             .select("total_harga, detail_item");
         if (error) throw error;
         let totalRevenue = 0;
