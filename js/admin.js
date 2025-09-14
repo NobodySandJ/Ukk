@@ -2,8 +2,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const token = localStorage.getItem('userToken');
     const userData = JSON.parse(localStorage.getItem('userData'));
 
-    // Keamanan: Cek apakah pengguna adalah admin
-    // Menggunakan kolom 'peran' sesuai dengan database Bahasa Indonesia
     if (!token || !userData || userData.peran !== 'admin') {
         alert('Akses ditolak. Anda bukan admin.');
         window.location.href = 'index.html';
@@ -13,13 +11,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const statsGrid = document.getElementById('stats-grid');
     const ordersTbody = document.getElementById('orders-tbody');
     const adminWelcome = document.getElementById('admin-welcome');
+    const searchInput = document.getElementById('search-input');
+    
+    let allOrders = []; // Simpan semua pesanan untuk filtering
 
-    // Menampilkan nama admin
     if(adminWelcome && userData.nama_pengguna) {
         adminWelcome.textContent = `Selamat Datang, ${userData.nama_pengguna}!`;
     }
 
-    // Mengambil dan menampilkan statistik
     async function fetchStats() {
         try {
             const response = await fetch('/api/admin/stats', {
@@ -48,7 +47,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Mengambil dan menampilkan semua pesanan
     async function fetchAllOrders() {
         try {
             const response = await fetch('/api/admin/all-orders', {
@@ -56,39 +54,28 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             if (!response.ok) throw new Error('Gagal memuat pesanan.');
             
-            const orders = await response.json();
-            renderOrders(orders);
+            allOrders = await response.json();
+            renderOrders(allOrders);
         } catch (error) {
             ordersTbody.innerHTML = `<tr><td colspan="5">${error.message}</td></tr>`;
         }
     }
-
-    // Merender tabel pesanan (sudah disesuaikan dengan kolom Bahasa Indonesia)
+    
     function renderOrders(orders) {
         ordersTbody.innerHTML = '';
         if (orders.length === 0) {
-            ordersTbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Belum ada pesanan.</td></tr>`;
+            ordersTbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Tidak ada pesanan yang cocok.</td></tr>`;
             return;
         }
         orders.forEach(order => {
             const row = document.createElement('tr');
             let items = order.detail_item ? order.detail_item.map(item => `${item.quantity}x ${item.name}`).join('<br>') : 'Tidak ada detail';
             
-            // Mengubah status_tiket menjadi lebih user-friendly
-            let statusClass = '';
-            let statusText = '';
+            let statusClass = '', statusText = '';
             switch(order.status_tiket) {
-                case 'berlaku':
-                    statusClass = 'status-berlaku';
-                    statusText = 'Berlaku';
-                    break;
-                case 'hangus':
-                    statusClass = 'status-hangus';
-                    statusText = 'Hangus';
-                    break;
-                default:
-                    statusClass = 'status-pending';
-                    statusText = 'Pending';
+                case 'berlaku': statusClass = 'status-berlaku'; statusText = 'Berlaku'; break;
+                case 'hangus': statusClass = 'status-hangus'; statusText = 'Hangus'; break;
+                default: statusClass = 'status-pending'; statusText = 'Pending';
             }
 
             row.innerHTML = `
@@ -102,7 +89,15 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Event listener untuk tombol "Gunakan" tiket
+    searchInput.addEventListener('input', (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const filteredOrders = allOrders.filter(order => 
+            order.nama_pelanggan.toLowerCase().includes(searchTerm) ||
+            order.id_pesanan.toLowerCase().includes(searchTerm)
+        );
+        renderOrders(filteredOrders);
+    });
+
     ordersTbody.addEventListener('click', async function(e) {
         if (e.target && e.target.classList.contains('btn-use')) {
             const button = e.target;
@@ -121,7 +116,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (!response.ok) throw new Error('Gagal memperbarui status tiket.');
                     
                     alert('Status tiket berhasil diubah menjadi hangus.');
-                    fetchAllOrders(); // Muat ulang data tabel untuk menampilkan perubahan
+                    fetchAllOrders(); 
                 } catch (error) {
                     alert('Terjadi kesalahan: ' + error.message);
                 }
@@ -129,7 +124,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Inisialisasi panel admin
     fetchStats();
     fetchAllOrders();
 });

@@ -7,18 +7,106 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <style>
-        .admin-panel { padding: 2rem 0; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 3rem; }
-        .stat-card { background: #fff; padding: 1.5rem; border-radius: 8px; box-shadow: var(--shadow-light); text-align: center; }
-        .stat-card h3 { font-size: 1.2rem; margin-bottom: 0.5rem; color: #555; }
-        .stat-card p { font-size: 2rem; font-weight: 700; color: var(--primary-color); }
+        .admin-panel { padding: 2rem 0; background-color: #f4f7f9; min-height: 100vh;}
+        .admin-header { 
+            text-align: center; 
+            margin-bottom: 2rem;
+        }
+        .stats-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); 
+            gap: 1.5rem; 
+            margin-bottom: 3rem; 
+        }
+        .stat-card { 
+            background: #fff; 
+            padding: 1.5rem; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            text-align: center; 
+        }
+        .stat-card h3 { 
+            font-size: 1.1rem; 
+            margin-bottom: 0.5rem; 
+            color: #555; 
+            font-weight: 600;
+        }
+        .stat-card p { 
+            font-size: 2rem; 
+            font-weight: 700; 
+            color: var(--primary-color); 
+        }
+        .management-section {
+            background: #fff;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+        .management-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .search-bar {
+            position: relative;
+            width: 100%;
+            max-width: 350px;
+        }
+        .search-bar input {
+            width: 100%;
+            padding: 0.8rem 1rem 0.8rem 2.5rem;
+            border-radius: 50px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+        }
+        .search-bar .fa-search {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #aaa;
+        }
         .order-table-container { overflow-x: auto; }
-        .order-table { width: 100%; border-collapse: collapse; background: #fff; }
-        .order-table th, .order-table td { padding: 1rem; border: 1px solid #ddd; text-align: left; }
-        .order-table th { background-color: #f2f2f2; }
-        .action-btn { padding: 0.4rem 0.8rem; border-radius: 5px; border: none; color: #fff; cursor: pointer; }
+        .order-table { width: 100%; border-collapse: collapse; }
+        .order-table th, .order-table td { 
+            padding: 1rem; 
+            border-bottom: 1px solid #ddd; 
+            text-align: left; 
+            vertical-align: middle;
+        }
+        .order-table th { 
+            background-color: #f8f9fa; 
+            font-weight: 600;
+        }
+        .order-table tr:last-child td {
+            border-bottom: none;
+        }
+        .action-btn { 
+            padding: 0.5rem 1rem; 
+            border-radius: 50px; 
+            border: none; 
+            color: #fff; 
+            cursor: pointer; 
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
         .btn-use { background-color: var(--success-color); }
-        .btn-use:disabled { background-color: #6c757d; }
+        .btn-use:hover { background-color: #218838; }
+        .btn-use:disabled { background-color: #6c757d; cursor: not-allowed; }
+        .status-badge {
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
+            color: white;
+            white-space: nowrap;
+        }
+        .status-berlaku { background-color: #28a745; }
+        .status-hangus { background-color: #6c757d; }
+        .status-pending { background-color: #ffc107; color: #333;}
     </style>
 </head>
 <body>
@@ -31,16 +119,23 @@
 
     <main class="admin-panel">
         <div class="container">
-            <h2 id="admin-welcome">Selamat Datang, Admin!</h2>
+            <div class="admin-header">
+                <h2 id="admin-welcome">Selamat Datang, Admin!</h2>
+            </div>
             
             <section id="statistics">
-                <h3>Statistik Penjualan</h3>
                 <div class="stats-grid" id="stats-grid">
                     </div>
             </section>
 
-            <section id="orders-management">
-                <h3>Manajemen Tiket</h3>
+            <section id="orders-management" class="management-section">
+                <div class="management-header">
+                    <h3>Manajemen Tiket</h3>
+                    <div class="search-bar">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="search-input" placeholder="Cari berdasarkan nama atau ID pesanan...">
+                    </div>
+                </div>
                 <div class="order-table-container">
                     <table class="order-table">
                         <thead>
