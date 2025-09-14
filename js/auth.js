@@ -1,7 +1,6 @@
-// js/auth.js (Navbar disederhanakan)
+// js/auth.js (Penyempurnaan Terakhir)
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Pastikan elemen dasar ada sebelum melanjutkan
     const navLinksContainer = document.getElementById('nav-links');
     if (!navLinksContainer) {
         console.error('Elemen navigasi #nav-links tidak ditemukan!');
@@ -10,9 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     const token = localStorage.getItem('userToken');
 
-    // --- FUNGSI UTAMA: Membuat Navigasi & Memasang Listener ---
     function initializeApp() {
-        // **DIUBAH:** Link Galeri dan Pesan Cheki dihapus dari sini
         let navHTML = `
             <li><a href="index.html#about">Tentang Kami</a></li>
             <li><a href="index.html#members">Member</a></li>
@@ -42,7 +39,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- Fungsi untuk mengelola logika internal Modal ---
     function setupModalListeners() {
         const authModal = document.getElementById('auth-modal');
         if (!authModal) return;
@@ -78,7 +74,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- Fungsi untuk menangani submit form ---
     function setupFormHandlers() {
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
@@ -104,6 +99,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                     const result = await response.json();
                     if (!response.ok) throw new Error(result.message || 'Login gagal.');
+                    
+                    // **FIX:** Membersihkan data lama sebelum menyimpan yang baru
+                    localStorage.removeItem('userToken');
+                    localStorage.removeItem('userData');
                     
                     localStorage.setItem('userToken', result.token);
                     localStorage.setItem('userData', JSON.stringify(result.user));
@@ -166,7 +165,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // --- JALANKAN SEMUA FUNGSI ---
     initializeApp();
     setupModalListeners();
     setupFormHandlers();
