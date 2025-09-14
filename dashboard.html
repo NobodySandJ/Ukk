@@ -26,6 +26,7 @@
             display: flex;
             gap: 1.5rem;
             flex-wrap: wrap;
+            align-items: center;
         }
         .order-details {
             flex-grow: 1;
@@ -58,6 +59,15 @@
         .status-hangus {
             background-color: #dc3545;
         }
+        /* Style untuk tombol logout baru */
+        #dashboard-logout-btn {
+            margin-top: 1.5rem;
+            background-color: #dc3545; /* Merah */
+            padding: 0.7rem 2rem;
+        }
+        #dashboard-logout-btn:hover {
+            background-color: #c82333; /* Merah lebih gelap */
+        }
     </style>
 </head>
 <body>
@@ -79,6 +89,9 @@
                 <div class="dashboard-header">
                     <h2 id="welcome-message">Memuat data...</h2>
                     <p>Ini adalah daftar tiket Cheki yang pernah Anda beli.</p>
+                    <button id="dashboard-logout-btn" class="cta-button">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </button>
                 </div>
                 <div id="order-history-container" class="order-history-container">
                     </div>

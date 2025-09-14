@@ -1,4 +1,4 @@
-// js/auth.js (Perbaikan Final & Optimal)
+// js/auth.js (Navbar disederhanakan)
 
 document.addEventListener('DOMContentLoaded', function() {
     // Pastikan elemen dasar ada sebelum melanjutkan
@@ -12,19 +12,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- FUNGSI UTAMA: Membuat Navigasi & Memasang Listener ---
     function initializeApp() {
-        // 1. Buat HTML Navigasi
+        // **DIUBAH:** Link Galeri dan Pesan Cheki dihapus dari sini
         let navHTML = `
             <li><a href="index.html#about">Tentang Kami</a></li>
             <li><a href="index.html#members">Member</a></li>
             <li><a href="index.html#news">Berita</a></li>
-            <li><a href="gallery.html">Galeri</a></li>
-            <li><a href="cheki.html">Pesan Cheki</a></li>
         `;
 
         if (token) {
             navHTML += `
                 <li><a href="dashboard.html" title="Akun Saya"><i class="fas fa-user-circle" style="font-size: 1.5rem;"></i></a></li>
-                <li><a href="#" id="logout-btn" title="Logout"><i class="fas fa-sign-out-alt" style="font-size: 1.5rem;"></i></a></li>
             `;
         } else {
             navHTML += `
@@ -32,27 +29,15 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
         }
         
-        // 2. Tampilkan HTML ke Halaman
         navLinksContainer.innerHTML = navHTML;
 
-        // 3. SEKARANG, cari elemen yang BARU DIBUAT dan pasang listener
         const authIconBtn = document.getElementById('auth-icon-btn');
-        const logoutBtn = document.getElementById('logout-btn');
         const authModal = document.getElementById('auth-modal');
 
         if (authIconBtn && authModal) {
             authIconBtn.addEventListener('click', (e) => {
                 e.preventDefault();
                 authModal.classList.add('active');
-            });
-        }
-
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                localStorage.removeItem('userToken');
-                localStorage.removeItem('userData');
-                window.location.href = 'index.html';
             });
         }
     }
@@ -68,8 +53,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const showRegisterLink = document.getElementById('show-register-link');
         const showLoginLink = document.getElementById('show-login-link');
         
-        // Listener untuk menutup modal
-        // **FIX:** Only add listeners if the elements exist
         if (closeModalBtn) {
             closeModalBtn.addEventListener('click', () => authModal.classList.remove('active'));
         }
@@ -79,7 +62,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Listener untuk beralih form
         if (showRegisterLink && loginView && registerView) {
             showRegisterLink.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -126,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     localStorage.setItem('userToken', result.token);
                     localStorage.setItem('userData', JSON.stringify(result.user));
 
-                    if (result.user.role === 'admin') {
+                    if (result.user.peran === 'admin') {
                         window.location.href = 'admin.html';
                     } else {
                         window.location.href = 'dashboard.html';
@@ -167,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (!response.ok) throw new Error(result.message || 'Gagal mendaftar.');
                     
                     alert('Pendaftaran berhasil! Silakan login.');
-                    // Switch to login view after successful registration
+                    
                     const loginView = document.getElementById('login-view');
                     const registerView = document.getElementById('register-view');
                     if(loginView && registerView) {
