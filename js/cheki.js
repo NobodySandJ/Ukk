@@ -1,8 +1,7 @@
-// js/cheki.js (Perbaikan Lengkap)
+// js/cheki.js (Perbaikan Final)
 
 document.addEventListener('DOMContentLoaded', function () {
     if (document.getElementById('cheki-page')) {
-        // --- Ambil data pengguna & token dari Local Storage ---
         const token = localStorage.getItem('userToken');
         const userData = JSON.parse(localStorage.getItem('userData'));
 
@@ -15,11 +14,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const mobileCartTotal = document.getElementById('mobile-cart-total');
         const orderSummaryContainer = document.querySelector('.order-summary-container');
 
-
         let membersData = [];
         let cart = {};
 
-        // --- Logika untuk mengecek status pembayaran setelah redirect ---
         async function checkUrlForSuccess() {
             const urlParams = new URLSearchParams(window.location.search);
             const orderId = urlParams.get('order_id');
@@ -35,7 +32,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             transaction_status: transactionStatus
                         }),
                     });
-                    // Alihkan ke dasbor untuk melihat tiket
                     window.location.href = `/dashboard.html?payment=success&order_id=${orderId}`;
                 } catch (error) {
                     formErrorEl.textContent = 'Pembayaran berhasil, namun gagal memperbarui status. Hubungi admin.';
@@ -43,7 +39,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        // --- Memuat produk Cheki dari data.json ---
         async function loadChekiProducts() {
             try {
                 const response = await fetch('data.json');
@@ -57,7 +52,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
-        // ===== [FUNGSI YANG HILANG 1] Render kartu produk =====
         function renderProducts() {
             chekiListContainer.innerHTML = '';
             membersData.forEach(member => {
@@ -77,7 +71,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // ===== [FUNGSI YANG HILANG 2 & 3] Fungsi helper untuk interaksi =====
         function showToast(message) {
             const oldToast = document.querySelector('.toast-notification');
             if (oldToast) oldToast.remove();
@@ -97,7 +90,6 @@ document.addEventListener('DOMContentLoaded', function () {
             setTimeout(() => orderSummaryContainer.classList.remove('item-added'), 500);
         }
 
-        // ===== [FUNGSI YANG HILANG 4] Update kuantitas item =====
         function updateQuantity(memberId, action) {
             const member = membersData.find(m => m.id === memberId);
             if (!member) return;
@@ -119,7 +111,6 @@ document.addEventListener('DOMContentLoaded', function () {
             updateTotals();
         }
 
-        // ===== [FUNGSI YANG HILANG 5] Update total harga dan item =====
         function updateTotals() {
             let totalItems = 0, totalPrice = 0;
             for (const memberId in cart) {
@@ -143,7 +134,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        // --- Event Listener untuk tombol +, -, dan cart mobile ---
         chekiListContainer.addEventListener('click', e => {
             if (e.target.classList.contains('quantity-btn')) {
                 updateQuantity(e.target.dataset.id, e.target.dataset.action);
@@ -154,7 +144,6 @@ document.addEventListener('DOMContentLoaded', function () {
             orderSummaryContainer.scrollIntoView({ behavior: 'smooth' });
         });
 
-        // --- Event Listener Tombol Checkout ---
         submitButton.addEventListener('click', async function (e) {
             e.preventDefault();
 
@@ -197,9 +186,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     gross_amount: gross_amount
                 },
                 customer_details: {
-                    first_name: userData.username,
+                    // **FIX:** Menggunakan 'nama_pengguna' yang benar dari localStorage
+                    first_name: userData.nama_pengguna, 
                     email: userData.email,
-                    phone: userData.whatsapp_number || 'N/A',
+                    phone: userData.nomor_whatsapp || 'N/A',
                 },
                 item_details: item_details
             };
@@ -235,7 +225,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
         
-        // --- Inisialisasi Halaman ---
         checkUrlForSuccess();
         loadChekiProducts();
     }
