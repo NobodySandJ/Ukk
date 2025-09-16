@@ -95,17 +95,18 @@ document.addEventListener('DOMContentLoaded', function() {
     searchInput.addEventListener('input', (e) => {
         const searchTerm = e.target.value.toLowerCase();
         const filteredOrders = allOrders.filter(order => 
-            order.nama_pelanggan.toLowerCase().includes(searchTerm) ||
-            order.id_pesanan.toLowerCase().includes(searchTerm)
+            (order.nama_pelanggan && order.nama_pelanggan.toLowerCase().includes(searchTerm)) ||
+            (order.id_pesanan && order.id_pesanan.toLowerCase().includes(searchTerm))
         );
         renderOrders(filteredOrders);
     });
 
     ordersTbody.addEventListener('click', async function(e) {
         const button = e.target;
+        if (!button.classList.contains('action-btn')) return;
+    
         const orderId = button.dataset.orderid;
-
-        // Logika untuk tombol "Gunakan"
+    
         if (button.classList.contains('btn-use')) {
             if (confirm(`Anda yakin ingin MENGGUNAKAN tiket untuk pesanan ${orderId}? Aksi ini akan mengubah statusnya menjadi HANGUS.`)) {
                 try {
@@ -126,8 +127,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         }
-
-        // Logika untuk tombol "Hapus"
+    
         if (button.classList.contains('btn-delete')) {
             if (confirm(`APAKAH ANDA YAKIN ingin MENGHAPUS pesanan ${orderId} secara permanen? Aksi ini tidak dapat dibatalkan.`)) {
                 try {
@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (!response.ok) throw new Error(result.message || 'Gagal menghapus pesanan.');
 
                     alert(result.message);
-                    fetchAllOrders(); // Muat ulang data setelah berhasil hapus
+                    fetchAllOrders();
                 } catch (error) {
                     alert('Terjadi kesalahan: ' + error.message);
                 }
