@@ -1,112 +1,44 @@
 {
-  "group": {
-    "name": "Mujōken no Umi",
-    "name_japanese": "無条件の海",
-    "tagline": "Menyelami lautan dukungan dan semangat yang tak terbatas bersama kami.",
-    "about": "<strong>Mujōken no Umi (無条件の海)</strong>, atau \"Lautan Tanpa Syarat,\" adalah grup idola yang mengusung konsep bahwa cinta dan musik dapat menciptakan samudra di mana saja, bahkan di tengah daratan. Terdiri dari lima anggota yang terinspirasi oleh pesona hewan laut, mereka siap mengajakmu menyelami lautan dukungan dan semangat yang tak terbatas."
-  },
-  "images": {
-    "hero_background": "img/member/grup2.jpg"
-  },
-  "members": [
+  "version": 2,
+  "builds": [
     {
-      "id": "runa",
-      "name": "Runa (ルナ)",
-      "image": "img/member/chartRuna.jpg",
-      "role": "Sang Ubur-Ubur Panggung",
-      "price": 35000,
-      "details": {
-        "sifat": "Tenang, anggun, dan sedikit misterius. Tipe *cool beauty* yang memancarkan aura etereal.",
-        "hobi": "Makeup Artistry, Melukis dengan Cat Air, Menulis Puisi.",
-        "jiko": "<i>\"Melayang-layang di lautan cinta kalian, aku datang untuk menyengat hatimu dengan pesonaku yang lembut. Jangan berkedip, nanti aku menghilang! Aku Runa, sang ubur-ubur panggung!\"</i>"
-      }
+      "src": "backend/server.js",
+      "use": "@vercel/node"
     },
     {
-      "id": "hina",
-      "name": "Hina (ヒナ)",
-      "image": "img/member/chartHina.jpg",
-      "role": "Si Berang-Berang Laut Penuh Energi",
-      "price": 35000,
-      "details": {
-        "sifat": "Ceria, super energik, dan sangat ramah. *Mood maker* di dalam grup.",
-        "hobi": "Memasak, Mengoleksi Benda-benda Kecil, Vlogging.",
-        "jiko": "<i>\"Dengan cangkang kerang di satu tangan dan hatimu di tangan lainnya, aku siap memecahkan keheningan! Tok tok tok! Siap menyemangatimu hari ini! Aku Hina, berang-berang laut kesayanganmu!\"</i>"
-      }
+      "src": "*.html",
+      "use": "@vercel/static"
     },
     {
-      "id": "ami",
-      "name": "Ami (アミ)",
-      "image": "img/member/chartAmi.jpg",
-      "role": "Axolotl yang Selalu Tersenyum",
-      "price": 35000,
-      "details": {
-        "sifat": "Unik, quirky, dan selalu tersenyum. Sangat optimis dan tahan banting.",
-        "hobi": "Cosplay, Bermain Rhythm Game, Merawat Ikan Hias.",
-        "jiko": "<i>\"Walaupun terjatuh, aku akan tumbuh dan tersenyum lagi! Siap meregenerasi semangatmu kapan pun kamu butuh! Senyumku hanya untukmu, aku Ami, axolotl-mu yang abadi!\"</i>"
-      }
+      "src": "data.json",
+      "use": "@vercel/static"
     },
     {
-      "id": "marina",
-      "name": "Marina (マリナ)",
-      "image": "img/member/chartRina.jpg",
-      "role": "Sang Lumba-Lumba Karismatik",
-      "price": 35000,
-      "details": {
-        "sifat": "Cerdas, karismatik, dan komunikator yang hebat. Berjiwa pemimpin alami.",
-        "hobi": "Mancing, Belajar Bahasa Asing, Menari Gaya Bebas.",
-        "jiko": "<i>\"Melompat lebih tinggi dari ombak, aku akan memandumu melewati lautan tak bersyarat ini! Dengarkan baik-baik, sonar hatiku memanggil namamu! Aku Marina!\"</i>"
-      }
+      "src": "js/**",
+      "use": "@vercel/static"
     },
     {
-      "id": "anzu",
-      "name": "Anzu (アンズ)",
-      "image": "img/member/chartAnzu.jpg",
-      "role": "Ikan Badut Pemberani",
-      "price": 35000,
-      "details": {
-        "sifat": "Pemalu pada awalnya, namun menjadi sangat berani dan protektif jika menyangkut member lain.",
-        "hobi": "Merajut, Menonton Film Horor, Mendekorasi.",
-        "jiko": "<i>\"Dari balik anemon panggung, aku mengintip untuk menemukanmu! Mungkin aku kecil dan suka bersembunyi, tapi aku akan selalu ada untuk melindungimu! Namaku Anzu, ikan badut penjagamu!\"</i>"
-      }
+      "src": "css/**",
+      "use": "@vercel/static"
     },
     {
-      "id": "group",
-      "name": "Group Cheki",
-      "image": "img/member/group.jpg",
-      "role": "Foto Bersama Semua Member",
-      "price": 50000,
-      "details": {
-        "sifat": "Momen kebersamaan seluruh member.",
-        "hobi": "Menyebarkan kebahagiaan bersama.",
-        "jiko": "<i>\"Lautan tanpa syarat tidak akan lengkap tanpa kita semua! Dapatkan momen spesial bersama seluruh member Mujōken no Umi!\"</i>"
-      }
+      "src": "img/**",
+      "use": "@vercel/static"
     }
   ],
-  "news": [
-    {
-      "title": "Debut Mujōken no Umi!",
-      "content": "Saksikan penampilan pertama kami pada tanggal 20 Oktober 2025. Informasi lebih lanjut akan segera diumumkan!",
-      "date": "15 September 2025"
-    },
-    {
-      "title": "Jadwal Teater Bulan Ini",
-      "content": "Jadwal pertunjukan teater untuk bulan Oktober kini telah dirilis. Cek halaman jadwal untuk detail lengkap.",
-      "date": "10 September 2025"
-    },
-    {
-      "title": "Pengumuman Member Baru!",
-      "content": "Nantikan kejutan spesial dengan perkenalan member baru di acara live kami bulan depan!",
-      "date": "01 September 2025"
-    }
-  ],
-   "gallery": [
-    { "src": "img/member/group.jpg", "alt": "Mujōken no Umi Foto Grup" },
-    { "src": "img/member/hina.jpg", "alt": "Hina di Panggung" },
-    { "src": "img/member/Runa.jpg", "alt": "Runa di Panggung" },
-    { "src": "img/member/Ami.jpg", "alt": "Ami di Panggung" },
-    { "src": "img/member/Rina.jpg", "alt": "Rina di Panggung" },
-    { "src": "img/member/Anzu.jpg", "alt": "Anzu di Panggung" },
-    { "src": "img/member/grup2.jpg", "alt": "Mujōken no Umi Foto Grup 2" },
-    { "src": "img/member/Runa1.jpg", "alt": "Runa Close Up" }
+  "routes": [
+    { "src": "/api/register", "dest": "/backend/server.js" },
+    { "src": "/api/login", "dest": "/backend/server.js" },
+    { "src": "/api/my-orders", "dest": "/backend/server.js" },
+    { "src": "/get-snap-token", "dest": "/backend/server.js" },
+    { "src": "/update-order-status", "dest": "/backend/server.js" },
+    
+    
+    { "src": "/api/admin/stats", "dest": "/backend/server.js" },
+    { "src": "/api/admin/all-orders", "dest": "/backend/server.js" },
+    { "src": "/api/admin/update-ticket-status", "dest": "/backend/server.js" },
+    { "src": "/api/admin/delete-order/(.*)", "dest": "/backend/server.js" },
+    
+    { "src": "/(.*)", "dest": "/$1" }
   ]
 }
