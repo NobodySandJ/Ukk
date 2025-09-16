@@ -1,21 +1,50 @@
-document.addEventListener('DOMContentLoaded', function () {
+// nobodysandj/ukk/Ukk-7c6003e68c8bfcc1421a6e0fe28a09e9ec6fbf04/js/script.js
+function showToast(message, isSuccess = true) {
+    const oldToast = document.querySelector('.toast-notification');
+    if (oldToast) oldToast.remove();
 
-    // --- FUNGSI UTAMA UNTUK MEMUAT DATA DINAMIS ---
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    toast.textContent = message;
+    toast.style.backgroundColor = isSuccess ? 'var(--success-color)' : '#D33333';
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 100);
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        toast.addEventListener('transitionend', () => toast.remove());
+    }, 3000);
+}
+
+
+document.addEventListener('DOMContentLoaded', function () {
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+            navigator.serviceWorker.register('/sw.js')
+                .then(registration => {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                })
+                .catch(err => {
+                    console.log('ServiceWorker registration failed: ', err);
+                });
+        });
+    }
+
     async function loadWebsiteData() {
         try {
-            // Menggunakan path absolut untuk memastikan file ditemukan
-            const response = await fetch('data.json'); // Langsung fetch nama filenya
+            const response = await fetch('data.json');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
 
-            // --- PERBAIKAN: Memeriksa apakah data dan struktur 'group' ada ---
             if (!data || !data.group) {
                 throw new Error("Format data.json tidak valid atau data gagal dimuat.");
             }
 
-            // Cek halaman mana yang sedang aktif
             if (document.getElementById('hero')) {
                 populateIndexPage(data);
             }
@@ -25,7 +54,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
         } catch (error) {
             console.error("Could not load website data:", error);
-            // Menampilkan pesan error di halaman jika data gagal dimuat
             if (document.getElementById('hero-title')) {
                 document.getElementById('hero-title').textContent = "Gagal Memuat Konten";
             }
@@ -35,9 +63,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- FUNGSI UNTUK MENGISI KONTEN HALAMAN INDEX ---
     function populateIndexPage(data) {
-        // Data Grup
         document.title = `${data.group.name} (${data.group.name_japanese}) - Official Website`;
         const logoTitle = document.querySelector('#logo-title a');
         if (logoTitle) logoTitle.textContent = data.group.name;
@@ -50,21 +76,18 @@ document.addEventListener('DOMContentLoaded', function () {
         const footerText = document.querySelector('#footer-text');
         if (footerText) footerText.innerHTML = `&copy; 2025 ${data.group.name}. All Rights Reserved.`;
 
-
-        // Set Latar Belakang Hero
         const heroSection = document.getElementById('hero');
         if (data.images && data.images.hero_background) {
             heroSection.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('${data.images.hero_background}')`;
         }
 
-        // Data Member
         const memberGrid = document.getElementById('member-grid');
         memberGrid.innerHTML = '';
         data.members.forEach(member => {
             const card = document.createElement('div');
             card.className = 'member-card reveal';
             card.innerHTML = `
-                <img src="${member.image}" alt="${member.name}">
+                <img src="${member.image}" alt="${member.name}" loading="lazy">
                 <div class="member-card-header">
                     <h3>${member.name}</h3>
                     <p class="role">${member.role}</p>
@@ -77,8 +100,7 @@ document.addEventListener('DOMContentLoaded', function () {
             `;
             memberGrid.appendChild(card);
         });
-
-        // Data Berita (UPDATED)
+        
         const newsGrid = document.getElementById('news-grid');
         newsGrid.innerHTML = '';
         data.news.forEach(item => {
@@ -93,9 +115,9 @@ document.addEventListener('DOMContentLoaded', function () {
             `;
             newsGrid.appendChild(newsItem);
         });
+
     }
 
-    // --- FUNGSI UNTUK MENGISI KONTEN HALAMAN GALERI ---
     function populateGalleryPage(data) {
         const galleryGrid = document.getElementById('gallery-grid');
         galleryGrid.innerHTML = '';
@@ -104,16 +126,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 const galleryItem = document.createElement('div');
                 galleryItem.className = 'gallery-item';
                 galleryItem.setAttribute('data-index', index);
-                galleryItem.innerHTML = `<img src="${image.src}" alt="${image.alt}">`;
+                galleryItem.innerHTML = `<img src="${image.src}" alt="${image.alt}" loading="lazy">`;
                 galleryGrid.appendChild(galleryItem);
             });
         }
         initializeLightbox(data.gallery);
     }
-
+    
     loadWebsiteData();
 
-    // --- KODE UNTUK MENU HAMBURGER MOBILE ---
     const hamburger = document.getElementById('hamburger-menu');
     const navLinks = document.querySelector('.nav-links');
 
@@ -128,7 +149,6 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // --- [MODIFIKASI] LIGHTBOX DENGAN SWIPE ---
     function initializeLightbox(galleryData) {
         const lightbox = document.getElementById('lightbox');
         if (!lightbox) return;
@@ -190,7 +210,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // --- [BARU] Logika Swipe ---
         let touchstartX = 0;
         let touchendX = 0;
 
@@ -209,7 +228,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }, { passive: true });
     }
 
-    // --- FUNGSI UNTUK ANIMASI ON SCROLL ---
     function reveal() {
         const reveals = document.querySelectorAll(".reveal");
         for (let i = 0; i < reveals.length; i++) {
@@ -224,7 +242,6 @@ document.addEventListener('DOMContentLoaded', function () {
     window.addEventListener("scroll", reveal);
     reveal();
     
-    // --- [BARU] FUNGSI UNTUK FAQ INTERAKTIF ---
     const faqItems = document.querySelectorAll('.faq-item');
     faqItems.forEach(item => {
         const question = item.querySelector('.faq-question');
@@ -233,7 +250,6 @@ document.addEventListener('DOMContentLoaded', function () {
         question.addEventListener('click', () => {
             const isActive = item.classList.contains('active');
             
-            // Tutup semua item lain
             faqItems.forEach(otherItem => {
                 if(otherItem !== item) {
                     otherItem.classList.remove('active');
@@ -241,7 +257,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
 
-            // Buka atau tutup item yang diklik
             if (isActive) {
                 item.classList.remove('active');
                 answer.style.maxHeight = 0;

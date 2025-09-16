@@ -1,5 +1,4 @@
-// js/auth.js (Penyempurnaan Terakhir)
-
+// nobodysandj/ukk/Ukk-7c6003e68c8bfcc1421a6e0fe28a09e9ec6fbf04/js/auth.js
 document.addEventListener('DOMContentLoaded', function() {
     const navLinksContainer = document.getElementById('nav-links');
     if (!navLinksContainer) {
@@ -18,7 +17,6 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
 
         if (token && userData) {
-            // Periksa peran pengguna di sini untuk menentukan tujuan tautan
             const destination = userData.peran === 'admin' ? 'admin.html' : 'dashboard.html';
             navHTML += `
                 <li><a href="${destination}" title="Akun Saya"><i class="fas fa-user-circle" style="font-size: 1.5rem;"></i></a></li>
@@ -105,17 +103,20 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     localStorage.setItem('userToken', result.token);
                     localStorage.setItem('userData', JSON.stringify(result.user));
+                    
+                    showToast(`Login berhasil! Selamat datang, ${result.user.nama_pengguna}!`);
 
-                    // --- PERUBAHAN DI SINI ---
-                    if (result.user && result.user.peran === 'admin') {
-                        window.location.href = 'admin.html';
-                    } else {
-                        // Pengguna biasa diarahkan ke index.html
-                        window.location.href = 'index.html';
-                    }
+                    setTimeout(() => {
+                        if (result.user && result.user.peran === 'admin') {
+                            window.location.href = 'admin.html';
+                        } else {
+                            window.location.href = 'index.html';
+                        }
+                    }, 1500);
+
                 } catch (error) {
                     formError.textContent = error.message;
-                } finally {
+                    showToast(error.message, false);
                     submitButton.disabled = false;
                     submitButton.textContent = 'Login';
                 }
@@ -148,16 +149,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     const result = await response.json();
                     if (!response.ok) throw new Error(result.message || 'Gagal mendaftar.');
                     
-                    alert('Pendaftaran berhasil! Silakan login.');
+                    showToast('Pendaftaran berhasil! Silakan login.');
                     
                     const loginView = document.getElementById('login-view');
                     const registerView = document.getElementById('register-view');
                     if(loginView && registerView) {
+                        registerForm.reset();
                         loginView.style.display = 'block';
                         registerView.style.display = 'none';
                     }
                 } catch (error) {
                     formError.textContent = error.message;
+                    showToast(error.message, false);
                 } finally {
                     submitButton.disabled = false;
                     submitButton.textContent = 'Daftar';

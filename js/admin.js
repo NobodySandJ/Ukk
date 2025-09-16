@@ -1,3 +1,4 @@
+// nobodysandj/ukk/Ukk-7c6003e68c8bfcc1421a6e0fe28a09e9ec6fbf04/js/admin.js
 document.addEventListener('DOMContentLoaded', function() {
     const token = localStorage.getItem('userToken');
     const userData = JSON.parse(localStorage.getItem('userData'));
@@ -12,16 +13,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const ordersTbody = document.getElementById('orders-tbody');
     const adminWelcome = document.getElementById('admin-welcome');
     const searchInput = document.getElementById('search-input');
-    // Variabel baru untuk tombol logout
     const logoutBtn = document.getElementById('admin-logout-btn');
     
-    let allOrders = []; // Simpan semua pesanan untuk filtering
+    let allOrders = [];
 
     if(adminWelcome && userData.nama_pengguna) {
         adminWelcome.textContent = `Selamat Datang, ${userData.nama_pengguna}!`;
     }
 
-    // --- [BARU] Logika untuk tombol logout ---
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
             localStorage.removeItem('userToken');

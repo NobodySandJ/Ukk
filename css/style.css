@@ -1,7 +1,7 @@
+/* nobodysandj/ukk/Ukk-7c6003e68c8bfcc1421a6e0fe28a09e9ec6fbf04/css/style.css */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap');
 
 :root {
-    /* === PALET WARNA FINAL: MINIMALIS & MENARIK === */
     --primary-color: #33A1E0;
     --accent-color: #2b8ac9;
     --bg-color: #f8f9fa;
@@ -10,8 +10,6 @@
     --secondary-text-color: #6c7d;
     --light-text-color: #FFFFFF;
     --success-color: #28a745;
-
-    /* === PROPERTI DESAIN GLOBAL === */
     --shadow-light: 0 5px 15px rgba(0, 0, 0, 0.05);
     --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.1);
     --border-radius: 8px;
@@ -63,7 +61,6 @@ a:hover {
     opacity: 1;
 }
 
-/* NAVBAR & HEADER */
 header {
     background: var(--primary-color);
     box-shadow: var(--shadow-light);
@@ -139,7 +136,6 @@ nav ul.nav-links li a:hover::after {
     color: var(--light-text-color);
 }
 
-/* HERO SECTION */
 #hero {
     min-height: 90vh;
     display: flex;
@@ -161,7 +157,6 @@ nav ul.nav-links li a:hover::after {
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     border-radius: var(--border-radius);
-    /* border: 1px solid rgba(255, 255, 255, 0.2); <-- GARIS DIHILANGKAN DARI SINI */
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
 }
 
@@ -182,7 +177,6 @@ nav ul.nav-links li a:hover::after {
     opacity: 0.9;
 }
 
-/* **DITAMBAHKAN:** Style untuk container tombol dan tombol sekunder */
 .hero-buttons {
     display: flex;
     justify-content: center;
@@ -221,8 +215,6 @@ nav ul.nav-links li a:hover::after {
     color: var(--primary-color);
 }
 
-
-/* SECTIONS */
 section {
     padding: 6rem 0;
 }
@@ -234,7 +226,7 @@ section:nth-of-type(odd) {
 section h2 {
     font-family: 'Playfair Display', serif;
     text-align: center;
-    margin-bottom: 1.5rem; /* DIUBAH: Jarak bawah judul dikurangi */
+    margin-bottom: 1.5rem;
     font-size: clamp(2.2rem, 5vw, 3rem);
     color: var(--text-color);
     position: relative;
@@ -262,7 +254,6 @@ section h2::after {
     margin: 0 auto;
 }
 
-/* KARTU MEMBER */
 .member-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
@@ -284,7 +275,7 @@ section h2::after {
 }
 
 .member-card:hover {
-    transform: translateY(-10px);
+    transform: translateY(-10px) scale(1.02);
     box-shadow: var(--shadow-hover);
 }
 
@@ -336,7 +327,6 @@ section h2::after {
     color: var(--accent-color);
 }
 
-/* BERITA (UPDATED) */
 .news-grid {
     display: grid;
     grid-template-columns: 1fr;
@@ -395,8 +385,6 @@ section h2::after {
     margin-right: 0.5rem;
 }
 
-
-/* FOOTER */
 footer {
     background: var(--primary-color);
     color: var(--light-text-color);
@@ -424,7 +412,6 @@ footer p {
     font-size: 0.9rem;
 }
 
-/* HALAMAN GALERI & CHEKI */
 .page-intro {
     text-align: center;
     max-width: 600px;
@@ -480,7 +467,7 @@ footer p {
 }
 
 .gallery-item:hover {
-    transform: translateY(-8px);
+    transform: translateY(-8px) scale(1.02);
     box-shadow: var(--shadow-hover);
 }
 
@@ -496,7 +483,6 @@ footer p {
     transform: scale(1.1);
 }
 
-/* Lightbox */
 .lightbox {
     display: none;
     position: fixed;
@@ -587,7 +573,6 @@ footer p {
     transform: rotate(180deg);
 }
 
-/* HALAMAN CHEKI */
 .cheki-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
@@ -616,7 +601,6 @@ footer p {
     object-fit: contain;
     border-radius: 4px;
     margin-bottom: 1rem;
-    /* Tambahkan baris ini */
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); 
 }
 
@@ -693,17 +677,9 @@ footer p {
 }
 
 @keyframes pulse {
-    0% {
-        transform: scale(1);
-    }
-
-    50% {
-        transform: scale(1.02);
-    }
-
-    100% {
-        transform: scale(1);
-    }
+    0% { transform: scale(1); }
+    50% { transform: scale(1.02); }
+    100% { transform: scale(1); }
 }
 
 #customer-form {
@@ -728,12 +704,11 @@ footer p {
     min-height: 1.2em;
 }
 
-/* Notifikasi Toast */
 .toast-notification {
     position: fixed;
     bottom: 20px;
     left: 50%;
-    transform: translateX(-50%);
+    transform: translate(-50%, 100px);
     background-color: var(--text-color);
     color: var(--light-text-color);
     padding: 1rem 1.5rem;
@@ -741,8 +716,9 @@ footer p {
     z-index: 3000;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.4s ease, transform 0.4s ease, visibility 0.4s;
+    transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
     font-weight: 500;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
 
 .toast-notification.show {
@@ -751,7 +727,6 @@ footer p {
     transform: translate(-50%, -10px);
 }
 
-/* Pesan Sukses */
 #order-success-message {
     text-align: center;
     padding: 2rem;
@@ -771,7 +746,6 @@ footer p {
     margin-bottom: 1.5rem;
 }
 
-/* Mobile Floating Cart */
 .mobile-cart-summary {
     display: none;
     position: fixed;
@@ -802,248 +776,91 @@ footer p {
     font-size: 1.1rem;
 }
 
-
-/* === [REVISI] TAMPILAN MOBILE === */
 @media (max-width: 768px) {
-    body {
-        padding-bottom: 80px;
-        line-height: 1.6;
-        /* Sedikit lebih rapat */
-    }
-
-    /* Ukuran Font Mobile yang Disesuaikan */
-    nav .logo h1 {
-        font-size: 1.6rem;
-    }
-
-    .hero-content h2 {
-        font-size: 2rem;
-    }
-
-    .hero-content p {
-        font-size: 1rem;
-    }
-
-    .hero-button {
-        font-size: 1rem;
-        padding: 0.8rem 2rem;
-    }
-
-    section h2 {
-        font-size: 1.9rem;
-        margin-bottom: 2.5rem;
-    }
-
-    #about p {
-        font-size: 1rem;
-    }
-
-    .member-card-header h3 {
-        font-size: 1.5rem;
-    }
-
-    .member-card-header .role {
-        font-size: 0.95rem;
-    }
-
-    .member-details {
-        font-size: 0.9rem;
-    }
-
-    .news-item-content h3 {
-        font-size: 1.1rem;
-    }
-
-    .news-item-content p {
-        font-size: 0.95rem;
-    }
-
-    .news-item .date {
-        font-size: 0.85rem;
-    }
-
-    .cheki-card h3 {
-        font-size: 1.4rem;
-    }
-
-    .cheki-card .price {
-        font-size: 1rem;
-    }
-
-    .order-summary-container h3 {
-        font-size: 1.3rem;
-    }
-
-    #order-success-message h3 {
-        font-size: 1.5rem;
-    }
-
-    #order-success-message p {
-        font-size: 1rem;
-    }
-
-    /* Layout & Spacing Mobile yang Disesuaikan */
-    .container {
-        padding: 0 1rem;
-    }
-
-    section {
-        padding: 4rem 0;
-    }
-
-    .hero-content {
-        padding: 2rem 1.5rem;
-    }
-
-    .member-card {
-        padding: 1.5rem;
-    }
-
-    .cheki-card {
-        padding: 1.2rem;
-    }
-
-    .order-summary-container {
-        padding: 1.5rem;
-    }
-
-    .cheki-grid {
-        gap: 1.5rem;
-    }
-
-    /* Navigasi & Lightbox Mobile */
-    nav {
-        padding: 0.5rem 1rem;
-    }
-
-    .hamburger {
-        display: block;
-        z-index: 1001;
-    }
-
-    nav ul.nav-links {
-        position: fixed;
-        top: 0;
-        right: -100%;
-        width: 80%;
-        max-width: 300px;
-        height: 100vh;
-        background-color: #2b2b2b;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        transition: right 0.5s cubic-bezier(0.77, 0, 0.175, 1);
-    }
-
-    nav ul.nav-links.active {
-        right: 0;
-        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.2);
-    }
-
-    nav ul.nav-links li {
-        margin: 1.5rem 0;
-        transform: translateX(50px);
-        opacity: 0;
-        transition: transform 0.4s ease, opacity 0.4s ease;
-    }
-
-    nav ul.nav-links.active li {
-        transform: translateX(0);
-        opacity: 1;
-        transition-delay: calc(0.1s * var(--i));
-    }
-
-    #hero {
-        min-height: 80vh;
-    }
-
-    .member-grid,
-    .gallery-grid,
-    .cheki-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .news-item {
-        flex-direction: column;
-        align-items: flex-start;
-        padding: 1.2rem;
-    }
-
-    .news-item .date {
-        margin-left: 0;
-        margin-top: 0.8rem;
-    }
-
-    .lightbox-content {
-        max-width: 90vw;
-        max-height: 70vh;
-    }
-
-    .nav-arrow {
-        font-size: 2.5rem;
-    }
-
-    /* Sedikit lebih besar agar mudah disentuh */
-    .lightbox-caption {
-        font-size: 1rem;
-    }
-
-    /* Tampilkan Floating Cart di Mobile */
-    .mobile-cart-summary {
-        display: block;
-    }
-
-    .order-summary-container {
-        margin-bottom: 2rem;
-    }
+    body { padding-bottom: 80px; line-height: 1.6; }
+    nav .logo h1 { font-size: 1.6rem; }
+    .hero-content h2 { font-size: 2rem; }
+    .hero-content p { font-size: 1rem; }
+    .hero-button { font-size: 1rem; padding: 0.8rem 2rem; }
+    section h2 { font-size: 1.9rem; margin-bottom: 2.5rem; }
+    #about p { font-size: 1rem; }
+    .member-card-header h3 { font-size: 1.5rem; }
+    .member-card-header .role { font-size: 0.95rem; }
+    .member-details { font-size: 0.9rem; }
+    .news-item-content h3 { font-size: 1.1rem; }
+    .news-item-content p { font-size: 0.95rem; }
+    .news-item .date { font-size: 0.85rem; }
+    .cheki-card h3 { font-size: 1.4rem; }
+    .cheki-card .price { font-size: 1rem; }
+    .order-summary-container h3 { font-size: 1.3rem; }
+    #order-success-message h3 { font-size: 1.5rem; }
+    #order-success-message p { font-size: 1rem; }
+    .container { padding: 0 1rem; }
+    section { padding: 4rem 0; }
+    .hero-content { padding: 2rem 1.5rem; }
+    .member-card { padding: 1.5rem; }
+    .cheki-card { padding: 1.2rem; }
+    .order-summary-container { padding: 1.5rem; }
+    .cheki-grid { gap: 1.5rem; }
+    nav { padding: 0.5rem 1rem; }
+    .hamburger { display: block; z-index: 1001; }
+    nav ul.nav-links { position: fixed; top: 0; right: -100%; width: 80%; max-width: 300px; height: 100vh; background-color: #2b2b2b; flex-direction: column; justify-content: center; align-items: center; transition: right 0.5s cubic-bezier(0.77, 0, 0.175, 1); }
+    nav ul.nav-links.active { right: 0; box-shadow: -10px 0 30px rgba(0, 0, 0, 0.2); }
+    nav ul.nav-links li { margin: 1.5rem 0; transform: translateX(50px); opacity: 0; transition: transform 0.4s ease, opacity 0.4s ease; }
+    nav ul.nav-links.active li { transform: translateX(0); opacity: 1; transition-delay: calc(0.1s * var(--i)); }
+    #hero { min-height: 80vh; }
+    .member-grid, .gallery-grid, .cheki-grid { grid-template-columns: 1fr; }
+    .news-item { flex-direction: column; align-items: flex-start; padding: 1.2rem; }
+    .news-item .date { margin-left: 0; margin-top: 0.8rem; }
+    .lightbox-content { max-width: 90vw; max-height: 70vh; }
+    .nav-arrow { font-size: 2.5rem; }
+    .lightbox-caption { font-size: 1rem; }
+    .mobile-cart-summary { display: block; }
+    .order-summary-container { margin-bottom: 2rem; }
 }
 
-/* Penyesuaian untuk Logo di Navigasi */
 nav .logo {
     display: flex;
     align-items: center;
-    gap: 10px; /* Memberi jarak antara logo dan teks */
+    gap: 10px;
 }
 
 nav .logo img {
-    height: 40px; /* Anda bisa sesuaikan ukurannya */
+    height: 40px;
 }
 
 nav .logo h1 {
-    margin: 0; /* Menghapus margin bawaan agar lebih rapi */
+    margin: 0;
 }
 
-/* Ukuran logo di mobile agar tidak terlalu besar */
 @media (max-width: 768px) {
     nav .logo img {
         height: 35px;
     }
 }
-/* Penyesuaian untuk Logo di Hero Section */
+
 .hero-logo {
-    margin-bottom: 1rem; /* Jarak antara logo dan judul */
+    margin-bottom: 1rem;
 }
 
 .hero-logo img {
-    max-width: 180px; /* Atur ukuran logo sesuai selera */
+    max-width: 180px;
     height: auto;
 }
 
-/* Menyesuaikan jarak bawah judul setelah slogan dihapus */
 .hero-content h2 {
     margin-bottom: 2.5rem; 
 }
-/* Gaya untuk Slogan di Bawah Judul "Tentang Kami" */
+
 .about-tagline {
     text-align: center;
-    font-size: 1.25rem; /* DIUBAH: Sedikit lebih besar */
-    font-style: normal; /* DIUBAH: Tidak lagi miring */
-    color: #888; /* DIUBAH: Warna lebih lembut */
+    font-size: 1.25rem;
+    font-style: normal;
+    color: #888;
     max-width: 700px;
-    margin: 0 auto 3rem auto; /* DIUBAH: Margin disesuaikan */
+    margin: 0 auto 3rem auto;
 }
 
-/* === FAQ SECTION STYLES === */
 .faq-container {
     max-width: 750px;
     margin: 2rem auto 0;
@@ -1089,12 +906,10 @@ nav .logo h1 {
     line-height: 1.8;
 }
 
-/* Style for active/open FAQ */
 .faq-item.active .faq-question .fa-chevron-down {
     transform: rotate(180deg);
 }
 
-/* === HOW-TO SECTION STYLES === */
 .how-to-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
