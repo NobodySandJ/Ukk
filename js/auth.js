@@ -106,11 +106,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     localStorage.setItem('userToken', result.token);
                     localStorage.setItem('userData', JSON.stringify(result.user));
 
-                    // INI BAGIAN YANG DIPERBAIKI
+                    // --- PERUBAHAN DI SINI ---
                     if (result.user && result.user.peran === 'admin') {
                         window.location.href = 'admin.html';
                     } else {
-                        window.location.href = 'dashboard.html';
+                        // Pengguna biasa diarahkan ke index.html
+                        window.location.href = 'index.html';
                     }
                 } catch (error) {
                     formError.textContent = error.message;
