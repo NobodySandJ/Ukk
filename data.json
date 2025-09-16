@@ -14,7 +14,7 @@
       "name": "Hina",
       "role": "Center",
       "image": "img/member/chartHina.jpg",
-      "price": 50000,
+      "price": 25000,
       "details": {
         "sifat": "Ceria dan Enerjik",
         "hobi": "Menyanyi dan Menari",
@@ -26,7 +26,7 @@
       "name": "Runa",
       "role": "Vokalis Utama",
       "image": "img/member/chartRuna.jpg",
-      "price": 45000,
+      "price": 25000,
       "details": {
         "sifat": "Tenang dan Anggun",
         "hobi": "Membaca Puisi",
@@ -38,7 +38,7 @@
       "name": "Ami",
       "role": "Penari Utama",
       "image": "img/member/chartAmi.jpg",
-      "price": 45000,
+      "price": 25000,
       "details": {
         "sifat": "Ramah dan Humoris",
         "hobi": "Menonton Film Komedi",
@@ -50,7 +50,7 @@
       "name": "Rina",
       "role": "Visual",
       "image": "img/member/chartRina.jpg",
-      "price": 48000,
+      "price": 25000,
       "details": {
         "sifat": "Pemalu tapi Perhatian",
         "hobi": "Fotografi",
@@ -62,7 +62,7 @@
       "name": "Anzu",
       "role": "Kapten",
       "image": "img/member/chartAnzu.jpg",
-      "price": 55000,
+      "price": 25000,
       "details": {
         "sifat": "Dewasa dan Bijaksana",
         "hobi": "Minum Teh",
