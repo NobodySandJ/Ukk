@@ -8,6 +8,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     const token = localStorage.getItem('userToken');
+    const userData = JSON.parse(localStorage.getItem('userData'));
 
     function initializeApp() {
         let navHTML = `
@@ -16,9 +17,11 @@ document.addEventListener('DOMContentLoaded', function() {
             <li><a href="index.html#news">Berita</a></li>
         `;
 
-        if (token) {
+        if (token && userData) {
+            // Periksa peran pengguna di sini untuk menentukan tujuan tautan
+            const destination = userData.peran === 'admin' ? 'admin.html' : 'dashboard.html';
             navHTML += `
-                <li><a href="dashboard.html" title="Akun Saya"><i class="fas fa-user-circle" style="font-size: 1.5rem;"></i></a></li>
+                <li><a href="${destination}" title="Akun Saya"><i class="fas fa-user-circle" style="font-size: 1.5rem;"></i></a></li>
             `;
         } else {
             navHTML += `
@@ -100,14 +103,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     const result = await response.json();
                     if (!response.ok) throw new Error(result.message || 'Login gagal.');
                     
-                    // **FIX:** Membersihkan data lama sebelum menyimpan yang baru
-                    localStorage.removeItem('userToken');
-                    localStorage.removeItem('userData');
-                    
                     localStorage.setItem('userToken', result.token);
                     localStorage.setItem('userData', JSON.stringify(result.user));
 
-                    if (result.user.peran === 'admin') {
+                    // INI BAGIAN YANG DIPERBAIKI
+                    if (result.user && result.user.peran === 'admin') {
                         window.location.href = 'admin.html';
                     } else {
                         window.location.href = 'dashboard.html';
