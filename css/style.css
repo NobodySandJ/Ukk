@@ -161,7 +161,7 @@ nav ul.nav-links li a:hover::after {
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     border-radius: var(--border-radius);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    /* border: 1px solid rgba(255, 255, 255, 0.2); <-- GARIS DIHILANGKAN DARI SINI */
     box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.2);
 }
 
@@ -234,7 +234,7 @@ section:nth-of-type(odd) {
 section h2 {
     font-family: 'Playfair Display', serif;
     text-align: center;
-    margin-bottom: 4rem;
+    margin-bottom: 1.5rem; /* DIUBAH: Jarak bawah judul dikurangi */
     font-size: clamp(2.2rem, 5vw, 3rem);
     color: var(--text-color);
     position: relative;
@@ -996,4 +996,49 @@ footer p {
     .order-summary-container {
         margin-bottom: 2rem;
     }
+}
+
+/* Penyesuaian untuk Logo di Navigasi */
+nav .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* Memberi jarak antara logo dan teks */
+}
+
+nav .logo img {
+    height: 40px; /* Anda bisa sesuaikan ukurannya */
+}
+
+nav .logo h1 {
+    margin: 0; /* Menghapus margin bawaan agar lebih rapi */
+}
+
+/* Ukuran logo di mobile agar tidak terlalu besar */
+@media (max-width: 768px) {
+    nav .logo img {
+        height: 35px;
+    }
+}
+/* Penyesuaian untuk Logo di Hero Section */
+.hero-logo {
+    margin-bottom: 1rem; /* Jarak antara logo dan judul */
+}
+
+.hero-logo img {
+    max-width: 180px; /* Atur ukuran logo sesuai selera */
+    height: auto;
+}
+
+/* Menyesuaikan jarak bawah judul setelah slogan dihapus */
+.hero-content h2 {
+    margin-bottom: 2.5rem; 
+}
+/* Gaya untuk Slogan di Bawah Judul "Tentang Kami" */
+.about-tagline {
+    text-align: center;
+    font-size: 1.25rem; /* DIUBAH: Sedikit lebih besar */
+    font-style: normal; /* DIUBAH: Tidak lagi miring */
+    color: #888; /* DIUBAH: Warna lebih lembut */
+    max-width: 700px;
+    margin: 0 auto 3rem auto; /* DIUBAH: Margin disesuaikan */
 }

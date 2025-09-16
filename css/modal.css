@@ -114,3 +114,12 @@
 .sk-agreement input[type="checkbox"] {
     width: auto;
 }
+.modal-logo {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+
+.modal-logo img {
+    max-width: 100px;
+    height: auto;
+}

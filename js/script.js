@@ -1,14 +1,14 @@
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
 
     // --- FUNGSI UTAMA UNTUK MEMUAT DATA DINAMIS ---
     async function loadWebsiteData() {
         try {
-            const response = await fetch('data.json');
+            const response = await fetch('/data.json');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
-            
+
             // Cek halaman mana yang sedang aktif
             if (document.getElementById('hero')) {
                 populateIndexPage(data);
@@ -30,10 +30,10 @@ document.addEventListener('DOMContentLoaded', function() {
         if (logoTitle) logoTitle.textContent = data.group.name;
 
         document.getElementById('hero-title').textContent = data.group.name;
-        document.getElementById('hero-tagline').textContent = data.group.tagline;
         document.getElementById('about-title').innerHTML = `Tentang ${data.group.name} (${data.group.name_japanese})`;
+        document.querySelector('.about-tagline').textContent = data.group.tagline;
         document.getElementById('about-content').innerHTML = data.group.about;
-        
+
         const footerText = document.querySelector('#footer-text');
         if (footerText) footerText.innerHTML = `&copy; 2025 ${data.group.name}. All Rights Reserved.`;
 
@@ -114,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
+
     // --- [MODIFIKASI] LIGHTBOX DENGAN SWIPE ---
     function initializeLightbox(galleryData) {
         const lightbox = document.getElementById('lightbox');
@@ -132,13 +132,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!galleryData || galleryData.length === 0) return;
             if (index >= galleryData.length) index = 0;
             if (index < 0) index = galleryData.length - 1;
-            
+
             const image = galleryData[index];
             lightboxImg.src = image.src;
             lightboxCaption.textContent = image.alt;
             currentIndex = index;
         }
-        
+
         function openLightbox(index) {
             lightbox.classList.add('active');
             showImage(index);
@@ -156,13 +156,13 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         if (closeBtn) closeBtn.addEventListener('click', closeLightbox);
-        
+
         const showNext = () => showImage(currentIndex + 1);
         const showPrev = () => showImage(currentIndex - 1);
 
         if (prevBtn) prevBtn.addEventListener('click', showPrev);
         if (nextBtn) nextBtn.addEventListener('click', showNext);
-        
+
         lightbox.addEventListener('click', (e) => {
             if (e.target === lightbox) {
                 closeLightbox();
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (e.key === 'Escape') closeLightbox();
             }
         });
-        
+
         // --- [BARU] Logika Swipe ---
         let touchstartX = 0;
         let touchendX = 0;
@@ -198,15 +198,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- FUNGSI UNTUK ANIMASI ON SCROLL ---
     function reveal() {
-      const reveals = document.querySelectorAll(".reveal");
-      for (let i = 0; i < reveals.length; i++) {
-        const windowHeight = window.innerHeight;
-        const elementTop = reveals[i].getBoundingClientRect().top;
-        const elementVisible = 100;
-        if (elementTop < windowHeight - elementVisible) {
-          reveals[i].classList.add("active");
+        const reveals = document.querySelectorAll(".reveal");
+        for (let i = 0; i < reveals.length; i++) {
+            const windowHeight = window.innerHeight;
+            const elementTop = reveals[i].getBoundingClientRect().top;
+            const elementVisible = 100;
+            if (elementTop < windowHeight - elementVisible) {
+                reveals[i].classList.add("active");
+            }
         }
-      }
     }
     window.addEventListener("scroll", reveal);
     reveal();

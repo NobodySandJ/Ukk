@@ -7,14 +7,21 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/modal.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="img/logo/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="img/logo/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="img/logo/favicon-16x16.png">
+<link rel="manifest" href="img/logo/site.webmanifest">
 </head>
 <body>
 
     <header>
     <nav class="container">
         <div class="logo">
-            <h1 id="logo-title"><a href="index.html">Mujōken no Umi</a></h1>
-        </div>
+    <a href="index.html">
+        <img src="img/logo/apple-touch-icon.png" alt="Mujōken no Umi Logo" style="height: 40px; margin-right: 10px;">
+    </a>
+    <h1 id="logo-title"><a href="index.html">Mujōken no Umi</a></h1>
+</div>
         
         <ul class="nav-links" id="nav-links">
             </ul>
@@ -27,22 +34,25 @@
 
     <main>
         <section id="hero">
-            <div class="hero-content reveal">
-                <h2 id="hero-title"></h2>
-                <p id="hero-tagline"></p>
-                <div class="hero-buttons">
-                    <a href="cheki.html" class="hero-button">Pesan Cheki Sekarang!</a>
-                    <a href="gallery.html" class="hero-button secondary">Lihat Galeri</a>
-                </div>
-            </div>
-        </section>
+    <div class="hero-content reveal">
+        <div class="hero-logo">
+            <img src="img/logo/android-chrome-512x512.png" alt="Mujōken no Umi Logo">
+        </div>
+        <h2 id="hero-title"></h2>
+        <div class="hero-buttons">
+            <a href="cheki.html" class="hero-button secondary">Pesan Cheki Sekarang!</a>
+            <a href="gallery.html" class="hero-button secondary">Lihat Galeri</a>
+        </div>
+    </div>
+</section>
 
         <section id="about" class="reveal">
-            <div class="container">
-                <h2 id="about-title"></h2>
-                <p id="about-content"></p>
-            </div>
-        </section>
+    <div class="container">
+        <h2 id="about-title"></h2>
+        <p class="about-tagline"></p>
+        <p id="about-content"></p>
+    </div>
+</section>
 
         <section id="members" class="reveal">
             <div class="container">
@@ -64,42 +74,48 @@
         <div class="modal-container">
             <button class="modal-close-btn" id="modal-close-btn">&times;</button>
             
-            <div id="login-view">
-                <div class="modal-form-container">
-                    <h2>Login Akun</h2>
-                    <form id="login-form" class="modal-form">
-                        <input type="email" id="login-email" placeholder="Email" required>
-                        <input type="password" id="login-password" placeholder="Password" required>
-                        <button type="submit" class="cta-button">Login</button>
-                        <p id="login-error" class="error-message" style="text-align: center;"></p>
-                    </form>
-                    <p class="modal-switch-link">
-                        Belum punya akun? <a id="show-register-link">Daftar di sini</a>
-                    </p>
-                </div>
-            </div>
+           <div id="login-view">
+    <div class="modal-form-container">
+        <div class="modal-logo">
+            <img src="img/logo/android-chrome-192x192.png" alt="Logo Mujōken no Umi">
+        </div>
+        <h2>Login Akun</h2>
+        <form id="login-form" class="modal-form">
+            <input type="email" id="login-email" placeholder="Email" required>
+            <input type="password" id="login-password" placeholder="Password" required>
+            <button type="submit" class="cta-button">Login</button>
+            <p id="login-error" class="error-message" style="text-align: center;"></p>
+        </form>
+        <p class="modal-switch-link">
+            Belum punya akun? <a id="show-register-link">Daftar di sini</a>
+        </p>
+    </div>
+</div>
 
             <div id="register-view">
-                <div class="modal-form-container">
-                    <h2>Buat Akun Baru</h2>
-                    <form id="register-form" class="modal-form">
-                        <input type="text" id="register-username" placeholder="Username" required>
-                        <input type="email" id="register-email" placeholder="Email Aktif" required>
-                        <input type="password" id="register-password" placeholder="Password" required>
-                        <input type="text" id="register-whatsapp" placeholder="No. WhatsApp" required>
-                        <input type="text" id="register-instagram" placeholder="Username Instagram" required>
-                        <div class="sk-agreement">
-                            <input type="checkbox" id="sk-checkbox" required>
-                            <label for="sk-checkbox">Saya setuju dengan <a href="sk.html" target="_blank">Syarat & Ketentuan</a>.</label>
-                        </div>
-                        <button type="submit" class="cta-button">Daftar</button>
-                        <p id="register-error" class="error-message" style="text-align: center;"></p>
-                    </form>
-                    <p class="modal-switch-link">
-                        Sudah punya akun? <a id="show-login-link">Login di sini</a>
-                    </p>
-                </div>
+    <div class="modal-form-container">
+        <div class="modal-logo">
+            <img src="img/logo/android-chrome-192x192.png" alt="Logo Mujōken no Umi">
+        </div>
+        <h2>Buat Akun Baru</h2>
+        <form id="register-form" class="modal-form">
+            <input type="text" id="register-username" placeholder="Username" required>
+            <input type="email" id="register-email" placeholder="Email Aktif" required>
+            <input type="password" id="register-password" placeholder="Password" required>
+            <input type="text" id="register-whatsapp" placeholder="No. WhatsApp" required>
+            <input type="text" id="register-instagram" placeholder="Username Instagram" required>
+            <div class="sk-agreement">
+                <input type="checkbox" id="sk-checkbox" required>
+                <label for="sk-checkbox">Saya setuju dengan <a href="sk.html" target="_blank">Syarat & Ketentuan</a>.</label>
             </div>
+            <button type="submit" class="cta-button">Daftar</button>
+            <p id="register-error" class="error-message" style="text-align: center;"></p>
+        </form>
+        <p class="modal-switch-link">
+            Sudah punya akun? <a id="show-login-link">Login di sini</a>
+        </p>
+    </div>
+</div>
 
         </div>
     </div>
