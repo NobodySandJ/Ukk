@@ -326,4 +326,23 @@ app.get("/api/admin/stats", authenticateAdmin, async (req, res) => {
     }
 });
 
+// Endpoint Admin: Menghapus pesanan
+app.delete("/api/admin/delete-order/:order_id", authenticateAdmin, async (req, res) => {
+    const { order_id } = req.params;
+    if (!order_id) {
+        return res.status(400).json({ message: "Order ID diperlukan." });
+    }
+    try {
+        const { error } = await supabase
+            .from("pesanan")
+            .delete()
+            .eq("id_pesanan", order_id);
+        if (error) throw error;
+        res.status(200).json({ message: `Pesanan ${order_id} berhasil dihapus.` });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
+
 module.exports = app;

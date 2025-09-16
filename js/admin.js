@@ -83,7 +83,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td>${order.nama_pelanggan}<br><small>${order.email_pelanggan}</small></td>
                 <td>${items}</td>
                 <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                <td><button class="action-btn btn-use" data-orderid="${order.id_pesanan}" ${order.status_tiket !== 'berlaku' ? 'disabled' : ''}>Gunakan</button></td>
+                <td>
+                    <button class="action-btn btn-use" data-orderid="${order.id_pesanan}" ${order.status_tiket !== 'berlaku' ? 'disabled' : ''}>Gunakan</button>
+                    <button class="action-btn btn-delete" data-orderid="${order.id_pesanan}">Hapus</button>
+                </td>
             `;
             ordersTbody.appendChild(row);
         });
@@ -99,10 +102,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     ordersTbody.addEventListener('click', async function(e) {
-        if (e.target && e.target.classList.contains('btn-use')) {
-            const button = e.target;
-            const orderId = button.dataset.orderid;
-            
+        const button = e.target;
+        const orderId = button.dataset.orderid;
+
+        // Logika untuk tombol "Gunakan"
+        if (button.classList.contains('btn-use')) {
             if (confirm(`Anda yakin ingin MENGGUNAKAN tiket untuk pesanan ${orderId}? Aksi ini akan mengubah statusnya menjadi HANGUS.`)) {
                 try {
                     const response = await fetch('/api/admin/update-ticket-status', {
@@ -117,6 +121,27 @@ document.addEventListener('DOMContentLoaded', function() {
                     
                     alert('Status tiket berhasil diubah menjadi hangus.');
                     fetchAllOrders(); 
+                } catch (error) {
+                    alert('Terjadi kesalahan: ' + error.message);
+                }
+            }
+        }
+
+        // Logika untuk tombol "Hapus"
+        if (button.classList.contains('btn-delete')) {
+            if (confirm(`APAKAH ANDA YAKIN ingin MENGHAPUS pesanan ${orderId} secara permanen? Aksi ini tidak dapat dibatalkan.`)) {
+                try {
+                    const response = await fetch(`/api/admin/delete-order/${orderId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.message || 'Gagal menghapus pesanan.');
+
+                    alert(result.message);
+                    fetchAllOrders(); // Muat ulang data setelah berhasil hapus
                 } catch (error) {
                     alert('Terjadi kesalahan: ' + error.message);
                 }
