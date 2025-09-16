@@ -12,11 +12,23 @@ document.addEventListener('DOMContentLoaded', function() {
     const ordersTbody = document.getElementById('orders-tbody');
     const adminWelcome = document.getElementById('admin-welcome');
     const searchInput = document.getElementById('search-input');
+    // Variabel baru untuk tombol logout
+    const logoutBtn = document.getElementById('admin-logout-btn');
     
     let allOrders = []; // Simpan semua pesanan untuk filtering
 
     if(adminWelcome && userData.nama_pengguna) {
         adminWelcome.textContent = `Selamat Datang, ${userData.nama_pengguna}!`;
+    }
+
+    // --- [BARU] Logika untuk tombol logout ---
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('userToken');
+            localStorage.removeItem('userData');
+            alert('Anda telah logout.');
+            window.location.href = 'index.html';
+        });
     }
 
     async function fetchStats() {

@@ -7,14 +7,31 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="apple-touch-icon" sizes="180x180" href="img/logo/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="img/logo/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="img/logo/favicon-16x16.png">
-<link rel="manifest" href="img/logo/site.webmanifest">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/logo/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/logo/favicon-16x16.png">
+    <link rel="manifest" href="img/logo/site.webmanifest">
     <style>
         .admin-panel { padding: 2rem 0; background-color: #f4f7f9; min-height: 100vh;}
         .admin-header { 
             text-align: center; 
             margin-bottom: 2rem;
+        }
+        /* Tambahkan style untuk logout button */
+        #admin-logout-btn {
+            background-color: transparent;
+            color: #dc3545;
+            border: 2px solid #dc3545;
+            padding: 0.6rem 1.8rem;
+            font-weight: 600;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+        #admin-logout-btn:hover {
+            background-color: #dc3545;
+            color: #fff;
+            transform: translateY(-2px);
         }
         .stats-grid { 
             display: grid; 
@@ -96,13 +113,12 @@
             cursor: pointer; 
             font-weight: 500;
             transition: background-color 0.3s ease;
-            margin-right: 5px; /* Memberi jarak antar tombol */
+            margin-right: 5px;
         }
         .btn-use { background-color: var(--success-color); }
         .btn-use:hover { background-color: #218838; }
         .btn-use:disabled { background-color: #6c757d; cursor: not-allowed; }
         
-        /* Gaya untuk tombol hapus */
         .btn-delete { background-color: #dc3545; }
         .btn-delete:hover { background-color: #c82333; }
 
@@ -131,6 +147,9 @@
         <div class="container">
             <div class="admin-header">
                 <h2 id="admin-welcome">Selamat Datang, Admin!</h2>
+                <button id="admin-logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
             </div>
             
             <section id="statistics">
