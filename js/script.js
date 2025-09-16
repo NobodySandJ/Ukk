@@ -3,11 +3,17 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- FUNGSI UTAMA UNTUK MEMUAT DATA DINAMIS ---
     async function loadWebsiteData() {
         try {
-            const response = await fetch('/data.json');
+            // Menggunakan path relatif agar konsisten dengan file lain
+            const response = await fetch('data.json');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
+
+            // --- PERBAIKAN: Memeriksa apakah data dan struktur 'group' ada ---
+            if (!data || !data.group) {
+                throw new Error("Format data.json tidak valid atau data gagal dimuat.");
+            }
 
             // Cek halaman mana yang sedang aktif
             if (document.getElementById('hero')) {
@@ -19,6 +25,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         } catch (error) {
             console.error("Could not load website data:", error);
+            // Menampilkan pesan error di halaman jika data gagal dimuat
+            if (document.getElementById('hero-title')) {
+                document.getElementById('hero-title').textContent = "Gagal Memuat Konten";
+            }
+             if (document.getElementById('about-title')) {
+                document.getElementById('about-title').textContent = "Konten tidak tersedia";
+            }
         }
     }
 
