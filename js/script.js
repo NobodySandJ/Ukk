@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', function () {
     async function loadWebsiteData() {
         try {
             // Menggunakan path absolut untuk memastikan file ditemukan
-            const response = await fetch('/data.json');
+            const response = await fetch('data.json'); // Langsung fetch nama filenya
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
