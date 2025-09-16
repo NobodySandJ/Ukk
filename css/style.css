@@ -1042,3 +1042,54 @@ nav .logo h1 {
     max-width: 700px;
     margin: 0 auto 3rem auto; /* DIUBAH: Margin disesuaikan */
 }
+
+/* === FAQ SECTION STYLES === */
+.faq-container {
+    max-width: 750px;
+    margin: 2rem auto 0;
+    border-top: 1px solid #eee;
+}
+
+.faq-item {
+    border-bottom: 1px solid #eee;
+}
+
+.faq-question {
+    width: 100%;
+    background: none;
+    border: none;
+    text-align: left;
+    font-size: 1.15rem;
+    font-weight: 600;
+    padding: 1.5rem 1rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-color);
+}
+
+.faq-question:hover {
+    color: var(--primary-color);
+}
+
+.faq-question .fa-chevron-down {
+    transition: transform 0.3s ease;
+}
+
+.faq-answer {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.4s ease;
+}
+
+.faq-answer p {
+    padding: 0 1rem 1.5rem;
+    color: #555;
+    line-height: 1.8;
+}
+
+/* Style for active/open FAQ */
+.faq-item.active .faq-question .fa-chevron-down {
+    transform: rotate(180deg);
+}

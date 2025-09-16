@@ -15,6 +15,12 @@ document.addEventListener('DOMContentLoaded', function () {
         const orderSummaryContainer = document.querySelector('.order-summary-container');
 
         let membersData = [];
+        let groupChekiData = {
+            id: 'grup',
+            name: 'Grup',
+            image: 'img/member/group.jpg',
+            price: 75000 
+        };
         let cart = {};
 
         async function checkUrlForSuccess() {
@@ -52,22 +58,33 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
+        function createProductCard(product) {
+            const card = document.createElement('div');
+            card.className = 'cheki-card reveal';
+            card.innerHTML = `
+                <img src="${product.image}" alt="Cheki ${product.name}">
+                <h3>${product.name}</h3>
+                <p class="price">Rp ${product.price.toLocaleString('id-ID')}</p>
+                <div class="quantity-selector">
+                    <button class="quantity-btn" data-id="${product.id}" data-action="decrease">-</button>
+                    <input type="number" class="quantity-input" data-id="${product.id}" value="0" min="0" readonly>
+                    <button class="quantity-btn" data-id="${product.id}" data-action="increase">+</button>
+                </div>
+            `;
+            return card;
+        }
+        
         function renderProducts() {
             chekiListContainer.innerHTML = '';
+            
+            // Render Group Cheki Card First
+            const groupCard = createProductCard(groupChekiData);
+            chekiListContainer.appendChild(groupCard);
+            
+            // Render Member Cheki Cards
             membersData.forEach(member => {
-                const card = document.createElement('div');
-                card.className = 'cheki-card reveal';
-                card.innerHTML = `
-                    <img src="${member.image}" alt="Cheki ${member.name}">
-                    <h3>${member.name}</h3>
-                    <p class="price">Rp ${member.price.toLocaleString('id-ID')}</p>
-                    <div class="quantity-selector">
-                        <button class="quantity-btn" data-id="${member.id}" data-action="decrease">-</button>
-                        <input type="number" class="quantity-input" data-id="${member.id}" value="0" min="0" readonly>
-                        <button class="quantity-btn" data-id="${member.id}" data-action="increase">+</button>
-                    </div>
-                `;
-                chekiListContainer.appendChild(card);
+                const memberCard = createProductCard(member);
+                chekiListContainer.appendChild(memberCard);
             });
         }
         
@@ -90,35 +107,44 @@ document.addEventListener('DOMContentLoaded', function () {
             setTimeout(() => orderSummaryContainer.classList.remove('item-added'), 500);
         }
 
-        function updateQuantity(memberId, action) {
-            const member = membersData.find(m => m.id === memberId);
-            if (!member) return;
-
-            if (!cart[memberId]) cart[memberId] = 0;
-
-            if (action === 'increase') {
-                cart[memberId]++;
-                showToast(`${member.name} Cheki ditambahkan!`);
-                giveFeedback();
-            } else if (action === 'decrease' && cart[memberId] > 0) {
-                cart[memberId]--;
-                showToast(`${member.name} Cheki dikurangi.`);
+        function updateQuantity(productId, action) {
+            // Find the product in either membersData or groupChekiData
+            let product = membersData.find(m => m.id === productId);
+            if (!product) {
+                if (productId === groupChekiData.id) {
+                    product = groupChekiData;
+                } else {
+                    return; // Product not found
+                }
             }
 
-            const inputEl = document.querySelector(`.quantity-input[data-id="${memberId}"]`);
-            if (inputEl) inputEl.value = cart[memberId];
+            if (!cart[productId]) cart[productId] = 0;
+
+            if (action === 'increase') {
+                cart[productId]++;
+                showToast(`Cheki ${product.name} ditambahkan!`);
+                giveFeedback();
+            } else if (action === 'decrease' && cart[productId] > 0) {
+                cart[productId]--;
+                showToast(`Cheki ${product.name} dikurangi.`);
+            }
+
+            const inputEl = document.querySelector(`.quantity-input[data-id="${productId}"]`);
+            if (inputEl) inputEl.value = cart[productId];
 
             updateTotals();
         }
 
         function updateTotals() {
             let totalItems = 0, totalPrice = 0;
-            for (const memberId in cart) {
-                if (cart[memberId] > 0) {
-                    const member = membersData.find(m => m.id === memberId);
-                    if (member) {
-                        totalItems += cart[memberId];
-                        totalPrice += cart[memberId] * member.price;
+            const allProducts = [...membersData, groupChekiData];
+
+            for (const productId in cart) {
+                if (cart[productId] > 0) {
+                    const product = allProducts.find(p => p.id === productId);
+                    if (product) {
+                        totalItems += cart[productId];
+                        totalPrice += cart[productId] * product.price;
                     }
                 }
             }
@@ -165,17 +191,19 @@ document.addEventListener('DOMContentLoaded', function () {
 
             let item_details = [];
             let gross_amount = 0;
-            for (const memberId in cart) {
-                if (cart[memberId] > 0) {
-                    const member = membersData.find(m => m.id === memberId);
-                    if (member) {
+            const allProducts = [...membersData, groupChekiData];
+
+            for (const productId in cart) {
+                if (cart[productId] > 0) {
+                    const product = allProducts.find(p => p.id === productId);
+                    if (product) {
                         item_details.push({
-                            id: member.id,
-                            price: member.price,
-                            quantity: cart[memberId],
-                            name: `Cheki ${member.name}`
+                            id: product.id,
+                            price: product.price,
+                            quantity: cart[productId],
+                            name: `Cheki ${product.name}`
                         });
-                        gross_amount += member.price * cart[memberId];
+                        gross_amount += product.price * cart[productId];
                     }
                 }
             }
@@ -186,7 +214,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     gross_amount: gross_amount
                 },
                 customer_details: {
-                    // **FIX:** Menggunakan 'nama_pengguna' yang benar dari localStorage
                     first_name: userData.nama_pengguna, 
                     email: userData.email,
                     phone: userData.nomor_whatsapp || 'N/A',
