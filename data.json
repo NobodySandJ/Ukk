@@ -1,44 +1,93 @@
 {
-  "version": 2,
-  "builds": [
+  "group": {
+    "name": "Mujōken no Umi",
+    "name_japanese": "無条件の海",
+    "tagline": "Laut Tanpa Syarat",
+    "about": "Mujōken no Umi adalah grup idola yang berenang di lautan mimpi, menyebarkan cinta tanpa syarat melalui musik dan tarian. Kami di sini untuk menjadi cahaya dalam hari-harimu!"
+  },
+  "images": {
+    "hero_background": "img/member/grup2.jpg"
+  },
+  "members": [
     {
-      "src": "backend/server.js",
-      "use": "@vercel/node"
+      "id": "hina",
+      "name": "Hina",
+      "role": "Center",
+      "image": "img/member/chartHina.jpg",
+      "price": 50000,
+      "details": {
+        "sifat": "Ceria dan Enerjik",
+        "hobi": "Menyanyi dan Menari",
+        "jiko": "Seperti lumba-lumba yang melompat riang, aku akan membawamu ke lautan kebahagiaan! Aku Hina!"
+      }
     },
     {
-      "src": "*.html",
-      "use": "@vercel/static"
+      "id": "runa",
+      "name": "Runa",
+      "role": "Vokalis Utama",
+      "image": "img/member/chartRuna.jpg",
+      "price": 45000,
+      "details": {
+        "sifat": "Tenang dan Anggun",
+        "hobi": "Membaca Puisi",
+        "jiko": "Dengan suara selembut ombak, aku akan menenangkan hatimu. Namaku Runa."
+      }
     },
     {
-      "src": "data.json",
-      "use": "@vercel/static"
+      "id": "ami",
+      "name": "Ami",
+      "role": "Penari Utama",
+      "image": "img/member/chartAmi.jpg",
+      "price": 45000,
+      "details": {
+        "sifat": "Ramah dan Humoris",
+        "hobi": "Menonton Film Komedi",
+        "jiko": "Siap tertawa bersamaku? Aku Ami, si ikan badut yang akan mewarnai harimu!"
+      }
     },
     {
-      "src": "js/**",
-      "use": "@vercel/static"
+      "id": "rina",
+      "name": "Rina",
+      "role": "Visual",
+      "image": "img/member/chartRina.jpg",
+      "price": 48000,
+      "details": {
+        "sifat": "Pemalu tapi Perhatian",
+        "hobi": "Fotografi",
+        "jiko": "Aku akan mengabadikan setiap momen indah kita bersama. Aku Rina."
+      }
     },
     {
-      "src": "css/**",
-      "use": "@vercel/static"
-    },
-    {
-      "src": "img/**",
-      "use": "@vercel/static"
+      "id": "anzu",
+      "name": "Anzu",
+      "role": "Kapten",
+      "image": "img/member/chartAnzu.jpg",
+      "price": 55000,
+      "details": {
+        "sifat": "Dewasa dan Bijaksana",
+        "hobi": "Minum Teh",
+        "jiko": "Sebagai kapten kapal ini, aku akan memandu kita semua menuju lautan mimpi. Aku Anzu."
+      }
     }
   ],
-  "routes": [
-    { "src": "/api/register", "dest": "/backend/server.js" },
-    { "src": "/api/login", "dest": "/backend/server.js" },
-    { "src": "/api/my-orders", "dest": "/backend/server.js" },
-    { "src": "/get-snap-token", "dest": "/backend/server.js" },
-    { "src": "/update-order-status", "dest": "/backend/server.js" },
-    
-    
-    { "src": "/api/admin/stats", "dest": "/backend/server.js" },
-    { "src": "/api/admin/all-orders", "dest": "/backend/server.js" },
-    { "src": "/api/admin/update-ticket-status", "dest": "/backend/server.js" },
-    { "src": "/api/admin/delete-order/(.*)", "dest": "/backend/server.js" },
-    
-    { "src": "/(.*)", "dest": "/$1" }
+  "news": [
+    {
+      "title": "Debut Single 'Umi no Melody'!",
+      "content": "Single pertama kami akan segera dirilis! Nantikan informasi selanjutnya.",
+      "date": "25 Oktober 2025"
+    },
+    {
+      "title": "Jadwal Theater Bulan November",
+      "content": "Jadwal pertunjukan teater untuk bulan November telah diperbarui di halaman event.",
+      "date": "20 Oktober 2025"
+    }
+  ],
+  "gallery": [
+    { "src": "img/member/group.jpg", "alt": "Mujōken no Umi di atas panggung" },
+    { "src": "img/member/hina.jpg", "alt": "Hina saat tampil solo" },
+    { "src": "img/member/Runa.jpg", "alt": "Runa dalam sesi foto" },
+    { "src": "img/member/Ami.jpg", "alt": "Ami menyapa penggemar" },
+    { "src": "img/member/Rina.jpg", "alt": "Rina dengan senyum manisnya" },
+    { "src": "img/member/Anzu.jpg", "alt": "Anzu dengan tatapan karismatik" }
   ]
 }
