@@ -3,8 +3,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- FUNGSI UTAMA UNTUK MEMUAT DATA DINAMIS ---
     async function loadWebsiteData() {
         try {
-            // Menggunakan path relatif agar konsisten dengan file lain
-            const response = await fetch('data.json');
+            // Menggunakan path absolut untuk memastikan file ditemukan
+            const response = await fetch('/data.json');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
