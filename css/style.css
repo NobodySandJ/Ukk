@@ -1093,3 +1093,44 @@ nav .logo h1 {
 .faq-item.active .faq-question .fa-chevron-down {
     transform: rotate(180deg);
 }
+
+/* === HOW-TO SECTION STYLES === */
+.how-to-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+    margin-top: 3rem;
+}
+
+.how-to-step-card {
+    background: var(--card-bg);
+    padding: 2rem;
+    text-align: center;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-light);
+    border-top: 4px solid var(--primary-color);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.how-to-step-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-hover);
+}
+
+.step-icon {
+    font-size: 3rem;
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+}
+
+.how-to-step-card h3 {
+    font-size: 1.3rem;
+    margin-bottom: 0.8rem;
+    color: var(--text-color);
+}
+
+.how-to-step-card p {
+    color: #555;
+    line-height: 1.7;
+    font-size: 0.95rem;
+}
