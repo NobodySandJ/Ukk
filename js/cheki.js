@@ -1,4 +1,4 @@
-// js/cheki.js (Perbaikan Final)
+// js/cheki.js (Versi Final dengan data.json)
 
 document.addEventListener('DOMContentLoaded', function () {
     if (document.getElementById('cheki-page')) {
@@ -15,12 +15,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const orderSummaryContainer = document.querySelector('.order-summary-container');
 
         let membersData = [];
-        let groupChekiData = {
-            id: 'grup',
-            name: 'Grup',
-            image: 'img/member/group.jpg',
-            price: 75000 
-        };
+        let groupChekiData = {}; // Dikosongkan, akan diisi dari data.json
         let cart = {};
 
         async function checkUrlForSuccess() {
@@ -48,9 +43,13 @@ document.addEventListener('DOMContentLoaded', function () {
         async function loadChekiProducts() {
             try {
                 const response = await fetch('data.json');
-                if (!response.ok) throw new Error('Data member tidak ditemukan');
+                if (!response.ok) throw new Error('Data produk tidak ditemukan');
                 const data = await response.json();
+                
+                // Mengambil data member dan data cheki grup dari file JSON
                 membersData = data.members;
+                groupChekiData = data.group_cheki; 
+
                 renderProducts();
             } catch (error) {
                 console.error("Gagal memuat produk cheki:", error);
@@ -78,8 +77,10 @@ document.addEventListener('DOMContentLoaded', function () {
             chekiListContainer.innerHTML = '';
             
             // Render Group Cheki Card First
-            const groupCard = createProductCard(groupChekiData);
-            chekiListContainer.appendChild(groupCard);
+            if (groupChekiData && groupChekiData.id) {
+                const groupCard = createProductCard(groupChekiData);
+                chekiListContainer.appendChild(groupCard);
+            }
             
             // Render Member Cheki Cards
             membersData.forEach(member => {
@@ -108,13 +109,12 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         function updateQuantity(productId, action) {
-            // Find the product in either membersData or groupChekiData
             let product = membersData.find(m => m.id === productId);
             if (!product) {
                 if (productId === groupChekiData.id) {
                     product = groupChekiData;
                 } else {
-                    return; // Product not found
+                    return;
                 }
             }
 

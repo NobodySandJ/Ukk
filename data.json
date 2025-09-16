@@ -5,6 +5,12 @@
     "tagline": "Laut Tanpa Syarat",
     "about": "Mujōken no Umi adalah grup idola yang berenang di lautan mimpi, menyebarkan cinta tanpa syarat melalui musik dan tarian. Kami di sini untuk menjadi cahaya dalam hari-harimu!"
   },
+  "group_cheki": {
+    "id": "grup",
+    "name": "Grup",
+    "image": "img/member/group.jpg",
+    "price": 30000
+  },
   "images": {
     "hero_background": "img/member/grup2.jpg"
   },
@@ -58,17 +64,17 @@
       }
     },
     {
-      "id": "anzu",
-      "name": "Anzu",
-      "role": "Kapten",
-      "image": "img/member/chartAnzu.jpg",
-      "price": 25000,
-      "details": {
-        "sifat": "Dewasa dan Bijaksana",
-        "hobi": "Minum Teh",
-        "jiko": "Sebagai kapten kapal ini, aku akan memandu kita semua menuju lautan mimpi. Aku Anzu."
+        "id": "anzu",
+        "name": "Anzu",
+        "role": "Kapten",
+        "image": "img/member/chartAnzu.jpg",
+        "price": 25000,
+        "details": {
+          "sifat": "Dewasa dan Bijaksana",
+          "hobi": "Minum Teh",
+          "jiko": "Sebagai kapten kapal ini, aku akan memandu kita semua menuju lautan mimpi. Aku Anzu."
+        }
       }
-    }
   ],
   "news": [
     {
