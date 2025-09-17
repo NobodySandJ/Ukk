@@ -64,17 +64,17 @@
       }
     },
     {
-        "id": "anzu",
-        "name": "Anzu",
-        "role": "Kapten",
-        "image": "img/member/chartAnzu.jpg",
-        "price": 25000,
-        "details": {
-          "sifat": "Dewasa dan Bijaksana",
-          "hobi": "Minum Teh",
-          "jiko": "Sebagai kapten kapal ini, aku akan memandu kita semua menuju lautan mimpi. Aku Anzu."
-        }
+      "id": "anzu",
+      "name": "Anzu",
+      "role": "Kapten",
+      "image": "img/member/chartAnzu.jpg",
+      "price": 25000,
+      "details": {
+        "sifat": "Dewasa dan Bijaksana",
+        "hobi": "Minum Teh",
+        "jiko": "Sebagai kapten kapal ini, aku akan memandu kita semua menuju lautan mimpi. Aku Anzu."
       }
+    }
   ],
   "news": [
     {
@@ -89,25 +89,43 @@
     }
   ],
   "gallery": [
-    { "src": "img/member/group.jpg", "alt": "Mujōken no Umi di atas panggung" },
-    { "src": "img/member/hina.jpg", "alt": "Hina saat tampil solo" },
-    { "src": "img/member/Runa.jpg", "alt": "Runa dalam sesi foto" },
-    { "src": "img/member/Ami.jpg", "alt": "Ami menyapa penggemar" },
-    { "src": "img/member/Rina.jpg", "alt": "Rina dengan senyum manisnya" },
-    { "src": "img/member/Anzu.jpg", "alt": "Anzu dengan tatapan karismatik" }
+    {
+      "src": "img/member/group.jpg",
+      "alt": "Mujōken no Umi di atas panggung"
+    },
+    {
+      "src": "img/member/hina.jpg",
+      "alt": "Hina saat tampil solo"
+    },
+    {
+      "src": "img/member/Runa.jpg",
+      "alt": "Runa dalam sesi foto"
+    },
+    {
+      "src": "img/member/Ami.jpg",
+      "alt": "Ami menyapa penggemar"
+    },
+    {
+      "src": "img/member/Rina.jpg",
+      "alt": "Rina dengan senyum manisnya"
+    },
+    {
+      "src": "img/member/Anzu.jpg",
+      "alt": "Anzu dengan tatapan karismatik"
+    }
   ],
   "faq": [
     {
       "question": "Apa itu Cheki?",
-      "answer": "Cheki adalah foto instan (mirip polaroid) bersama member. Di sini, kami menjualnya dalam format tiket digital yang bisa Anda tukarkan dengan foto fisik di lokasi event."
+      "answer": "Cheki adalah foto instan menggunakan kamera polaroid bersama member. Jadi hasilnya langsung berupa foto fisik yang bisa kamu bawa pulang saat itu juga."
     },
     {
-      "question": "Bagaimana cara menukarkan tiket Cheki?",
-      "answer": "Setelah pembayaran berhasil, Anda akan mendapatkan QR Code di halaman Akun Saya. Cukup tunjukkan QR Code tersebut kepada staff di booth official merchandise kami saat event berlangsung."
+      "question": "Bagaimana cara mendapatkan Cheki?",
+      "answer": "Setelah membeli tiket Cheki, kamu bisa langsung datang ke booth official merchandise saat event berlangsung untuk berfoto bersama member. Hasil foto polaroid akan diberikan langsung di tempat."
     },
     {
-      "question": "Apakah tiket Cheki memiliki masa berlaku?",
-      "answer": "Ya, setiap tiket Cheki biasanya hanya berlaku untuk event atau periode tertentu yang diinformasikan saat pembelian. Pastikan untuk menukarkannya sebelum masa berlakunya habis."
+      "question": "Apakah Cheki memiliki masa berlaku?",
+      "answer": "Ya, setiap tiket Cheki hanya berlaku pada event atau periode tertentu yang diinformasikan saat pembelian. Pastikan untuk menggunakannya sesuai jadwal."
     },
     {
       "question": "Apakah saya bisa request pose saat berfoto?",
