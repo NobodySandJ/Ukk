@@ -95,5 +95,27 @@
     { "src": "img/member/Ami.jpg", "alt": "Ami menyapa penggemar" },
     { "src": "img/member/Rina.jpg", "alt": "Rina dengan senyum manisnya" },
     { "src": "img/member/Anzu.jpg", "alt": "Anzu dengan tatapan karismatik" }
+  ],
+  "faq": [
+    {
+      "question": "Apa itu Cheki?",
+      "answer": "Cheki adalah foto instan (mirip polaroid) bersama member. Di sini, kami menjualnya dalam format tiket digital yang bisa Anda tukarkan dengan foto fisik di lokasi event."
+    },
+    {
+      "question": "Bagaimana cara menukarkan tiket Cheki?",
+      "answer": "Setelah pembayaran berhasil, Anda akan mendapatkan QR Code di halaman Akun Saya. Cukup tunjukkan QR Code tersebut kepada staff di booth official merchandise kami saat event berlangsung."
+    },
+    {
+      "question": "Apakah tiket Cheki memiliki masa berlaku?",
+      "answer": "Ya, setiap tiket Cheki biasanya hanya berlaku untuk event atau periode tertentu yang diinformasikan saat pembelian. Pastikan untuk menukarkannya sebelum masa berlakunya habis."
+    },
+    {
+      "question": "Apakah saya bisa request pose saat berfoto?",
+      "answer": "Tentu saja! Selama pose yang diminta wajar, sopan, dan tidak bersentuhan fisik, member kami akan dengan senang hati mengikuti arahan Anda."
+    },
+    {
+      "question": "Bagaimana jika saya lupa password akun saya?",
+      "answer": "Saat ini fitur reset password otomatis belum tersedia. Silakan hubungi kami melalui media sosial resmi kami dengan menyertakan email dan username Anda, kami akan bantu untuk meresetnya secara manual."
+    }
   ]
 }
