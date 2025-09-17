@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Profil - Mujōken no Umi</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="apple-touch-icon" sizes="180x180" href="img/logo/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/logo/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/logo/favicon-16x16.png">
+    <link rel="manifest" href="img/logo/site.webmanifest">
+    <style>
+        body { background-color: #f4f7f9; }
+        .profile-card {
+            max-width: 600px;
+            margin: 4rem auto;
+            background: #fff;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+        .profile-form .form-group {
+            margin-bottom: 1.2rem;
+        }
+        .profile-form label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #555;
+        }
+        .profile-form input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        .profile-form .cta-button { width: 100%; }
+        .back-link {
+            display: inline-block;
+            margin-top: 1.5rem;
+            text-align: center;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo"><h1><a href="index.html">Mujōken no Umi</a></h1></div>
+            <ul class="nav-links" id="nav-links"></ul>
+            <button class="hamburger" id="hamburger-menu" aria-label="Buka menu navigasi"><i class="fas fa-bars"></i></button>
+        </nav>
+    </header>
+
+    <main>
+        <section id="edit-profile-page">
+            <div class="container">
+                 <div class="profile-card">
+                    <h2 style="text-align: center;">Edit Profil</h2>
+                    <form id="profile-update-form" class="profile-form">
+                        <div class="form-group">
+                            <label for="profile-username">Username</label>
+                            <input type="text" id="profile-username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-email">Email</label>
+                            <input type="email" id="profile-email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-whatsapp">No. WhatsApp</label>
+                            <input type="text" id="profile-whatsapp">
+                        </div>
+                        <div class="form-group">
+                            <label for="profile-instagram">Instagram</label>
+                            <input type="text" id="profile-instagram">
+                        </div>
+                         <div class="form-group">
+                            <label for="profile-password">Password Baru (opsional)</label>
+                            <input type="password" id="profile-password" placeholder="Isi untuk ganti password">
+                        </div>
+                        <button type="submit" class="cta-button">Simpan Perubahan</button>
+                    </form>
+                    <a href="dashboard.html" class="back-link">Kembali ke Dashboard</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+             <p>&copy; 2025 Mujōken no Umi. All Rights Reserved.</p>
+        </div>
+    </footer>
+    
+    <script src="js/script.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/edit-profile.js"></script>
+</body>
+</html>
