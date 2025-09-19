@@ -32,10 +32,17 @@
     { "src": "/api/my-orders", "dest": "/backend/server.js" },
     { "src": "/get-snap-token", "dest": "/backend/server.js" },
     { "src": "/update-order-status", "dest": "/backend/server.js" },
+    
+    
+    { "src": "/api/user/profile", "dest": "/backend/server.js" },
+
+    
     { "src": "/api/admin/stats", "dest": "/backend/server.js" },
     { "src": "/api/admin/all-orders", "dest": "/backend/server.js" },
     { "src": "/api/admin/update-ticket-status", "dest": "/backend/server.js" },
     { "src": "/api/admin/delete-order/(.*)", "dest": "/backend/server.js" },
+    
+    
     { "src": "/(.*)", "dest": "/$1" }
   ]
 }
