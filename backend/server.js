@@ -1,10 +1,11 @@
-// nobodysandj/ukk/Ukk-7c6003e68c8bfcc1421a6e0fe28a09e9ec6fbf04/backend/server.js
+// nobodysandj/ukk/Ukk-4b4a46eaa48589fe04747b7a87ab7fb5fa58a6ec/backend/server.js
 const express = require("express");
 const midtransClient = require("midtrans-client");
 const cors = require("cors");
 const { createClient } = require("@supabase/supabase-js");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const nodemailer = require("nodemailer");
 require("dotenv").config();
 
 const app = express();
@@ -22,6 +23,18 @@ const snap = new midtransClient.Snap({
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+// Konfigurasi Nodemailer (untuk kirim email)
+const transporter = nodemailer.createTransport({
+    host: process.env.EMAIL_HOST,
+    port: 587,
+    secure: false, 
+    auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+    },
+});
+
 
 // Endpoint Registrasi Pengguna
 app.post("/api/register", async (req, res) => {
@@ -111,6 +124,92 @@ app.post("/api/login", async (req, res) => {
             .json({ message: "Terjadi kesalahan pada server.", error: e.message });
     }
 });
+
+// --- FITUR LUPA SANDI ---
+app.post('/api/forgot-password', async (req, res) => {
+    const { email } = req.body;
+    try {
+        const { data: user, error } = await supabase
+            .from('pengguna')
+            .select('id, email')
+            .eq('email', email)
+            .single();
+
+        if (error || !user) {
+            return res.status(404).json({ message: 'Email tidak ditemukan.' });
+        }
+
+        const resetToken = jwt.sign({ userId: user.id }, process.env.JWT_RESET_SECRET, { expiresIn: '15m' });
+        const expires = new Date(Date.now() + 15 * 60 * 1000); // Token berlaku 15 menit
+
+        const { error: updateError } = await supabase
+            .from('pengguna')
+            .update({ reset_token: resetToken, reset_token_expires: expires })
+            .eq('id', user.id);
+
+        if (updateError) throw updateError;
+        
+        const resetUrl = `${process.env.BASE_URL}/reset-password.html?token=${resetToken}`;
+        
+        await transporter.sendMail({
+            from: `"Mujōken no Umi" <${process.env.EMAIL_USER}>`,
+            to: user.email,
+            subject: 'Reset Password Akun Anda',
+            html: `<p>Anda menerima email ini karena ada permintaan untuk mereset password akun Anda.</p>
+                   <p>Silakan klik link di bawah ini untuk melanjutkan:</p>
+                   <a href="${resetUrl}" style="background-color:#33A1E0; color:white; padding:10px 20px; text-decoration:none; border-radius:5px;">Reset Password</a>
+                   <p>Link ini hanya berlaku selama 15 menit.</p>
+                   <p>Jika Anda tidak merasa melakukan permintaan ini, abaikan saja email ini.</p>`,
+        });
+
+        res.json({ message: 'Link reset password telah dikirim ke email Anda.' });
+
+    } catch (e) {
+        console.error('Error di forgot password:', e.message);
+        res.status(500).json({ message: 'Terjadi kesalahan server.' });
+    }
+});
+
+app.post('/api/reset-password', async (req, res) => {
+    const { token, newPassword } = req.body;
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_RESET_SECRET);
+        
+        const { data: user, error } = await supabase
+            .from('pengguna')
+            .select('*')
+            .eq('id', decoded.userId)
+            .single();
+
+        if (error || !user || user.reset_token !== token || new Date() > new Date(user.reset_token_expires)) {
+            return res.status(400).json({ message: 'Token tidak valid atau telah kedaluwarsa.' });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: "Password baru minimal 6 karakter." });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const password_hash = await bcrypt.hash(newPassword, salt);
+        
+        const { error: updateError } = await supabase
+            .from('pengguna')
+            .update({ kata_sandi: password_hash, reset_token: null, reset_token_expires: null })
+            .eq('id', user.id);
+        
+        if (updateError) throw updateError;
+        
+        res.json({ message: 'Password berhasil diubah. Silakan login kembali.' });
+
+    } catch (e) {
+        console.error('Error di reset password:', e.message);
+        if (e.name === 'JsonWebTokenError' || e.name === 'TokenExpiredError') {
+            return res.status(400).json({ message: 'Token tidak valid atau telah kedaluwarsa.' });
+        }
+        res.status(500).json({ message: 'Terjadi kesalahan server.' });
+    }
+});
+
 
 // Middleware otentikasi
 function authenticateToken(req, res, next) {

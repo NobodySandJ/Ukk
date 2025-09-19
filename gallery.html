@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,29 +9,31 @@
     <link rel="stylesheet" href="css/modal.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="apple-touch-icon" sizes="180x180" href="img/logo/apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="img/logo/favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="img/logo/favicon-16x16.png">
-<link rel="manifest" href="img/logo/site.webmanifest">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/logo/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/logo/favicon-16x16.png">
+    <link rel="manifest" href="img/logo/site.webmanifest">
 </head>
+
 <body>
 
-<header>
-    <nav class="container">
-        <div class="logo">
-    <a href="index.html">
-        <img src="img/logo/apple-touch-icon.png" alt="Mujōken no Umi Logo" style="height: 40px; margin-right: 10px;">
-    </a>
-    <h1 id="logo-title"><a href="index.html">Mujōken no Umi</a></h1>
-</div>
-        
-        <ul class="nav-links" id="nav-links">
+    <header>
+        <nav class="container">
+            <div class="logo">
+                <a href="index.html">
+                    <img src="img/logo/apple-touch-icon.png" alt="Mujōken no Umi Logo"
+                        style="height: 40px; margin-right: 10px;">
+                </a>
+                <h1 id="logo-title"><a href="index.html">Mujōken no Umi</a></h1>
+            </div>
+
+            <ul class="nav-links" id="nav-links">
             </ul>
 
-        <button class="hamburger" id="hamburger-menu" aria-label="Buka menu navigasi">
-            <i class="fas fa-bars"></i>
-        </button>
-    </nav>
-</header>
+            <button class="hamburger" id="hamburger-menu" aria-label="Buka menu navigasi">
+                <i class="fas fa-bars"></i>
+            </button>
+        </nav>
+    </header>
 
     <main>
         <section id="gallery-page" class="reveal">
@@ -41,7 +44,7 @@
             </div>
         </section>
     </main>
-    
+
     <div id="lightbox" class="lightbox">
         <span class="close-btn" aria-label="Tutup galeri">&times;</span>
         <span class="nav-arrow prev-btn" aria-label="Gambar sebelumnya">&#10094;</span>
@@ -53,13 +56,15 @@
     <div class="modal-overlay" id="auth-modal">
         <div class="modal-container">
             <button class="modal-close-btn" id="modal-close-btn">&times;</button>
-            
+
             <div id="login-view">
                 <div class="modal-form-container">
                     <h2>Login Akun</h2>
                     <form id="login-form" class="modal-form">
                         <input type="email" id="login-email" placeholder="Email" required>
                         <input type="password" id="login-password" placeholder="Password" required>
+                        <a href="forgot-password.html"
+                            style="text-align: right; font-size: 0.9em; margin-top: -0.5rem;">Lupa Sandi?</a>
                         <button type="submit" class="cta-button">Login</button>
                         <p id="login-error" class="error-message" style="text-align: center;"></p>
                     </form>
@@ -80,7 +85,8 @@
                         <input type="text" id="register-instagram" placeholder="Username Instagram" required>
                         <div class="sk-agreement">
                             <input type="checkbox" id="sk-checkbox" required>
-                            <label for="sk-checkbox">Saya setuju dengan <a href="sk.html" target="_blank">Syarat & Ketentuan</a>.</label>
+                            <label for="sk-checkbox">Saya setuju dengan <a href="sk.html" target="_blank">Syarat &
+                                    Ketentuan</a>.</label>
                         </div>
                         <button type="submit" class="cta-button">Daftar</button>
                         <p id="register-error" class="error-message" style="text-align: center;"></p>
@@ -108,7 +114,8 @@
 
     <script src="js/auth.js"></script>
     <script src="js/script.js"></script>
-    <script src="js/cheki.js"></script> 
+    <script src="js/cheki.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1/build/qrcode.min.js"></script>
 </body>
+
 </html>
