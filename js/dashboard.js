@@ -58,10 +58,17 @@ document.addEventListener('DOMContentLoaded', function() {
             const card = document.createElement('div');
             card.className = 'ticket-card';
             
+            // Membuat daftar item dari detail_item
+            let itemsList = 'Tidak ada detail item';
+            if (order.detail_item && order.detail_item.length > 0) {
+                itemsList = order.detail_item.map(item => `${item.quantity}x ${item.name}`).join('<br>');
+            }
+
             card.innerHTML = `
                 <div class="ticket-details">
                     <p><strong>ID Pesanan</strong>: ${order.id_pesanan}</p>
                     <p><strong>Total</strong>: Rp ${order.total_harga.toLocaleString('id-ID')}</p>
+                    <p><strong>Item Dibeli</strong>: <br><span class="item-list">${itemsList}</span></p>
                 </div>
                 <div class="ticket-qr">
                     <canvas id="qr-${order.id_pesanan}"></canvas>
@@ -70,10 +77,14 @@ document.addEventListener('DOMContentLoaded', function() {
             
             ticketContainer.appendChild(card);
             
-            // Generate QR Code
+            // Generate QR Code dengan data yang lebih lengkap
             const qrCanvas = document.getElementById(`qr-${order.id_pesanan}`);
             if (qrCanvas) {
-                QRCode.toCanvas(qrCanvas, order.id_pesanan, { width: 100, margin: 1 }, function (error) {
+                // Membuat string data untuk QR code
+                const qrItems = order.detail_item ? order.detail_item.map(item => `${item.quantity}x ${item.name}`).join(', ') : 'N/A';
+                const qrData = `ID Pesanan: ${order.id_pesanan}\nItem: ${qrItems}`;
+                
+                QRCode.toCanvas(qrCanvas, qrData, { width: 100, margin: 1 }, function (error) {
                     if (error) console.error(error);
                     console.log(`QR Code untuk ${order.id_pesanan} berhasil dibuat.`);
                 });
