@@ -39,6 +39,7 @@
     { "src": "/api/admin/all-orders", "dest": "/backend/server.js" },
     { "src": "/api/admin/update-ticket-status", "dest": "/backend/server.js" },
     { "src": "/api/admin/delete-order/(.*)", "dest": "/backend/server.js" },
+    { "src": "/api/admin/reset-user-password", "dest": "/backend/server.js" },
     { "src": "/(.*)", "dest": "/$1" }
   ]
 }
