@@ -1,5 +1,5 @@
 // nobodysandj/ukk/Ukk-7c6003e68c8bfcc1421a6e0fe28a09e9ec6fbf04/js/auth.js
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const navLinksContainer = document.getElementById('nav-links');
     if (!navLinksContainer) {
         console.error('Elemen navigasi #nav-links tidak ditemukan!');
@@ -10,25 +10,39 @@ document.addEventListener('DOMContentLoaded', function() {
     const userData = JSON.parse(localStorage.getItem('userData'));
 
     function initializeApp() {
+        // Link navigasi dasar yang akan ada di dalam hamburger menu
         let navHTML = `
             <li><a href="index.html#about">Tentang Kami</a></li>
             <li><a href="index.html#members">Member</a></li>
             <li><a href="index.html#news">Berita</a></li>
         `;
 
-        if (token && userData) {
-            const destination = userData.peran === 'admin' ? 'admin.html' : 'dashboard.html';
-            navHTML += `
-                <li><a href="${destination}" title="Akun Saya"><i class="fas fa-user-circle" style="font-size: 1.5rem;"></i></a></li>
-            `;
-        } else {
-            navHTML += `
-                <li><a href="#" id="auth-icon-btn" title="Login/Daftar"><i class="fas fa-user-circle" style="font-size: 1.5rem;"></i></a></li>
-            `;
-        }
-        
         navLinksContainer.innerHTML = navHTML;
 
+        // Logika untuk menambahkan ikon login/dashboard di luar hamburger
+        const nav = document.querySelector('nav.container');
+        if (nav) {
+            let userIconHTML = '';
+            if (token && userData) {
+                const destination = userData.peran === 'admin' ? 'admin.html' : 'dashboard.html';
+                // Membuat elemen baru yang akan berada di samping hamburger
+                userIconHTML = `
+                    <a href="${destination}" title="Akun Saya" class="nav-user-icon"><i class="fas fa-user-circle"></i></a>
+                `;
+            } else {
+                // Membuat tombol login/daftar
+                userIconHTML = `
+                     <a href="#" id="auth-icon-btn" title="Login/Daftar" class="nav-user-icon"><i class="fas fa-user-circle"></i></a>
+                `;
+            }
+            // Sisipkan ikon sebelum tombol hamburger
+            const hamburgerMenu = document.getElementById('hamburger-menu');
+            if (hamburgerMenu) {
+                hamburgerMenu.insertAdjacentHTML('beforebegin', userIconHTML);
+            }
+        }
+
+        // Setup listener untuk tombol login/daftar yang baru dibuat
         const authIconBtn = document.getElementById('auth-icon-btn');
         const authModal = document.getElementById('auth-modal');
 
@@ -49,7 +63,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const registerView = document.getElementById('register-view');
         const showRegisterLink = document.getElementById('show-register-link');
         const showLoginLink = document.getElementById('show-login-link');
-        
+
         if (closeModalBtn) {
             closeModalBtn.addEventListener('click', () => authModal.classList.remove('active'));
         }
@@ -78,7 +92,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function setupFormHandlers() {
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
-        
+
         if (loginForm) {
             loginForm.addEventListener('submit', async (e) => {
                 e.preventDefault();
@@ -91,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 submitButton.disabled = true;
                 submitButton.textContent = 'Masuk...';
                 formError.textContent = '';
-                
+
                 try {
                     const response = await fetch('/api/login', {
                         method: 'POST',
@@ -100,17 +114,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                     const result = await response.json();
                     if (!response.ok) throw new Error(result.message || 'Login gagal.');
-                    
+
                     localStorage.setItem('userToken', result.token);
                     localStorage.setItem('userData', JSON.stringify(result.user));
-                    
+
                     showToast(`Login berhasil! Selamat datang, ${result.user.nama_pengguna}!`);
 
                     setTimeout(() => {
                         if (result.user && result.user.peran === 'admin') {
                             window.location.href = 'admin.html';
                         } else {
-                            window.location.href = 'index.html';
+                            window.location.reload(); // Ganti ke reload agar nav terupdate
                         }
                     }, 1500);
 
@@ -148,12 +162,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                     const result = await response.json();
                     if (!response.ok) throw new Error(result.message || 'Gagal mendaftar.');
-                    
+
                     showToast('Pendaftaran berhasil! Silakan login.');
-                    
+
                     const loginView = document.getElementById('login-view');
                     const registerView = document.getElementById('register-view');
-                    if(loginView && registerView) {
+                    if (loginView && registerView) {
                         registerForm.reset();
                         loginView.style.display = 'block';
                         registerView.style.display = 'none';
@@ -168,6 +182,30 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         }
     }
+
+    // Menambahkan CSS untuk ikon pengguna
+    const style = document.createElement('style');
+    style.innerHTML = `
+        .nav-user-icon {
+            color: var(--light-text-color);
+            font-size: 1.8rem;
+            cursor: pointer;
+            display: none; /* Sembunyikan di desktop */
+        }
+        @media (max-width: 768px) {
+            .nav-user-icon {
+                display: block; /* Tampilkan di mobile */
+                margin-left: 1rem;
+            }
+            nav .container {
+                 justify-content: space-between;
+                 align-items: center;
+                 display: flex;
+            }
+        }
+    `;
+    document.head.appendChild(style);
+
 
     initializeApp();
     setupModalListeners();

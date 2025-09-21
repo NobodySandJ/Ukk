@@ -817,6 +817,42 @@ footer p {
     .lightbox-caption { font-size: 1rem; }
     .mobile-cart-summary { display: block; }
     .order-summary-container { margin-bottom: 2rem; }
+    
+    /* Aturan tambahan untuk dashboard.html */
+    .dashboard-container {
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+
+    .welcome-header h1 {
+        font-size: 2rem;
+    }
+
+    .ticket-card {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 1.5rem;
+    }
+
+    .ticket-details {
+        text-align: center;
+    }
+
+    .ticket-details p strong {
+        min-width: 0;
+        display: block;
+        margin-bottom: 0.25rem;
+    }
+
+    .item-list {
+        padding-left: 0;
+    }
+
+    .dashboard-actions {
+        flex-direction: column;
+        gap: 0.8rem;
+    }
 }
 
 nav .logo {

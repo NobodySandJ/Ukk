@@ -89,6 +89,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 default: statusClass = 'status-pending'; statusText = 'Pending';
             }
 
+            // Tambahkan tombol Reset Pass dengan data-userid
             row.innerHTML = `
                 <td>${order.id_pesanan}</td>
                 <td>${order.nama_pelanggan}<br><small>${order.email_pelanggan}</small></td>
@@ -97,6 +98,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <td>
                     <button class="action-btn btn-use" data-orderid="${order.id_pesanan}" ${order.status_tiket !== 'berlaku' ? 'disabled' : ''}>Gunakan</button>
                     <button class="action-btn btn-delete" data-orderid="${order.id_pesanan}">Hapus</button>
+                    <button class="action-btn btn-reset" data-userid="${order.id_pengguna}" data-username="${order.nama_pelanggan}">Reset Pass</button>
                 </td>
             `;
             ordersTbody.appendChild(row);
@@ -155,6 +157,31 @@ document.addEventListener('DOMContentLoaded', function() {
                     fetchAllOrders();
                 } catch (error) {
                     alert('Terjadi kesalahan: ' + error.message);
+                }
+            }
+        }
+
+        // Fungsi BARU untuk tombol Reset Password
+        if (button.classList.contains('btn-reset')) {
+            const userId = button.dataset.userid;
+            const username = button.dataset.username;
+            if (confirm(`Anda yakin ingin mereset password untuk user ${username}?`)) {
+                try {
+                    const response = await fetch('/api/admin/reset-user-password', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({ userId: userId })
+                    });
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.message);
+
+                    // Tampilkan password sementara kepada admin
+                    alert(`${result.message}\n\nPassword Sementara: ${result.temporaryPassword}\n\nHarap segera berikan password ini kepada user dan minta mereka untuk menggantinya.`);
+                } catch (error) {
+                    alert('Gagal mereset password: ' + error.message);
                 }
             }
         }
