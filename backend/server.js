@@ -5,7 +5,7 @@ const cors = require("cors");
 const { createClient } = require("@supabase/supabase-js");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const crypto = require("crypto"); // Diperlukan untuk generate password random
+const crypto = require("crypto");
 require("dotenv").config();
 
 const app = express();
@@ -98,7 +98,7 @@ app.post("/api/login", async (req, res) => {
             userId: user.id,
             username: user.nama_pengguna,
             email: user.email,
-            role: user.peran,
+            role: user.peran, // Peran disertakan di sini
         };
         const token = jwt.sign(payload, process.env.JWT_SECRET, {
             expiresIn: "1d",
@@ -293,34 +293,33 @@ app.put("/api/user/profile", authenticateToken, async (req, res) => {
 
 // --- BAGIAN ADMIN ---
 
+// --- PERBAIKAN DI SINI ---
 async function authenticateAdmin(req, res, next) {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
     if (token == null) return res.sendStatus(401);
+
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        const { data: user, error } = await supabase
-            .from("pengguna")
-            .select("peran")
-            .eq("id", decoded.userId)
-            .single();
-
-        if (error || !user || user.peran !== "admin") {
+        // Langsung periksa peran dari token, tidak perlu query database lagi.
+        if (decoded.role !== "admin") {
             return res.status(403).json({ message: "Akses ditolak: Wajib admin." });
         }
-        req.user = decoded;
+        
+        req.user = decoded; // Teruskan data yang sudah diverifikasi
         next();
     } catch (err) {
         return res.status(403).json({ message: "Token tidak valid." });
     }
 }
 
+
 app.get("/api/admin/all-orders", authenticateAdmin, async (req, res) => {
     try {
         const { data, error } = await supabase
             .from("pesanan")
-            .select("*, pengguna(id, nama_pengguna)") // Ambil juga data pengguna
+            .select("*, pengguna(id, nama_pengguna)")
             .order("dibuat_pada", { ascending: false });
         if (error) throw error;
         res.json(data);
@@ -401,21 +400,16 @@ app.delete("/api/admin/delete-order/:order_id", authenticateAdmin, async (req, r
     }
 });
 
-// Endpoint BARU untuk admin mereset password user
 app.post("/api/admin/reset-user-password", authenticateAdmin, async (req, res) => {
     const { userId } = req.body;
     if (!userId) {
         return res.status(400).json({ message: "User ID diperlukan." });
     }
     try {
-        // Buat password random yang aman
-        const tempPassword = crypto.randomBytes(4).toString('hex'); // contoh: 'a4b1c8e2'
-        
-        // Hash password baru
+        const tempPassword = crypto.randomBytes(4).toString('hex');
         const salt = await bcrypt.genSalt(10);
         const password_hash = await bcrypt.hash(tempPassword, salt);
         
-        // Update password di database
         const { data, error } = await supabase
             .from("pengguna")
             .update({ kata_sandi: password_hash })
@@ -424,7 +418,6 @@ app.post("/api/admin/reset-user-password", authenticateAdmin, async (req, res) =
 
         if (error) throw error;
 
-        // Kirim password sementara kembali ke admin
         res.status(200).json({ 
             message: `Password untuk user ${data[0].nama_pengguna} berhasil direset.`,
             temporaryPassword: tempPassword
