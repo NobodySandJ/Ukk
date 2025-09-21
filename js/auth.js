@@ -114,8 +114,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     const result = await response.json();
                     if (!response.ok) throw new Error(result.message || 'Login gagal.');
 
-                    // --- PERBAIKAN DI SINI ---
-                    // Menyimpan seluruh objek 'user' yang diterima dari server
                     localStorage.setItem('userToken', result.token);
                     localStorage.setItem('userData', JSON.stringify(result.user));
 
@@ -125,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         if (result.user && result.user.peran === 'admin') {
                             window.location.href = 'admin.html';
                         } else {
-                            window.location.reload(); // Ganti ke reload agar nav terupdate
+                            window.location.reload(); 
                         }
                     }, 1500);
 
@@ -184,6 +182,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // --- PERBAIKAN DI SINI ---
     // Menambahkan CSS untuk ikon pengguna
     const style = document.createElement('style');
     style.innerHTML = `
@@ -191,18 +190,13 @@ document.addEventListener('DOMContentLoaded', function () {
             color: var(--light-text-color);
             font-size: 1.8rem;
             cursor: pointer;
-            display: none; /* Sembunyikan di desktop */
+            display: block; /* Diubah dari display: none menjadi display: block */
+            margin-left: 1rem;
         }
-        @media (max-width: 768px) {
-            .nav-user-icon {
-                display: block; /* Tampilkan di mobile */
-                margin-left: 1rem;
-            }
-            nav .container {
-                 justify-content: space-between;
-                 align-items: center;
-                 display: flex;
-            }
+         nav .container {
+             justify-content: space-between;
+             align-items: center;
+             display: flex;
         }
     `;
     document.head.appendChild(style);
