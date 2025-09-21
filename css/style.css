@@ -1,4 +1,4 @@
-/* nobodysandj/ukk/Ukk-7c6003e68c8bfcc1421a6e0fe28a09e9ec6fbf04/css/style.css */
+/* nobodysandj/ukk/Ukk-14b598684d116e8ed29b16627a58dd62aa356a21/css/style.css */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap');
 
 :root {
@@ -818,7 +818,7 @@ footer p {
     .mobile-cart-summary { display: block; }
     .order-summary-container { margin-bottom: 2rem; }
     
-    /* Aturan tambahan untuk dashboard.html */
+    /* --- PERBAIKAN DI SINI UNTUK DASHBOARD --- */
     .dashboard-container {
         margin: 2rem auto;
         padding: 0 1rem;

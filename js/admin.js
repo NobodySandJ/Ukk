@@ -2,8 +2,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const token = localStorage.getItem('userToken');
     const userData = JSON.parse(localStorage.getItem('userData'));
 
-    // --- PERBAIKAN DI SINI ---
-    // Pengecekan token dan peran admin menjadi lebih aman
     if (!token || !userData || userData.peran !== 'admin') {
         alert('Akses ditolak. Anda bukan admin atau sesi Anda telah berakhir.');
         localStorage.removeItem('userToken');
@@ -28,7 +26,6 @@ document.addEventListener('DOMContentLoaded', function() {
         logoutBtn.addEventListener('click', () => {
             localStorage.removeItem('userToken');
             localStorage.removeItem('userData');
-            alert('Anda telah logout.');
             window.location.href = 'index.html';
         });
     }
@@ -57,7 +54,7 @@ document.addEventListener('DOMContentLoaded', function() {
             memberCard.innerHTML += memberStatsHTML;
             statsGrid.appendChild(memberCard);
         } catch (error) {
-            statsGrid.innerHTML = `<p>${error.message}</p>`;
+            showToast(error.message, false);
         }
     }
 
@@ -92,12 +89,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 default: statusClass = 'status-pending'; statusText = 'Pending';
             }
 
+            // --- PERBAIKAN DI SINI: MENAMBAHKAN DATA-LABEL UNTUK RESPONSIVE CSS ---
             row.innerHTML = `
-                <td>${order.id_pesanan}</td>
-                <td>${order.nama_pelanggan}<br><small>${order.email_pelanggan}</small></td>
-                <td>${items}</td>
-                <td><span class="status-badge ${statusClass}">${statusText}</span></td>
-                <td>
+                <td data-label="ID Pesanan">${order.id_pesanan}</td>
+                <td data-label="Pelanggan">${order.nama_pelanggan}<br><small>${order.email_pelanggan}</small></td>
+                <td data-label="Detail Item">${items}</td>
+                <td data-label="Status Tiket"><span class="status-badge ${statusClass}">${statusText}</span></td>
+                <td data-label="Aksi">
                     <button class="action-btn btn-use" data-orderid="${order.id_pesanan}" ${order.status_tiket !== 'berlaku' ? 'disabled' : ''}>Gunakan</button>
                     <button class="action-btn btn-delete" data-orderid="${order.id_pesanan}">Hapus</button>
                     <button class="action-btn btn-reset" data-userid="${order.id_pengguna}" data-username="${order.nama_pelanggan}">Reset Pass</button>
@@ -135,10 +133,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                     if (!response.ok) throw new Error('Gagal memperbarui status tiket.');
                     
-                    alert('Status tiket berhasil diubah menjadi hangus.');
+                    // --- PERBAIKAN DI SINI: MENGGANTI ALERT DENGAN TOAST ---
+                    showToast('Status tiket berhasil diubah menjadi hangus.');
                     fetchAllOrders(); 
                 } catch (error) {
-                    alert('Terjadi kesalahan: ' + error.message);
+                    showToast('Terjadi kesalahan: ' + error.message, false);
                 }
             }
         }
@@ -155,10 +154,11 @@ document.addEventListener('DOMContentLoaded', function() {
                     const result = await response.json();
                     if (!response.ok) throw new Error(result.message || 'Gagal menghapus pesanan.');
 
-                    alert(result.message);
+                    // --- PERBAIKAN DI SINI: MENGGANTI ALERT DENGAN TOAST ---
+                    showToast(result.message);
                     fetchAllOrders();
                 } catch (error) {
-                    alert('Terjadi kesalahan: ' + error.message);
+                    showToast('Terjadi kesalahan: ' + error.message, false);
                 }
             }
         }
@@ -179,9 +179,10 @@ document.addEventListener('DOMContentLoaded', function() {
                     const result = await response.json();
                     if (!response.ok) throw new Error(result.message);
 
+                    // --- DI SINI TETAP MENGGUNAKAN ALERT KARENA PERLU MENAMPILKAN INFO PENTING ---
                     alert(`${result.message}\n\nPassword Sementara: ${result.temporaryPassword}\n\nHarap segera berikan password ini kepada user dan minta mereka untuk menggantinya.`);
                 } catch (error) {
-                    alert('Gagal mereset password: ' + error.message);
+                    showToast('Gagal mereset password: ' + error.message, false);
                 }
             }
         }

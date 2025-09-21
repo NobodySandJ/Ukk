@@ -16,7 +16,6 @@
             text-align: center; 
             margin-bottom: 2rem;
         }
-        /* Tambahkan style untuk logout button */
         #admin-logout-btn {
             background-color: transparent;
             color: #dc3545;
@@ -114,6 +113,7 @@
             font-weight: 500;
             transition: background-color 0.3s ease;
             margin-right: 5px;
+            margin-bottom: 5px; /* Tambah margin bawah untuk mobile */
         }
         .btn-use { background-color: var(--success-color); }
         .btn-use:hover { background-color: #218838; }
@@ -133,6 +133,43 @@
         .status-berlaku { background-color: #28a745; }
         .status-hangus { background-color: #6c757d; }
         .status-pending { background-color: #ffc107; color: #333;}
+
+        /* --- PERBAIKAN DI SINI UNTUK ADMIN RESPONSIVE --- */
+        @media (max-width: 768px) {
+            .management-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-bar {
+                max-width: 100%;
+            }
+            .order-table thead {
+                display: none;
+            }
+            .order-table, .order-table tbody, .order-table tr, .order-table td {
+                display: block;
+                width: 100%;
+            }
+            .order-table tr {
+                margin-bottom: 1.5rem;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            .order-table td {
+                text-align: right;
+                padding-left: 50%;
+                position: relative;
+            }
+            .order-table td:before {
+                content: attr(data-label);
+                position: absolute;
+                left: 1rem;
+                width: calc(50% - 2rem);
+                text-align: left;
+                font-weight: 600;
+            }
+        }
     </style>
 </head>
 <body>
@@ -184,6 +221,7 @@
         </div>
     </main>
     
+    <script src="js/script.js"></script> 
     <script src="js/auth.js"></script>
     <script src="js/admin.js"></script>
 </body>
