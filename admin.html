@@ -113,7 +113,7 @@
             font-weight: 500;
             transition: background-color 0.3s ease;
             margin-right: 5px;
-            margin-bottom: 5px; /* Tambah margin bawah untuk mobile */
+            margin-bottom: 5px;
         }
         .btn-use { background-color: var(--success-color); }
         .btn-use:hover { background-color: #218838; }
@@ -134,7 +134,6 @@
         .status-hangus { background-color: #6c757d; }
         .status-pending { background-color: #ffc107; color: #333;}
 
-        /* --- PERBAIKAN DI SINI UNTUK ADMIN RESPONSIVE --- */
         @media (max-width: 768px) {
             .management-header {
                 flex-direction: column;
@@ -168,6 +167,22 @@
                 width: calc(50% - 2rem);
                 text-align: left;
                 font-weight: 600;
+            }
+
+            /* --- PERBAIKAN DI SINI UNTUK TOMBOL DI MOBILE --- */
+            .order-table td[data-label="Aksi"] {
+                padding-left: 1rem;
+                text-align: left;
+            }
+            .order-table td[data-label="Aksi"] .action-btn {
+                display: block;
+                width: 100%;
+                margin-right: 0;
+                margin-bottom: 8px;
+                text-align: center;
+            }
+            .order-table td[data-label="Aksi"] .action-btn:last-child {
+                margin-bottom: 0;
             }
         }
     </style>
