@@ -1,10 +1,13 @@
-// nobodysandj/ukk/Ukk-7c6003e68c8bfcc1421a6e0fe28a09e9ec6fbf04/js/admin.js
 document.addEventListener('DOMContentLoaded', function() {
     const token = localStorage.getItem('userToken');
     const userData = JSON.parse(localStorage.getItem('userData'));
 
+    // --- PERBAIKAN DI SINI ---
+    // Pengecekan token dan peran admin menjadi lebih aman
     if (!token || !userData || userData.peran !== 'admin') {
-        alert('Akses ditolak. Anda bukan admin.');
+        alert('Akses ditolak. Anda bukan admin atau sesi Anda telah berakhir.');
+        localStorage.removeItem('userToken');
+        localStorage.removeItem('userData');
         window.location.href = 'index.html';
         return;
     }
@@ -35,7 +38,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch('/api/admin/stats', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (!response.ok) throw new Error('Gagal memuat statistik.');
+            if (!response.ok) throw new Error('Gagal memuat statistik. Sesi mungkin berakhir.');
             
             const stats = await response.json();
 
@@ -63,7 +66,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch('/api/admin/all-orders', {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (!response.ok) throw new Error('Gagal memuat pesanan.');
+            if (!response.ok) throw new Error('Gagal memuat pesanan. Sesi mungkin berakhir.');
             
             allOrders = await response.json();
             renderOrders(allOrders);
@@ -89,7 +92,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 default: statusClass = 'status-pending'; statusText = 'Pending';
             }
 
-            // Tambahkan tombol Reset Pass dengan data-userid
             row.innerHTML = `
                 <td>${order.id_pesanan}</td>
                 <td>${order.nama_pelanggan}<br><small>${order.email_pelanggan}</small></td>
@@ -161,7 +163,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
 
-        // Fungsi BARU untuk tombol Reset Password
         if (button.classList.contains('btn-reset')) {
             const userId = button.dataset.userid;
             const username = button.dataset.username;
@@ -178,7 +179,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     const result = await response.json();
                     if (!response.ok) throw new Error(result.message);
 
-                    // Tampilkan password sementara kepada admin
                     alert(`${result.message}\n\nPassword Sementara: ${result.temporaryPassword}\n\nHarap segera berikan password ini kepada user dan minta mereka untuk menggantinya.`);
                 } catch (error) {
                     alert('Gagal mereset password: ' + error.message);

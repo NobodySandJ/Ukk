@@ -1,4 +1,3 @@
-// nobodysandj/ukk/Ukk-7c6003e68c8bfcc1421a6e0fe28a09e9ec6fbf04/js/auth.js
 document.addEventListener('DOMContentLoaded', function () {
     const navLinksContainer = document.getElementById('nav-links');
     if (!navLinksContainer) {
@@ -115,6 +114,8 @@ document.addEventListener('DOMContentLoaded', function () {
                     const result = await response.json();
                     if (!response.ok) throw new Error(result.message || 'Login gagal.');
 
+                    // --- PERBAIKAN DI SINI ---
+                    // Menyimpan seluruh objek 'user' yang diterima dari server
                     localStorage.setItem('userToken', result.token);
                     localStorage.setItem('userData', JSON.stringify(result.user));
 
