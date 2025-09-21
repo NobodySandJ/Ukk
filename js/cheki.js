@@ -1,5 +1,4 @@
-// js/cheki.js (Versi Final dengan data.json)
-
+// js/cheki.js
 document.addEventListener('DOMContentLoaded', function () {
     if (document.getElementById('cheki-page')) {
         const token = localStorage.getItem('userToken');
@@ -15,28 +14,28 @@ document.addEventListener('DOMContentLoaded', function () {
         const orderSummaryContainer = document.querySelector('.order-summary-container');
 
         let membersData = [];
-        let groupChekiData = {}; // Dikosongkan, akan diisi dari data.json
+        let groupChekiData = {};
         let cart = {};
 
-        async function checkUrlForSuccess() {
+        // --- PERBAIKAN DI SINI: MENAMPILKAN TOAST SETELAH PEMBAYARAN SUKSES ---
+        function checkUrlForSuccess() {
             const urlParams = new URLSearchParams(window.location.search);
             const orderId = urlParams.get('order_id');
             const transactionStatus = urlParams.get('transaction_status');
 
             if (orderId && (transactionStatus === 'settlement' || transactionStatus === 'capture')) {
-                try {
-                    await fetch('/update-order-status', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            order_id: orderId,
-                            transaction_status: transactionStatus
-                        }),
-                    });
-                    window.location.href = `/dashboard.html?payment=success&order_id=${orderId}`;
-                } catch (error) {
-                    formErrorEl.textContent = 'Pembayaran berhasil, namun gagal memperbarui status. Hubungi admin.';
-                }
+                // Tampilkan toast kustom
+                const toastHTML = `
+                    <div>Terima kasih sudah membeli cheki!</div>
+                    <div class="toast-actions">
+                        <button onclick="window.location.href='/dashboard.html'" class="toast-btn toast-btn-primary">Lihat Tiket</button>
+                        <button onclick="document.querySelector('.toast-notification').classList.remove('show')" class="toast-btn toast-btn-secondary">Pesan Lagi</button>
+                    </div>
+                `;
+                showToast(toastHTML, true, 10000); // Tampilkan selama 10 detik
+
+                // Hapus parameter dari URL agar toast tidak muncul lagi saat refresh
+                window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
 
@@ -46,7 +45,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (!response.ok) throw new Error('Data produk tidak ditemukan');
                 const data = await response.json();
                 
-                // Mengambil data member dan data cheki grup dari file JSON
                 membersData = data.members;
                 groupChekiData = data.group_cheki; 
 
@@ -76,47 +74,61 @@ document.addEventListener('DOMContentLoaded', function () {
         function renderProducts() {
             chekiListContainer.innerHTML = '';
             
-            // Render Group Cheki Card First
             if (groupChekiData && groupChekiData.id) {
                 const groupCard = createProductCard(groupChekiData);
                 chekiListContainer.appendChild(groupCard);
             }
             
-            // Render Member Cheki Cards
             membersData.forEach(member => {
                 const memberCard = createProductCard(member);
                 chekiListContainer.appendChild(memberCard);
             });
         }
         
-        function showToast(message) {
+        // --- PERBAIKAN DI SINI: FUNGSI TOAST YANG LEBIH FLEKSIBEL ---
+        function showToast(message, isSuccess = true, duration = 3000) {
             const oldToast = document.querySelector('.toast-notification');
             if (oldToast) oldToast.remove();
+            
             const toast = document.createElement('div');
             toast.className = 'toast-notification';
-            toast.textContent = message;
+            toast.style.backgroundColor = isSuccess ? 'var(--success-color)' : '#D33333';
+            
+            // Cek jika pesan adalah HTML atau teks biasa
+            if (/<[a-z][\s\S]*>/i.test(message)) {
+                toast.innerHTML = message;
+            } else {
+                toast.textContent = message;
+            }
+
             document.body.appendChild(toast);
             setTimeout(() => toast.classList.add('show'), 100);
-            setTimeout(() => {
-                toast.classList.remove('show');
-                toast.addEventListener('transitionend', () => toast.remove());
-            }, 3000);
+
+            // Jika durasi tidak 0, sembunyikan otomatis
+            if (duration !== 0) {
+                 setTimeout(() => {
+                    toast.classList.remove('show');
+                    toast.addEventListener('transitionend', () => toast.remove());
+                }, duration);
+            }
         }
 
         function giveFeedback() {
             orderSummaryContainer.classList.add('item-added');
             setTimeout(() => orderSummaryContainer.classList.remove('item-added'), 500);
         }
+        
+        function resetCart() {
+            cart = {};
+            // Reset semua input quantity menjadi 0
+            const inputs = document.querySelectorAll('.quantity-input');
+            inputs.forEach(input => input.value = 0);
+            updateTotals();
+        }
 
         function updateQuantity(productId, action) {
-            let product = membersData.find(m => m.id === productId);
-            if (!product) {
-                if (productId === groupChekiData.id) {
-                    product = groupChekiData;
-                } else {
-                    return;
-                }
-            }
+            let product = membersData.find(m => m.id === productId) || (productId === groupChekiData.id ? groupChekiData : null);
+            if (!product) return;
 
             if (!cart[productId]) cart[productId] = 0;
 
@@ -129,9 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 showToast(`Cheki ${product.name} dikurangi.`);
             }
 
-            const inputEl = document.querySelector(`.quantity-input[data-id="${productId}"]`);
-            if (inputEl) inputEl.value = cart[productId];
-
+            document.querySelector(`.quantity-input[data-id="${productId}"]`).value = cart[productId];
             updateTotals();
         }
 
@@ -238,6 +248,30 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 const data = await response.json();
                 window.snap.pay(data.token, {
+                    onSuccess: async function(result) {
+                        // Kirim status ke backend
+                        await fetch('/update-order-status', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                order_id: result.order_id,
+                                transaction_status: result.transaction_status
+                            }),
+                        });
+                        // Reset keranjang dan redirect dengan parameter
+                        resetCart();
+                        window.location.href = `/cheki.html?order_id=${result.order_id}&transaction_status=${result.transaction_status}`;
+                    },
+                    onPending: function(result){
+                        alert("Pembayaran Anda sedang diproses. Status: " + result.transaction_status);
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
+                    },
+                    onError: function(result){
+                        alert("Pembayaran gagal!");
+                        submitButton.disabled = false;
+                        submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
+                    },
                     onClose: function () {
                         formErrorEl.textContent = 'Anda menutup jendela pembayaran.';
                         submitButton.disabled = false;
