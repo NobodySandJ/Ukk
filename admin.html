@@ -114,6 +114,7 @@
             transition: background-color 0.3s ease;
             margin-right: 5px;
             margin-bottom: 5px;
+            white-space: nowrap; /* Mencegah teks tombol turun baris */
         }
         .btn-use { background-color: var(--success-color); }
         .btn-use:hover { background-color: #218838; }
@@ -121,6 +122,19 @@
         
         .btn-delete { background-color: #dc3545; }
         .btn-delete:hover { background-color: #c82333; }
+
+        /* --- PERBAIKAN DI SINI: WARNA DAN TATA LETAK TOMBOL --- */
+        .btn-reset { background-color: #007bff; }
+        .btn-reset:hover { background-color: #0056b3; }
+
+        .actions-container {
+            display: flex;
+            align-items: center;
+        }
+        .actions-container .btn-reset {
+            margin-left: auto; /* Mendorong tombol reset ke paling kanan */
+        }
+        /* --- BATAS PERBAIKAN --- */
 
         .status-badge {
             padding: 0.3rem 0.8rem;
@@ -168,20 +182,19 @@
                 text-align: left;
                 font-weight: 600;
             }
-
-            /* --- PERBAIKAN DI SINI UNTUK TOMBOL DI MOBILE --- */
-            .order-table td[data-label="Aksi"] {
-                padding-left: 1rem;
-                text-align: left;
+            
+            .actions-container {
+                flex-direction: column;
+                align-items: stretch; /* Membuat tombol memenuhi container */
             }
-            .order-table td[data-label="Aksi"] .action-btn {
-                display: block;
+            .actions-container .action-btn {
                 width: 100%;
                 margin-right: 0;
+                margin-left: 0;
                 margin-bottom: 8px;
                 text-align: center;
             }
-            .order-table td[data-label="Aksi"] .action-btn:last-child {
+            .actions-container .action-btn:last-child {
                 margin-bottom: 0;
             }
         }
@@ -205,8 +218,7 @@
             </div>
             
             <section id="statistics">
-                <div class="stats-grid" id="stats-grid">
-                    </div>
+                <div class="stats-grid" id="stats-grid"></div>
             </section>
 
             <section id="orders-management" class="management-section">
@@ -228,8 +240,7 @@
                                 <th>Aksi</th>
                             </tr>
                         </thead>
-                        <tbody id="orders-tbody">
-                            </tbody>
+                        <tbody id="orders-tbody"></tbody>
                     </table>
                 </div>
             </section>
