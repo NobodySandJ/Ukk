@@ -425,11 +425,37 @@ app.post("/api/admin/reset-user-password", authenticateAdmin, async (req, res) =
     }
 });
 
-// <-- MULAI REVISI
+// <-- REVISI BARU: ENDPOINT UNTUK MENGUPDATE STOK CHEKI
+app.post("/api/admin/update-cheki-stock", authenticateAdmin, async (req, res) => {
+    const { changeValue } = req.body;
+    if (typeof changeValue !== 'number') {
+        return res.status(400).json({ message: "Nilai perubahan stok harus berupa angka." });
+    }
+
+    try {
+        // Karena kita tidak bisa menulis ke data.json, endpoint ini hanya akan
+        // mengembalikan status sukses. Di aplikasi nyata dengan database,
+        // Anda akan menjalankan query UPDATE di sini.
+        
+        // Contoh jika menggunakan database:
+        // const { data, error } = await supabase.rpc('update_stock', { amount: changeValue });
+        // if (error) throw error;
+        
+        console.log(`(SIMULASI) Stok diubah sebanyak: ${changeValue}`);
+
+        // Kirim response sukses
+        res.status(200).json({ message: "Stok berhasil diperbarui (simulasi)!" });
+
+    } catch (e) {
+        res.status(500).json({ message: `Gagal memperbarui stok: ${e.message}` });
+    }
+});
+
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
-// SELESAI REVISI -->
+
 
 module.exports = app;

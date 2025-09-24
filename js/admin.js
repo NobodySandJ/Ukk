@@ -39,9 +39,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- FUNGSI BARU UNTUK STOK ---
     async function fetchChekiStock() {
         try {
-            // NOTE: Di implementasi production, ini akan menjadi endpoint API
-            // Untuk sekarang, kita fetch dari data.json
-            const response = await fetch('../data.json'); 
+            // <-- REVISI PATH
+            const response = await fetch('/data.json'); 
             const data = await response.json();
             currentStockEl.textContent = data.cheki_stock;
         } catch (error) {
@@ -50,29 +49,8 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // NOTE: Fungsi ini hanya simulasi karena kita tidak bisa menulis ke data.json dari client-side
-    // Di aplikasi nyata, ini akan memanggil API backend
+    // <-- REVISI: Mengaktifkan fungsi update stok ke backend
     async function updateChekiStock(change) {
-        const currentValue = parseInt(currentStockEl.textContent);
-        if (isNaN(currentValue)) {
-            alert('Gagal mendapatkan nilai stok saat ini.');
-            return;
-        }
-        
-        const newValue = currentValue + change;
-        if (newValue < 0) {
-            alert('Stok tidak bisa kurang dari nol.');
-            return;
-        }
-
-        alert(`(SIMULASI) Stok akan diubah menjadi ${newValue}.\nDi aplikasi production, ini akan mengirim permintaan ke server.`);
-        
-        // Simulasi update di UI
-        currentStockEl.textContent = newValue;
-        stockChangeInput.value = '';
-        
-        /*
-        // KODE ASLI UNTUK PRODUCTION DENGAN BACKEND
         try {
             const response = await fetch('/api/admin/update-cheki-stock', {
                 method: 'POST',
@@ -86,12 +64,16 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!response.ok) throw new Error(result.message);
 
             alert(result.message);
-            fetchChekiStock(); // Refresh stok dari server
+            // Karena backend hanya simulasi, kita update manual di frontend
+            const currentValue = parseInt(currentStockEl.textContent);
+            if (!isNaN(currentValue)) {
+                 currentStockEl.textContent = currentValue + change;
+            }
             stockChangeInput.value = '';
+
         } catch (error) {
             alert('Gagal mengubah stok: ' + error.message);
         }
-        */
     }
 
     increaseBtn.addEventListener('click', () => {
