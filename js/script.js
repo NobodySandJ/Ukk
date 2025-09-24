@@ -1,4 +1,3 @@
-// nobodysandj/ukk/Ukk-7c6003e68c8bfcc1421a6e0fe28a09e9ec6fbf04/js/script.js
 function showToast(message, isSuccess = true) {
     const oldToast = document.querySelector('.toast-notification');
     if (oldToast) oldToast.remove();
@@ -43,6 +42,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
             if (!data || !data.group) {
                 throw new Error("Format data.json tidak valid atau data gagal dimuat.");
+            }
+
+            // Menampilkan stok di index.html
+            const indexStockDisplay = document.getElementById('index-stock-display');
+            if (indexStockDisplay) {
+                indexStockDisplay.textContent = `${data.cheki_stock} tiket`;
             }
 
             if (document.getElementById('hero')) {

@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const userData = JSON.parse(localStorage.getItem('userData'));
 
     function initializeApp() {
-        // Link navigasi dasar yang akan ada di dalam hamburger menu
+        // ... (Kode inisialisasi tidak berubah)
         let navHTML = `
             <li><a href="index.html#about">Tentang Kami</a></li>
             <li><a href="index.html#members">Member</a></li>
@@ -18,30 +18,25 @@ document.addEventListener('DOMContentLoaded', function () {
 
         navLinksContainer.innerHTML = navHTML;
 
-        // Logika untuk menambahkan ikon login/dashboard di luar hamburger
         const nav = document.querySelector('nav.container');
         if (nav) {
             let userIconHTML = '';
             if (token && userData) {
                 const destination = userData.peran === 'admin' ? 'admin.html' : 'dashboard.html';
-                // Membuat elemen baru yang akan berada di samping hamburger
                 userIconHTML = `
                     <a href="${destination}" title="Akun Saya" class="nav-user-icon"><i class="fas fa-user-circle"></i></a>
                 `;
             } else {
-                // Membuat tombol login/daftar
                 userIconHTML = `
                      <a href="#" id="auth-icon-btn" title="Login/Daftar" class="nav-user-icon"><i class="fas fa-user-circle"></i></a>
                 `;
             }
-            // Sisipkan ikon sebelum tombol hamburger
             const hamburgerMenu = document.getElementById('hamburger-menu');
             if (hamburgerMenu) {
                 hamburgerMenu.insertAdjacentHTML('beforebegin', userIconHTML);
             }
         }
 
-        // Setup listener untuk tombol login/daftar yang baru dibuat
         const authIconBtn = document.getElementById('auth-icon-btn');
         const authModal = document.getElementById('auth-modal');
 
@@ -54,6 +49,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function setupModalListeners() {
+        // ... (Kode listener modal tidak berubah)
         const authModal = document.getElementById('auth-modal');
         if (!authModal) return;
 
@@ -106,7 +102,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 formError.textContent = '';
 
                 try {
-                    const response = await fetch('/api/login', {
+                    const response = await fetch('http://localhost:3000/api/login', { // <-- REVISI
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(loginData)
@@ -154,7 +150,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 formError.textContent = '';
 
                 try {
-                    const response = await fetch('/api/register', {
+                    const response = await fetch('http://localhost:3000/api/register', { // <-- REVISI
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(userData)
@@ -182,15 +178,13 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- PERBAIKAN DI SINI ---
-    // Menambahkan CSS untuk ikon pengguna
     const style = document.createElement('style');
     style.innerHTML = `
         .nav-user-icon {
             color: var(--light-text-color);
             font-size: 1.8rem;
             cursor: pointer;
-            display: block; /* Diubah dari display: none menjadi display: block */
+            display: block;
             margin-left: 1rem;
         }
          nav .container {

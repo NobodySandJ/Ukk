@@ -1018,3 +1018,31 @@ nav .logo h1 {
     line-height: 1.7;
     font-size: 0.95rem;
 }
+
+/* ... (kode CSS yang ada sebelumnya) ... */
+
+.stock-display {
+    text-align: center;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    background-color: #eaf6ff;
+    border-radius: var(--border-radius);
+    border: 1px solid var(--primary-color);
+}
+
+.stock-display h3 {
+    margin: 0;
+    color: var(--accent-color);
+}
+
+.how-to-step-card {
+    background: var(--card-bg);
+    padding: 2rem;
+    text-align: center;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-light);
+    border-top: 4px solid var(--primary-color);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* ... (sisa kode CSS) ... */

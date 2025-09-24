@@ -293,7 +293,6 @@ app.put("/api/user/profile", authenticateToken, async (req, res) => {
 
 // --- BAGIAN ADMIN ---
 
-// --- PERBAIKAN DI SINI ---
 async function authenticateAdmin(req, res, next) {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
@@ -302,12 +301,11 @@ async function authenticateAdmin(req, res, next) {
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         
-        // Langsung periksa peran dari token, tidak perlu query database lagi.
         if (decoded.role !== "admin") {
             return res.status(403).json({ message: "Akses ditolak: Wajib admin." });
         }
         
-        req.user = decoded; // Teruskan data yang sudah diverifikasi
+        req.user = decoded;
         next();
     } catch (err) {
         return res.status(403).json({ message: "Token tidak valid." });
@@ -426,5 +424,12 @@ app.post("/api/admin/reset-user-password", authenticateAdmin, async (req, res) =
         res.status(500).json({ message: e.message });
     }
 });
+
+// <-- MULAI REVISI
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Server is running on http://localhost:${PORT}`);
+});
+// SELESAI REVISI -->
 
 module.exports = app;

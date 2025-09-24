@@ -16,6 +16,12 @@ document.addEventListener('DOMContentLoaded', function() {
     const searchInput = document.getElementById('search-input');
     const logoutBtn = document.getElementById('admin-logout-btn');
     
+    // Elemen baru untuk stok
+    const currentStockEl = document.getElementById('current-stock');
+    const stockChangeInput = document.getElementById('stock-change-value');
+    const increaseBtn = document.getElementById('increase-stock-btn');
+    const decreaseBtn = document.getElementById('decrease-stock-btn');
+
     let allOrders = [];
 
     if(adminWelcome && userData.nama_pengguna) {
@@ -29,6 +35,82 @@ document.addEventListener('DOMContentLoaded', function() {
             window.location.href = 'index.html';
         });
     }
+
+    // --- FUNGSI BARU UNTUK STOK ---
+    async function fetchChekiStock() {
+        try {
+            // NOTE: Di implementasi production, ini akan menjadi endpoint API
+            // Untuk sekarang, kita fetch dari data.json
+            const response = await fetch('../data.json'); 
+            const data = await response.json();
+            currentStockEl.textContent = data.cheki_stock;
+        } catch (error) {
+            currentStockEl.textContent = 'Gagal memuat';
+            console.error('Error fetching stock:', error);
+        }
+    }
+
+    // NOTE: Fungsi ini hanya simulasi karena kita tidak bisa menulis ke data.json dari client-side
+    // Di aplikasi nyata, ini akan memanggil API backend
+    async function updateChekiStock(change) {
+        const currentValue = parseInt(currentStockEl.textContent);
+        if (isNaN(currentValue)) {
+            alert('Gagal mendapatkan nilai stok saat ini.');
+            return;
+        }
+        
+        const newValue = currentValue + change;
+        if (newValue < 0) {
+            alert('Stok tidak bisa kurang dari nol.');
+            return;
+        }
+
+        alert(`(SIMULASI) Stok akan diubah menjadi ${newValue}.\nDi aplikasi production, ini akan mengirim permintaan ke server.`);
+        
+        // Simulasi update di UI
+        currentStockEl.textContent = newValue;
+        stockChangeInput.value = '';
+        
+        /*
+        // KODE ASLI UNTUK PRODUCTION DENGAN BACKEND
+        try {
+            const response = await fetch('/api/admin/update-cheki-stock', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ changeValue: change })
+            });
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message);
+
+            alert(result.message);
+            fetchChekiStock(); // Refresh stok dari server
+            stockChangeInput.value = '';
+        } catch (error) {
+            alert('Gagal mengubah stok: ' + error.message);
+        }
+        */
+    }
+
+    increaseBtn.addEventListener('click', () => {
+        const value = parseInt(stockChangeInput.value);
+        if (value > 0) {
+            updateChekiStock(value);
+        } else {
+            alert('Masukkan jumlah yang valid.');
+        }
+    });
+
+    decreaseBtn.addEventListener('click', () => {
+        const value = parseInt(stockChangeInput.value);
+        if (value > 0) {
+            updateChekiStock(-value);
+        } else {
+            alert('Masukkan jumlah yang valid.');
+        }
+    });
 
     async function fetchStats() {
         try {
@@ -134,7 +216,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
                     if (!response.ok) throw new Error('Gagal memperbarui status tiket.');
                     
-                    // --- PERBAIKAN DI SINI: KEMBALI MENGGUNAKAN ALERT ---
                     alert('Status tiket berhasil diubah menjadi hangus.');
                     fetchAllOrders(); 
                 } catch (error) {
@@ -189,4 +270,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
     fetchStats();
     fetchAllOrders();
+    fetchChekiStock();
 });

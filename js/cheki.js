@@ -1,4 +1,3 @@
-// js/cheki.js
 document.addEventListener('DOMContentLoaded', function () {
     if (document.getElementById('cheki-page')) {
         const token = localStorage.getItem('userToken');
@@ -12,19 +11,19 @@ document.addEventListener('DOMContentLoaded', function () {
         const mobileCart = document.getElementById('mobile-cart');
         const mobileCartTotal = document.getElementById('mobile-cart-total');
         const orderSummaryContainer = document.querySelector('.order-summary-container');
+        const chekiStockDisplay = document.getElementById('cheki-stock-display');
 
         let membersData = [];
         let groupChekiData = {};
         let cart = {};
+        let availableStock = 0;
 
-        // --- PERBAIKAN DI SINI: MENAMPILKAN TOAST SETELAH PEMBAYARAN SUKSES ---
         function checkUrlForSuccess() {
             const urlParams = new URLSearchParams(window.location.search);
             const orderId = urlParams.get('order_id');
             const transactionStatus = urlParams.get('transaction_status');
 
             if (orderId && (transactionStatus === 'settlement' || transactionStatus === 'capture')) {
-                // Tampilkan toast kustom
                 const toastHTML = `
                     <div>Terima kasih sudah membeli cheki!</div>
                     <div class="toast-actions">
@@ -32,9 +31,8 @@ document.addEventListener('DOMContentLoaded', function () {
                         <button onclick="document.querySelector('.toast-notification').classList.remove('show')" class="toast-btn toast-btn-secondary">Pesan Lagi</button>
                     </div>
                 `;
-                showToast(toastHTML, true, 10000); // Tampilkan selama 10 detik
+                showToast(toastHTML, true, 10000);
 
-                // Hapus parameter dari URL agar toast tidak muncul lagi saat refresh
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
@@ -47,6 +45,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 
                 membersData = data.members;
                 groupChekiData = data.group_cheki; 
+                availableStock = data.cheki_stock || 0;
+
+                if (chekiStockDisplay) {
+                    chekiStockDisplay.textContent = `${availableStock} tiket`;
+                }
 
                 renderProducts();
             } catch (error) {
@@ -58,15 +61,17 @@ document.addEventListener('DOMContentLoaded', function () {
         function createProductCard(product) {
             const card = document.createElement('div');
             card.className = 'cheki-card reveal';
+            const isOutOfStock = availableStock === 0;
             card.innerHTML = `
                 <img src="${product.image}" alt="Cheki ${product.name}">
                 <h3>${product.name}</h3>
                 <p class="price">Rp ${product.price.toLocaleString('id-ID')}</p>
                 <div class="quantity-selector">
-                    <button class="quantity-btn" data-id="${product.id}" data-action="decrease">-</button>
+                    <button class="quantity-btn" data-id="${product.id}" data-action="decrease" ${isOutOfStock ? 'disabled' : ''}>-</button>
                     <input type="number" class="quantity-input" data-id="${product.id}" value="0" min="0" readonly>
-                    <button class="quantity-btn" data-id="${product.id}" data-action="increase">+</button>
+                    <button class="quantity-btn" data-id="${product.id}" data-action="increase" ${isOutOfStock ? 'disabled' : ''}>+</button>
                 </div>
+                ${isOutOfStock ? '<p style="color: red; margin-top: 10px;">Stok Habis</p>' : ''}
             `;
             return card;
         }
@@ -85,7 +90,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
         
-        // --- PERBAIKAN DI SINI: FUNGSI TOAST YANG LEBIH FLEKSIBEL ---
         function showToast(message, isSuccess = true, duration = 3000) {
             const oldToast = document.querySelector('.toast-notification');
             if (oldToast) oldToast.remove();
@@ -94,7 +98,6 @@ document.addEventListener('DOMContentLoaded', function () {
             toast.className = 'toast-notification';
             toast.style.backgroundColor = isSuccess ? 'var(--success-color)' : '#D33333';
             
-            // Cek jika pesan adalah HTML atau teks biasa
             if (/<[a-z][\s\S]*>/i.test(message)) {
                 toast.innerHTML = message;
             } else {
@@ -104,7 +107,6 @@ document.addEventListener('DOMContentLoaded', function () {
             document.body.appendChild(toast);
             setTimeout(() => toast.classList.add('show'), 100);
 
-            // Jika durasi tidak 0, sembunyikan otomatis
             if (duration !== 0) {
                  setTimeout(() => {
                     toast.classList.remove('show');
@@ -120,7 +122,6 @@ document.addEventListener('DOMContentLoaded', function () {
         
         function resetCart() {
             cart = {};
-            // Reset semua input quantity menjadi 0
             const inputs = document.querySelectorAll('.quantity-input');
             inputs.forEach(input => input.value = 0);
             updateTotals();
@@ -133,6 +134,11 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!cart[productId]) cart[productId] = 0;
 
             if (action === 'increase') {
+                const totalInCart = Object.values(cart).reduce((sum, count) => sum + count, 0);
+                if (totalInCart >= availableStock) {
+                    showToast('Maaf, stok cheki tidak mencukupi.', false);
+                    return;
+                }
                 cart[productId]++;
                 showToast(`Cheki ${product.name} ditambahkan!`);
                 giveFeedback();
@@ -249,7 +255,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const data = await response.json();
                 window.snap.pay(data.token, {
                     onSuccess: async function(result) {
-                        // Kirim status ke backend
                         await fetch('/update-order-status', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -258,7 +263,6 @@ document.addEventListener('DOMContentLoaded', function () {
                                 transaction_status: result.transaction_status
                             }),
                         });
-                        // Reset keranjang dan redirect dengan parameter
                         resetCart();
                         window.location.href = `/cheki.html?order_id=${result.order_id}&transaction_status=${result.transaction_status}`;
                     },
