@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
     async function fetchChekiStock() {
         try {
             // <-- REVISI PATH
-            const response = await fetch('/data.json'); 
+            const response = await fetch('/api/products-and-stock'); 
             const data = await response.json();
             currentStockEl.textContent = data.cheki_stock;
         } catch (error) {
@@ -65,10 +65,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             alert(result.message);
             // Karena backend hanya simulasi, kita update manual di frontend
-            const currentValue = parseInt(currentStockEl.textContent);
-            if (!isNaN(currentValue)) {
-                 currentStockEl.textContent = currentValue + change;
-            }
+            currentStockEl.textContent = result.newStock;
             stockChangeInput.value = '';
 
         } catch (error) {

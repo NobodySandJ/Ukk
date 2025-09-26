@@ -6,6 +6,8 @@ const { createClient } = require("@supabase/supabase-js");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
+const fs = require('fs');
+const path = require('path');
 require("dotenv").config();
 
 const app = express();
@@ -23,6 +25,22 @@ const snap = new midtransClient.Snap({
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+// --- HELPER FUNCTION TO GET STOCK ---
+async function getChekiStock() {
+    const { data, error } = await supabase
+        .from('pengaturan')
+        .select('nilai')
+        .eq('nama', 'stok_cheki')
+        .single();
+    if (error || !data) {
+        console.error("Gagal mendapatkan stok:", error);
+        // Return a default high value or 0 to indicate an issue, preventing sales if stock is unknown
+        return 0; 
+    }
+    return parseInt(data.nilai, 10);
+}
+
 
 // Endpoint Registrasi Pengguna
 app.post("/api/register", async (req, res) => {
@@ -125,6 +143,23 @@ function authenticateToken(req, res, next) {
     });
 }
 
+// NEW ENDPOINT: Get products from data.json and live stock from Supabase
+app.get("/api/products-and-stock", async (req, res) => {
+    try {
+        const dataPath = path.join(__dirname, '..', 'data.json');
+        const productData = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+        
+        const currentStock = await getChekiStock();
+        productData.cheki_stock = currentStock;
+
+        res.json(productData);
+    } catch (e) {
+        console.error("Gagal memuat data produk dan stok:", e.message);
+        res.status(500).json({ message: "Tidak dapat memuat data produk." });
+    }
+});
+
+
 // Endpoint membuat token pembayaran Midtrans
 app.post("/get-snap-token", authenticateToken, async (req, res) => {
     try {
@@ -133,6 +168,14 @@ app.post("/get-snap-token", authenticateToken, async (req, res) => {
 
         if (!parameter) {
             return res.status(400).json({ message: "Data pesanan tidak ditemukan." });
+        }
+
+        // --- STOCK CHECK ---
+        const totalItemsInCart = parameter.item_details.reduce((sum, item) => sum + item.quantity, 0);
+        const currentStock = await getChekiStock();
+
+        if (totalItemsInCart > currentStock) {
+            return res.status(400).json({ message: `Stok tidak mencukupi. Sisa stok: ${currentStock}` });
         }
         
         const { data, error } = await supabase
@@ -204,9 +247,18 @@ app.post("/update-order-status", async (req, res) => {
             if (error) throw error;
             if (!updatedOrder)
                 throw new Error("Pesanan tidak ditemukan untuk diupdate.");
-            console.log(
-                `Status tiket untuk pesanan ${order_id} berhasil diaktifkan.`
-            );
+            
+            // --- DECREMENT STOCK ---
+            const totalItemsPurchased = updatedOrder.detail_item.reduce((sum, item) => sum + item.quantity, 0);
+            if (totalItemsPurchased > 0) {
+                const { error: stockError } = await supabase.rpc('update_cheki_stock', { change_value: -totalItemsPurchased });
+                if (stockError) {
+                    console.error(`PENTING: Gagal mengurangi stok untuk pesanan ${order_id}. Error:`, stockError.message);
+                } else {
+                     console.log(`Stok berhasil dikurangi sebanyak ${totalItemsPurchased} untuk pesanan ${order_id}`);
+                }
+            }
+
             res.status(200).json({ message: "Status tiket berhasil diupdate." });
         } else {
             res
@@ -221,6 +273,7 @@ app.post("/update-order-status", async (req, res) => {
         res.status(500).json({ error: e.message });
     }
 });
+
 
 // Endpoint untuk mendapatkan profil pengguna
 app.get("/api/user/profile", authenticateToken, async (req, res) => {
@@ -425,7 +478,7 @@ app.post("/api/admin/reset-user-password", authenticateAdmin, async (req, res) =
     }
 });
 
-// <-- REVISI BARU: ENDPOINT UNTUK MENGUPDATE STOK CHEKI
+// UPDATE ENDPOINT: Update cheki stock using the Supabase function
 app.post("/api/admin/update-cheki-stock", authenticateAdmin, async (req, res) => {
     const { changeValue } = req.body;
     if (typeof changeValue !== 'number') {
@@ -433,18 +486,14 @@ app.post("/api/admin/update-cheki-stock", authenticateAdmin, async (req, res) =>
     }
 
     try {
-        // Karena kita tidak bisa menulis ke data.json, endpoint ini hanya akan
-        // mengembalikan status sukses. Di aplikasi nyata dengan database,
-        // Anda akan menjalankan query UPDATE di sini.
-        
-        // Contoh jika menggunakan database:
-        // const { data, error } = await supabase.rpc('update_stock', { amount: changeValue });
-        // if (error) throw error;
-        
-        console.log(`(SIMULASI) Stok diubah sebanyak: ${changeValue}`);
+        const { data, error } = await supabase.rpc('update_cheki_stock', { change_value: changeValue });
 
-        // Kirim response sukses
-        res.status(200).json({ message: "Stok berhasil diperbarui (simulasi)!" });
+        if (error) throw error;
+
+        res.status(200).json({
+            message: "Stok berhasil diperbarui!",
+            newStock: data
+        });
 
     } catch (e) {
         res.status(500).json({ message: `Gagal memperbarui stok: ${e.message}` });

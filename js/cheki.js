@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         async function loadChekiProducts() {
             try {
-                const response = await fetch('data.json');
+                const response = await fetch('/api/products-and-stock');
                 if (!response.ok) throw new Error('Data produk tidak ditemukan');
                 const data = await response.json();
                 

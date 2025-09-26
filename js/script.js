@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function loadWebsiteData() {
         try {
-            const response = await fetch('data.json');
+            const response = await fetch('/api/products-and-stock');
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
