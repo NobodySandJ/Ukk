@@ -6,8 +6,8 @@ const { createClient } = require("@supabase/supabase-js");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
-const fs = require('fs');
-const path = require('path');
+// DIUBAH: Impor data.json secara langsung
+const productData = require('../data.json'); 
 require("dotenv").config();
 
 const app = express();
@@ -35,7 +35,6 @@ async function getChekiStock() {
         .single();
     if (error || !data) {
         console.error("Gagal mendapatkan stok:", error);
-        // Return a default high value or 0 to indicate an issue, preventing sales if stock is unknown
         return 0; 
     }
     return parseInt(data.nilai, 10);
@@ -116,7 +115,7 @@ app.post("/api/login", async (req, res) => {
             userId: user.id,
             username: user.nama_pengguna,
             email: user.email,
-            role: user.peran, // Peran disertakan di sini
+            role: user.peran,
         };
         const token = jwt.sign(payload, process.env.JWT_SECRET, {
             expiresIn: "1d",
@@ -143,16 +142,16 @@ function authenticateToken(req, res, next) {
     });
 }
 
-// NEW ENDPOINT: Get products from data.json and live stock from Supabase
+// ENDPOINT DIUBAH: Ambil produk dari data yang sudah diimpor dan stok dari Supabase
 app.get("/api/products-and-stock", async (req, res) => {
     try {
-        const dataPath = path.join(__dirname, '..', 'data.json');
-        const productData = JSON.parse(fs.readFileSync(dataPath, 'utf-8'));
+        // Buat salinan data agar tidak mengubah data asli di memori server
+        const responseData = JSON.parse(JSON.stringify(productData));
         
         const currentStock = await getChekiStock();
-        productData.cheki_stock = currentStock;
+        responseData.cheki_stock = currentStock;
 
-        res.json(productData);
+        res.json(responseData);
     } catch (e) {
         console.error("Gagal memuat data produk dan stok:", e.message);
         res.status(500).json({ message: "Tidak dapat memuat data produk." });
@@ -170,7 +169,6 @@ app.post("/get-snap-token", authenticateToken, async (req, res) => {
             return res.status(400).json({ message: "Data pesanan tidak ditemukan." });
         }
 
-        // --- STOCK CHECK ---
         const totalItemsInCart = parameter.item_details.reduce((sum, item) => sum + item.quantity, 0);
         const currentStock = await getChekiStock();
 
@@ -248,7 +246,6 @@ app.post("/update-order-status", async (req, res) => {
             if (!updatedOrder)
                 throw new Error("Pesanan tidak ditemukan untuk diupdate.");
             
-            // --- DECREMENT STOCK ---
             const totalItemsPurchased = updatedOrder.detail_item.reduce((sum, item) => sum + item.quantity, 0);
             if (totalItemsPurchased > 0) {
                 const { error: stockError } = await supabase.rpc('update_cheki_stock', { change_value: -totalItemsPurchased });
