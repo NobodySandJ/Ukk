@@ -55,13 +55,20 @@ document.addEventListener('DOMContentLoaded', function () {
     function initializeApp() {
         if (!navLinksContainer) return;
         
+        // REVISI: Mengganti tombol cheki menjadi grup tombol dengan galeri
         let navHTML = `
-            <li><a href="index.html#about">Tentang Kami</a></li>
+            <li><a href="index.html#hero">Tentang Kami</a></li>
             <li><a href="index.html#members">Member</a></li>
-            <li><a href="index.html#news">Berita</a></li>
+            <li><a href="index.html#news">News</a></li>
+            <li>
+                <div class="nav-button-group">
+                    <a href="gallery.html" class="nav-button">Galeri</a>
+                    <a href="cheki.html" class="nav-button cta">Pesan Tiket Cheki!</a>
+                </div>
+            </li>
         `;
         navLinksContainer.innerHTML = navHTML;
-
+    
         // Cek jika sudah login, ganti tombol dengan ikon dashboard
         const navAuthButtons = document.querySelector('.nav-auth-buttons');
         if (token && userData && navAuthButtons) {
@@ -80,7 +87,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const showRegisterLink = document.getElementById('show-register-link');
         const showLoginLink = document.getElementById('show-login-link');
 
-        // REVISI: Event listener untuk tombol Login
         loginBtn?.addEventListener('click', (e) => {
             e.preventDefault();
             loginView.style.display = 'block';
@@ -88,7 +94,6 @@ document.addEventListener('DOMContentLoaded', function () {
             authModal.classList.add('active');
         });
 
-        // REVISI: Event listener untuk tombol Register
         registerBtn?.addEventListener('click', (e) => {
             e.preventDefault();
             loginView.style.display = 'none';
@@ -127,7 +132,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 password: document.getElementById('login-password').value
             };
             submitButton.disabled = true;
-            submitButton.textContent = 'Masuk...';
+            // REVISI: Menambahkan ikon spinner saat loading
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Masuk...';
             formError.textContent = '';
 
             try {
@@ -142,7 +148,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 localStorage.setItem('userToken', result.token);
                 localStorage.setItem('userData', JSON.stringify(result.user));
                 
-                // Menggunakan fungsi showToast global dari script.js
                 if (typeof showToast === 'function') {
                     showToast(`Login berhasil! Selamat datang, ${result.user.nama_pengguna}!`);
                 }
@@ -153,8 +158,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
             } catch (error) {
                 formError.textContent = error.message;
+                // REVISI: Mengembalikan teks tombol jika gagal
                 submitButton.disabled = false;
-                submitButton.textContent = 'Login';
+                submitButton.innerHTML = 'Login';
             }
         });
 
@@ -171,7 +177,8 @@ document.addEventListener('DOMContentLoaded', function () {
             };
 
             submitButton.disabled = true;
-            submitButton.textContent = 'Mendaftar...';
+            // REVISI: Menambahkan ikon spinner saat loading
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mendaftar...';
             formError.textContent = '';
 
             try {
@@ -193,8 +200,9 @@ document.addEventListener('DOMContentLoaded', function () {
             } catch (error) {
                 formError.textContent = error.message;
             } finally {
+                // REVISI: Selalu kembalikan teks tombol setelah proses selesai
                 submitButton.disabled = false;
-                submitButton.textContent = 'Daftar';
+                submitButton.innerHTML = 'Daftar';
             }
         });
     }

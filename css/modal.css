@@ -80,11 +80,6 @@
     font-family: 'Poppins', sans-serif;
 }
 
-.modal-form .cta-button {
-    margin-top: 1rem;
-    width: 100%;
-}
-
 .modal-switch-link {
     text-align: center;
     margin-top: 1.5rem;
@@ -122,4 +117,24 @@
 .modal-logo img {
     max-width: 100px;
     height: auto;
+}
+
+/* REVISI: Style tombol di dalam form modal */
+.modal-form .cta-button {
+    margin-top: 1rem;
+    width: 100%;
+    padding: 0.9rem; /* Padding disesuaikan agar lebih proporsional */
+    font-size: 1.05rem; /* Ukuran font sedikit lebih besar */
+    letter-spacing: 0.5px;
+    display: flex; /* Memungkinkan ikon dan teks sejajar */
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem; /* Jarak antara ikon spinner dan teks */
+}
+
+/* Style saat tombol di-disable (proses loading) */
+.modal-form .cta-button:disabled {
+    background-color: var(--accent-color);
+    opacity: 0.7;
+    cursor: not-allowed;
 }

@@ -100,16 +100,6 @@ ul.nav-links a {
 ul.nav-links a:hover {
     color: var(--primary-color);
 }
-.cheki-button {
-    background-color: var(--primary-color);
-    color: var(--light-text-color) !important;
-    padding: 0.6rem 1.3rem !important;
-    border-radius: 50px;
-    transition: background-color 0.3s ease;
-}
-.cheki-button:hover {
-    background-color: var(--accent-color);
-}
 
 .hamburger { 
     display: none; 
@@ -119,7 +109,7 @@ ul.nav-links a:hover {
     cursor: pointer; 
 }
 
-/* REVISI: Tombol Header Login/Register */
+/* Tombol Header Login/Register & Cheki/Galeri */
 .nav-auth-buttons { 
     display: flex; 
     align-items: center; 
@@ -267,7 +257,7 @@ section h2 {
     text-align: center; 
 }
 
-/* REVISI: Cara Pesan */
+/* Cara Pesan */
 .how-to-order-container { 
     display: flex; 
     flex-direction: column; 
@@ -303,7 +293,7 @@ section h2 {
     color: var(--secondary-text-color); 
 }
 
-/* REVISI: Member Section (Detailed) */
+/* Member Section (Detailed) */
 .member-grid-detailed { 
     display: grid; 
     grid-template-columns: 1fr; 
@@ -370,7 +360,7 @@ section h2 {
     margin-right: 0.5rem; 
 }
 
-/* REVISI: News Section */
+/* News Section */
 .news-container { 
     display: flex; 
     flex-direction: column; 
@@ -398,7 +388,7 @@ section h2 {
     color: var(--text-color); 
 }
 
-/* REVISI: FAQ (Accordion) */
+/* FAQ (Accordion) */
 .faq-container { 
     max-width: 800px; 
     margin: 0 auto; 
@@ -505,4 +495,37 @@ footer p {
     .member-details { 
         padding: 1.5rem; 
     }
+}
+
+/* Styling untuk grup tombol di navigasi */
+.nav-button-group {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+/* General CTA Button */
+.cta-button {
+    display: inline-block;
+    background-color: var(--primary-color);
+    color: var(--light-text-color);
+    padding: 0.8rem 2rem;
+    border-radius: 50px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: none;
+    cursor: pointer;
+}
+
+.cta-button:hover {
+    background-color: var(--accent-color);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Hero Section Specific CTA */
+.hero-cta {
+    margin-top: 2rem;
+    font-size: 1.1rem;
 }
