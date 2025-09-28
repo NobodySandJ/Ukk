@@ -1,4 +1,3 @@
-// nobodysandj/ukk/Ukk-d62b0944c32f178929f123a2ed9509d1a235b007/js/script.js
 document.addEventListener('DOMContentLoaded', function () {
     // --- Dynamic Content Loading ---
     async function loadWebsiteData() {
@@ -152,13 +151,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
     
-    // Panggil fungsi utama
-    if (document.body.id === 'home-page') {
+    // Panggil fungsi utama jika ini adalah halaman utama
+    if (document.querySelector('#hero')) { // Cek elemen yang hanya ada di index.html
         loadWebsiteData();
     }
 });
 
-// REVISI: Fungsi notifikasi global
+// REVISI: Fungsi notifikasi global yang bisa diakses file lain
 function showToast(message, isSuccess = true, duration = 4000) {
     const oldToast = document.querySelector('.toast-notification');
     if (oldToast) oldToast.remove();
