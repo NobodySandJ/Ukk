@@ -31,7 +31,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function loadWebsiteData() {
         try {
-            // Menggunakan path langsung ke data.json karena ini adalah frontend
             const response = await fetch('data.json');
             if (!response.ok) {
                 throw new Error(`Gagal mengambil data: ${response.statusText}`);
@@ -90,13 +89,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         // FAQ Section
-        const faqContainer = document.querySelector('.faq-container');
+        const faqContainer = document.getElementById('faq-container');
         if (faqContainer && data.faq) {
             faqContainer.innerHTML = ''; // Kosongkan kontainer
             data.faq.forEach(faq => {
                 const faqItem = document.createElement('div');
                 faqItem.className = 'faq-item';
-                faqItem.textContent = faq.question;
+                faqItem.innerHTML = `<strong>${faq.question}</strong><p>${faq.answer}</p>`;
                 faqContainer.appendChild(faqItem);
             });
         }
