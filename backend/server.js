@@ -26,6 +26,12 @@ const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_ANON_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
+// --- [START] REVISI: Endpoint baru untuk Client Key ---
+app.get("/api/midtrans-client-key", (req, res) => {
+    res.json({ clientKey: process.env.MIDTRANS_CLIENT_KEY });
+});
+// --- [END] REVISI ---
+
 // --- HELPER FUNCTION TO GET STOCK ---
 async function getChekiStock() {
     const { data, error } = await supabase

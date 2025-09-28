@@ -17,6 +17,33 @@ document.addEventListener('DOMContentLoaded', function () {
         let groupChekiData = {};
         let cart = {};
         let availableStock = 0;
+        
+        // --- [START] REVISI: Fungsi untuk memuat skrip Midtrans secara dinamis ---
+        async function loadMidtransScript() {
+            try {
+                const response = await fetch('/api/midtrans-client-key');
+                if (!response.ok) throw new Error('Gagal mendapatkan client key Midtrans.');
+                const data = await response.json();
+                const clientKey = data.clientKey;
+
+                if (clientKey) {
+                    const script = document.createElement('script');
+                    script.type = 'text/javascript';
+                    script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+                    script.setAttribute('data-client-key', clientKey);
+                    document.head.appendChild(script);
+                } else {
+                    console.error('Client key Midtrans tidak ditemukan.');
+                    submitButton.disabled = true;
+                    formErrorEl.textContent = 'Konfigurasi pembayaran tidak tersedia.';
+                }
+            } catch (error) {
+                console.error(error);
+                submitButton.disabled = true;
+                formErrorEl.textContent = 'Gagal memuat konfigurasi pembayaran.';
+            }
+        }
+        // --- [END] REVISI ---
 
         function checkUrlForSuccess() {
             const urlParams = new URLSearchParams(window.location.search);
@@ -195,6 +222,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
+            if (typeof window.snap === 'undefined') {
+                formErrorEl.textContent = 'Layanan pembayaran belum siap. Coba lagi sesaat.';
+                return;
+            }
+
             const totalItems = Object.values(cart).reduce((sum, count) => sum + count, 0);
             if (totalItems === 0) {
                 formErrorEl.textContent = 'Anda belum memilih cheki.';
@@ -236,7 +268,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 item_details: item_details
             };
-
+            
+            // --- [START] REVISI: Peningkatan Error Handling ---
             try {
                 const response = await fetch('/get-snap-token', {
                     method: 'POST',
@@ -247,13 +280,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     body: JSON.stringify({ orderData }),
                 });
 
+                const result = await response.json();
                 if (!response.ok) {
-                     const err = await response.json();
-                     throw new Error(err.message || 'Gagal mendapatkan token pembayaran.');
+                     throw new Error(result.message || 'Gagal mendapatkan token pembayaran.');
                 }
                 
-                const data = await response.json();
-                window.snap.pay(data.token, {
+                window.snap.pay(result.token, {
                     onSuccess: async function(result) {
                         await fetch('/update-order-status', {
                             method: 'POST',
@@ -267,12 +299,12 @@ document.addEventListener('DOMContentLoaded', function () {
                         window.location.href = `/cheki.html?order_id=${result.order_id}&transaction_status=${result.transaction_status}`;
                     },
                     onPending: function(result){
-                        alert("Pembayaran Anda sedang diproses. Status: " + result.transaction_status);
+                        showToast("Pembayaran Anda sedang diproses. Status: " + result.transaction_status, true, 5000);
                         submitButton.disabled = false;
                         submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
                     },
                     onError: function(result){
-                        alert("Pembayaran gagal!");
+                        showToast("Pembayaran gagal! Silakan coba lagi.", false);
                         submitButton.disabled = false;
                         submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
                     },
@@ -288,9 +320,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 submitButton.disabled = false;
                 submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
             }
+            // --- [END] REVISI ---
         });
         
         checkUrlForSuccess();
         loadChekiProducts();
+        loadMidtransScript(); // Panggil fungsi baru untuk memuat skrip
     }
 });
