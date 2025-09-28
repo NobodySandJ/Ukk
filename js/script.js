@@ -132,14 +132,47 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('group-name').textContent = data.group.name;
         document.getElementById('group-tagline').textContent = data.group.tagline;
         document.getElementById('about-content').textContent = data.group.about;
+        
+        // How to Order Section (NEW)
+        const howToOrderContainer = document.getElementById('how-to-order-container');
+        if (howToOrderContainer && data.how_to_order) {
+            howToOrderContainer.innerHTML = '';
+            data.how_to_order.forEach((step, index) => {
+                const stepEl = document.createElement('div');
+                stepEl.className = 'order-step';
+                stepEl.innerHTML = `
+                    <div class="step-number">${index + 1}</div>
+                    <div class="step-details">
+                        <h3>${step.title}</h3>
+                        <p>${step.description}</p>
+                    </div>
+                `;
+                howToOrderContainer.appendChild(stepEl);
+            });
+        }
 
         // Member Section (UPDATED)
         const memberGrid = document.getElementById('member-grid');
         if (memberGrid) {
             memberGrid.innerHTML = ''; // Kosongkan isi grid
 
-            // 1. Buat elemen untuk setiap member
-            const memberElements = data.members.map(member => {
+            // 1. Buat elemen untuk grup terlebih dahulu
+            const groupCard = document.createElement('div');
+            groupCard.className = 'member-card-detailed group-card';
+            groupCard.innerHTML = `
+                <img src="${data.group_cheki.image}" alt="${data.group.name}" loading="lazy">
+                <div class="member-details">
+                    <h3>${data.group.name}</h3>
+                    <blockquote class="jiko">"${data.group.tagline}"</blockquote>
+                    <p>${data.group.about}</p>
+                </div>
+            `;
+            
+            // 2. Buat array dan langsung masukkan kartu grup
+            const allElements = [groupCard];
+
+            // 3. Buat dan tambahkan elemen untuk setiap member ke array
+            data.members.forEach(member => {
                 const card = document.createElement('div');
                 card.className = 'member-card-detailed';
                 card.innerHTML = `
@@ -154,26 +187,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         </ul>
                     </div>
                 `;
-                return card;
+                allElements.push(card);
             });
 
-            // 2. Buat elemen untuk grup
-            const groupCard = document.createElement('div');
-            groupCard.className = 'member-card-detailed group-card';
-            groupCard.innerHTML = `
-                <img src="${data.group_cheki.image}" alt="${data.group.name}" loading="lazy">
-                <div class="member-details">
-                    <h3>${data.group.name}</h3>
-                    <blockquote class="jiko">"${data.group.tagline}"</blockquote>
-                    <p>${data.group.about}</p>
-                </div>
-            `;
-
-            // 3. Sisipkan kartu grup di posisi kedua (index 1)
-            memberElements.splice(1, 0, groupCard);
-
-            // 4. Tampilkan semua kartu ke dalam grid
-            memberElements.forEach(element => {
+            // 4. Tampilkan semua kartu dari array ke dalam grid
+            allElements.forEach(element => {
                 memberGrid.appendChild(element);
             });
         }

@@ -5,6 +5,20 @@
     "tagline": "Laut Tanpa Syarat",
     "about": "Mujōken no Umi adalah grup idola yang berenang di lautan mimpi, menyebarkan cinta tanpa syarat melalui musik dan tarian. Kami di sini untuk menjadi cahaya dalam hari-harimu!"
   },
+  "how_to_order": [
+    {
+      "title": "Login atau Daftar Akun",
+      "description": "Anda harus masuk ke akun Anda terlebih dahulu. Jika belum punya, silakan daftar secara gratis."
+    },
+    {
+      "title": "Pilih Member & Jumlah Tiket",
+      "description": "Masuk ke halaman 'Pesan Tiket Cheki', lalu pilih member dan tentukan jumlah tiket yang ingin dibeli."
+    },
+    {
+      "title": "Lakukan Pembayaran",
+      "description": "Selesaikan pembayaran melalui metode yang tersedia. Tiket akan otomatis masuk ke dashboard akun Anda setelah berhasil."
+    }
+  ],
   "group_cheki": {
     "id": "grup",
     "name": "Grup",
