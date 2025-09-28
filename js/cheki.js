@@ -184,7 +184,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     gross_amount: gross_amount
                 },
                 customer_details: {
-                    first_name: userData.nama_pengguna, 
                     email: userData.email,
                     phone: userData.nomor_whatsapp || '',
                 },
