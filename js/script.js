@@ -133,36 +133,67 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('group-tagline').textContent = data.group.tagline;
         document.getElementById('about-content').textContent = data.group.about;
 
-        // Member Section
+        // Member Section (UPDATED)
         const memberGrid = document.getElementById('member-grid');
         if (memberGrid) {
-            memberGrid.innerHTML = '';
-            data.members.forEach(member => {
+            memberGrid.innerHTML = ''; // Kosongkan isi grid
+
+            // 1. Buat elemen untuk setiap member
+            const memberElements = data.members.map(member => {
                 const card = document.createElement('div');
-                card.className = 'member-card';
+                card.className = 'member-card-detailed';
                 card.innerHTML = `
                     <img src="${member.image}" alt="${member.name}" loading="lazy">
-                    <div class="member-info">
+                    <div class="member-details">
+                        <span class="role">${member.role}</span>
                         <h3>${member.name}</h3>
-                        <p>${member.role}</p>
+                        <blockquote class="jiko">"${member.details.jiko}"</blockquote>
+                        <ul>
+                            <li><strong>Sifat:</strong> ${member.details.sifat}</li>
+                            <li><strong>Hobi:</strong> ${member.details.hobi}</li>
+                        </ul>
                     </div>
                 `;
-                memberGrid.appendChild(card);
+                return card;
+            });
+
+            // 2. Buat elemen untuk grup
+            const groupCard = document.createElement('div');
+            groupCard.className = 'member-card-detailed group-card';
+            groupCard.innerHTML = `
+                <img src="${data.group_cheki.image}" alt="${data.group.name}" loading="lazy">
+                <div class="member-details">
+                    <h3>${data.group.name}</h3>
+                    <blockquote class="jiko">"${data.group.tagline}"</blockquote>
+                    <p>${data.group.about}</p>
+                </div>
+            `;
+
+            // 3. Sisipkan kartu grup di posisi kedua (index 1)
+            memberElements.splice(1, 0, groupCard);
+
+            // 4. Tampilkan semua kartu ke dalam grid
+            memberElements.forEach(element => {
+                memberGrid.appendChild(element);
             });
         }
         
         // News Section
-        const newsGrid = document.getElementById('news-grid');
-        if (newsGrid) {
-            newsGrid.innerHTML = '';
+        const newsContainer = document.getElementById('news-container');
+        if (newsContainer) {
+            newsContainer.innerHTML = '';
             data.news.forEach(item => {
-                const newsLink = document.createElement('a');
-                newsLink.className = 'action-button-link';
-                newsLink.href = '#'; // Placeholder
-                newsLink.textContent = item.title;
-                newsGrid.appendChild(newsLink);
+                const newsItem = document.createElement('div');
+                newsItem.className = 'news-item';
+                newsItem.innerHTML = `
+                    <h3>${item.title}</h3>
+                    <div class="date">${item.date}</div>
+                    <p>${item.content}</p>
+                `;
+                newsContainer.appendChild(newsItem);
             });
         }
+
 
         // FAQ Section
         const faqContainer = document.getElementById('faq-container');
@@ -171,10 +202,22 @@ document.addEventListener('DOMContentLoaded', function () {
             data.faq.forEach(faq => {
                 const faqItem = document.createElement('div');
                 faqItem.className = 'faq-item';
-                faqItem.innerHTML = `<strong>${faq.question}</strong><p>${faq.answer}</p>`;
+                faqItem.innerHTML = `
+                    <div class="faq-question">${faq.question}</div>
+                    <div class="faq-answer">
+                        <p>${faq.answer}</p>
+                    </div>`;
                 faqContainer.appendChild(faqItem);
             });
+            // Add click listener for accordion
+            faqContainer.addEventListener('click', function(e) {
+                const question = e.target.closest('.faq-question');
+                if (question) {
+                    question.parentElement.classList.toggle('active');
+                }
+            });
         }
+
 
         // Footer
         const footerText = document.getElementById('footer-text');
