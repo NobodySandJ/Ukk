@@ -4,13 +4,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const userData = JSON.parse(localStorage.getItem('userData'));
 
         const chekiListContainer = document.getElementById('cheki-list');
-        const totalItemsEl = document.getElementById('total-items');
+        const orderSummaryItemsEl = document.getElementById('order-summary-items');
         const totalPriceEl = document.getElementById('total-price');
         const submitButton = document.getElementById('submit-button');
         const formErrorEl = document.getElementById('form-error');
-        const mobileCart = document.getElementById('mobile-cart');
-        const mobileCartTotal = document.getElementById('mobile-cart-total');
-        const orderSummaryContainer = document.querySelector('.order-summary-container');
         const chekiStockDisplay = document.getElementById('cheki-stock-display');
 
         let membersData = [];
@@ -43,14 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
         function checkUrlForSuccess() {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('transaction_status') === 'settlement' || urlParams.get('transaction_status') === 'capture') {
-                const toastHTML = `
-                    <div>Terima kasih sudah membeli cheki!</div>
-                    <div class="toast-actions">
-                        <button onclick="window.location.href='/dashboard.html'" class="toast-btn toast-btn-primary">Lihat Tiket</button>
-                        <button onclick="document.querySelector('.toast-notification').classList.remove('show')" class="toast-btn toast-btn-secondary">Pesan Lagi</button>
-                    </div>
-                `;
-                showToast(toastHTML, true, 10000);
+                showToast(`Terima kasih! Tiket Anda ada di dashboard.`);
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
@@ -75,20 +65,21 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
+        // REVISI: Fungsi membuat kartu member yang lebih simpel
         function createProductCard(product) {
             const card = document.createElement('div');
-            card.className = 'cheki-card reveal';
+            card.className = 'cheki-member-card';
             const isOutOfStock = availableStock === 0;
+            
             card.innerHTML = `
                 <img src="${product.image}" alt="Cheki ${product.name}">
                 <h3>${product.name}</h3>
-                <p class="price">Rp ${product.price.toLocaleString('id-ID')}</p>
                 <div class="quantity-selector">
                     <button class="quantity-btn" data-id="${product.id}" data-action="decrease" ${isOutOfStock ? 'disabled' : ''}>-</button>
                     <input type="number" class="quantity-input" data-id="${product.id}" value="0" min="0" readonly>
                     <button class="quantity-btn" data-id="${product.id}" data-action="increase" ${isOutOfStock ? 'disabled' : ''}>+</button>
                 </div>
-                ${isOutOfStock ? '<p style="color: red; margin-top: 10px;">Stok Habis</p>' : ''}
+                ${isOutOfStock ? '<p style="color: red; font-size: 0.8rem; margin-top: 10px;">Stok Habis</p>' : ''}
             `;
             return card;
         }
@@ -102,11 +93,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 chekiListContainer.appendChild(createProductCard(member));
             });
         }
-
-        function giveFeedback() {
-            orderSummaryContainer.classList.add('item-added');
-            setTimeout(() => orderSummaryContainer.classList.remove('item-added'), 500);
-        }
         
         function resetCart() {
             cart = {};
@@ -118,56 +104,56 @@ document.addEventListener('DOMContentLoaded', function () {
             let product = membersData.find(m => m.id === productId) || (productId === groupChekiData.id ? groupChekiData : null);
             if (!product) return;
 
-            cart[productId] = cart[productId] || 0;
+            cart[productId] = cart[productId] || { quantity: 0, name: product.name, price: product.price };
 
             if (action === 'increase') {
-                const totalInCart = Object.values(cart).reduce((sum, count) => sum + count, 0);
+                const totalInCart = Object.values(cart).reduce((sum, item) => sum + item.quantity, 0);
                 if (totalInCart >= availableStock) {
-                    showToast('Maaf, stok cheki tidak mencukupi.', false);
+                    showToast('Maaf, sisa stok tiket tidak mencukupi.', false);
                     return;
                 }
-                cart[productId]++;
-                showToast(`Cheki ${product.name} ditambahkan!`);
-                giveFeedback();
-            } else if (action === 'decrease' && cart[productId] > 0) {
-                cart[productId]--;
-                showToast(`Cheki ${product.name} dikurangi.`);
+                cart[productId].quantity++;
+            } else if (action === 'decrease' && cart[productId].quantity > 0) {
+                cart[productId].quantity--;
             }
 
-            document.querySelector(`.quantity-input[data-id="${productId}"]`).value = cart[productId];
+            document.querySelector(`.quantity-input[data-id="${productId}"]`).value = cart[productId].quantity;
             updateTotals();
         }
-
+        
+        // REVISI: Fungsi update total dan ringkasan pesanan
         function updateTotals() {
-            let totalItems = 0;
             let totalPrice = 0;
-            const allProducts = [...membersData, groupChekiData];
+            orderSummaryItemsEl.innerHTML = ''; // Kosongkan daftar item
 
-            for (const productId in cart) {
-                if (cart[productId] > 0) {
-                    const product = allProducts.find(p => p.id === productId);
-                    if (product) {
-                        totalItems += cart[productId];
-                        totalPrice += cart[productId] * product.price;
+            const hasItems = Object.values(cart).some(item => item.quantity > 0);
+
+            if (!hasItems) {
+                orderSummaryItemsEl.innerHTML = '<p class="empty-cart-message">Anda belum memilih tiket.</p>';
+            } else {
+                for (const productId in cart) {
+                    const item = cart[productId];
+                    if (item.quantity > 0) {
+                        const itemEl = document.createElement('div');
+                        itemEl.className = 'summary-item';
+                        itemEl.innerHTML = `
+                            <span>${item.quantity}x ${item.name}</span>
+                            <span>Rp ${(item.quantity * item.price).toLocaleString('id-ID')}</span>
+                        `;
+                        orderSummaryItemsEl.appendChild(itemEl);
+                        totalPrice += item.quantity * item.price;
                     }
                 }
             }
             
-            const formattedPrice = `Rp ${totalPrice.toLocaleString('id-ID')}`;
-            totalItemsEl.textContent = totalItems;
-            totalPriceEl.textContent = formattedPrice;
-            mobileCartTotal.textContent = formattedPrice;
-            mobileCart.classList.toggle('visible', totalItems > 0);
+            totalPriceEl.textContent = `Rp ${totalPrice.toLocaleString('id-ID')}`;
         }
+
 
         chekiListContainer.addEventListener('click', e => {
             if (e.target.classList.contains('quantity-btn')) {
                 updateQuantity(e.target.dataset.id, e.target.dataset.action);
             }
-        });
-
-        mobileCart.addEventListener('click', () => {
-            orderSummaryContainer.scrollIntoView({ behavior: 'smooth' });
         });
 
         submitButton.addEventListener('click', async function (e) {
@@ -183,8 +169,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 formErrorEl.textContent = 'Layanan pembayaran belum siap. Coba lagi sesaat.';
                 return;
             }
-
-            if (Object.values(cart).reduce((sum, count) => sum + count, 0) === 0) {
+            
+            const totalItemsInCart = Object.values(cart).reduce((sum, item) => sum + item.quantity, 0);
+            if (totalItemsInCart === 0) {
                 formErrorEl.textContent = 'Anda belum memilih cheki.';
                 return;
             }
@@ -193,21 +180,14 @@ document.addEventListener('DOMContentLoaded', function () {
             submitButton.disabled = true;
             submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
 
-            const item_details = [];
-            const allProducts = [...membersData, groupChekiData];
-            for (const productId in cart) {
-                if (cart[productId] > 0) {
-                    const product = allProducts.find(p => p.id === productId);
-                    if (product) {
-                        item_details.push({
-                            id: product.id,
-                            price: product.price,
-                            quantity: cart[productId],
-                            name: `Cheki ${product.name}`
-                        });
-                    }
-                }
-            }
+            const item_details = Object.values(cart)
+                .filter(item => item.quantity > 0)
+                .map(item => ({
+                    id: item.id,
+                    price: item.price,
+                    quantity: item.quantity,
+                    name: `Cheki ${item.name}`
+                }));
             
             const gross_amount = item_details.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 

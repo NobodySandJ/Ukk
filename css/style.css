@@ -530,7 +530,7 @@ footer p {
     font-size: 1.1rem;
 }
 
-/* REVISI: Section untuk Page Actions (Tombol) */
+/* Section untuk Page Actions (Tombol) */
 #page-actions {
     padding: 0 0 4rem 0;
     background-color: var(--bg-gray);
@@ -559,4 +559,146 @@ footer p {
     color: var(--light-text-color);
     transform: translateY(-2px);
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* REVISI HALAMAN CHEKI */
+#cheki-page {
+    background-color: var(--gray-bg);
+}
+.cheki-header {
+    text-align: center;
+    margin-bottom: 3rem;
+}
+.stock-display {
+    display: inline-block;
+    background-color: var(--primary-color);
+    color: var(--light-text-color);
+    padding: 0.5rem 1.5rem;
+    border-radius: 50px;
+    margin-top: 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+}
+.stock-display h3 {
+    margin: 0;
+    font-size: inherit;
+}
+.cheki-main-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+    align-items: flex-start;
+}
+.cheki-member-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+.cheki-member-card {
+    background-color: var(--card-bg);
+    border-radius: var(--border-radius);
+    padding: 1rem;
+    text-align: center;
+    box-shadow: var(--shadow-light);
+    transition: all 0.3s ease;
+}
+.cheki-member-card img {
+    width: 100%;
+    height: 150px; /* Atur tinggi gambar agar seragam */
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 1rem;
+}
+.cheki-member-card h3 {
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+.quantity-selector {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.5rem;
+}
+.quantity-selector .quantity-btn {
+    background-color: var(--primary-color);
+    color: var(--light-text-color);
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+.quantity-selector .quantity-btn:hover {
+    background-color: var(--accent-color);
+}
+.quantity-selector .quantity-btn:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+.quantity-selector .quantity-input {
+    width: 40px;
+    text-align: center;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 0.3rem;
+    font-size: 1rem;
+}
+.order-summary-container {
+    background-color: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-light);
+    position: sticky;
+    top: 100px; /* Header height + margin */
+}
+.order-summary-container h3 {
+    text-align: center;
+    margin-bottom: 1.5rem;
+}
+#order-summary-items {
+    margin-bottom: 1.5rem;
+    min-height: 50px;
+}
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.8rem;
+    font-size: 0.95rem;
+}
+.order-summary-total {
+    border-top: 1px solid #eee;
+    padding-top: 1rem;
+    font-weight: bold;
+    font-size: 1.2rem;
+}
+.order-summary-total #total-price {
+    color: var(--primary-color);
+}
+.order-summary-container .cta-button {
+    width: 100%;
+    margin-top: 1.5rem;
+}
+.empty-cart-message {
+    color: var(--secondary-text-color);
+    text-align: center;
+    font-style: italic;
+}
+@media (max-width: 992px) {
+    .cheki-main-layout {
+        grid-template-columns: 1fr;
+    }
+    .order-summary-container {
+        position: static;
+        top: auto;
+    }
+}
+@media (max-width: 576px) {
+    .cheki-member-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
 }
