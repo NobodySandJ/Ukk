@@ -1,89 +1,87 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mujōken no Umi - Official Website</title>
-    <link rel="stylesheet" href="/css/style.css">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/modal.css">
+
+    <link rel="apple-touch-icon" sizes="180x180" href="img/logo/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/logo/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/logo/favicon-16x16.png">
+    <link rel="manifest" href="img/logo/site.webmanifest">
 </head>
 <body>
 
     <header>
         <nav class="container">
-            <a href="#" class="logo">
-                <h1>Mujōken no Umi</h1>
+            <a href="index.html" class="logo">
+                <img src="img/logo/apple-touch-icon.png" alt="Logo" style="height: 40px;">
+                <h1 id="logo-title">Mujōken no Umi</h1>
             </a>
-            <ul class="nav-links">
-                <li><a href="#intro">TENTANG KAMI</a></li>
-                <li><a href="#">SCHEDULE</a></li>
-                <li><a href="#members">MEMBER</a></li>
-                <li><a href="#news">NEWS</a></li>
-            </ul>
-            <div class="nav-auth">
-                <a href="#" class="login-link">Login/Register</a>
-                <a href="#" class="cta-button">PESAN TIKET ONLINE</a>
-            </div>
-            <button class="hamburger" id="hamburger-menu">☰</button>
+            <ul class="nav-links" id="nav-links">
+                </ul>
+            <div class="nav-auth-container">
+                 </div>
+            <button class="hamburger" id="hamburger-menu" aria-label="Buka menu">
+                <i class="fas fa-bars"></i>
+            </button>
         </nav>
     </header>
 
     <main>
         <section id="hero">
-            <img src="https://via.placeholder.com/1200x400" alt="Mujoken no Umi group photo">
+            <img id="hero-image" src="img/member/grup2.jpg" alt="Mujoken no Umi group photo">
         </section>
 
-        <section id="intro">
+        <section id="about" class="bg-white">
             <div class="container">
-                <h2>Mujōken no Umi</h2>
-                <p>Laut tanpa syarat, Mujōken no Umi adalah grup idola yang berenang di lautan mimpi. Menyebarkan senyuman dan harapan kepada semua penggemar, kami di sini untuk menjadi cahaya dalam hari-harimu.</p>
-            </div>
-        </section>
-
-        <section id="how-to-order">
-            <div class="container">
-                <h2>CARA PESAN</h2>
-                <div class="steps-grid">
-                    <a href="#" class="step-button">STEP 1</a>
-                    <a href="#" class="step-button">STEP 2</a>
-                    <a href="#" class="step-button">STEP 3</a>
-                    <a href="#" class="step-button">STEP 4</a>
-                </div>
-            </div>
-        </section>
-
-        <section id="members">
-            <div class="container">
-                <h2>MEMBER</h2>
-                <div class="member-grid">
-                    <div class="member-card-placeholder"></div>
-                    <div class="member-card-placeholder"></div>
-                    <div class="member-card-placeholder"></div>
-                    <div class="member-card-placeholder"></div>
-                    <div class="member-card-placeholder"></div>
-                </div>
-            </div>
-        </section>
-
-        <section id="news">
-            <div class="container">
-                <h2>NEWS</h2>
-                <div class="news-grid">
-                     <a href="#" class="news-button">NEWS 1</a>
-                     <a href="#" class="news-button">NEWS 2</a>
-                </div>
+                <h2 id="about-title"></h2>
+                <p id="about-content"></p>
             </div>
         </section>
         
-        <section id="faq">
+        <section id="how-to-order">
+             <div class="container">
+                <h2>CARA PESAN</h2>
+                <div class="action-grid">
+                    <a href="#" class="action-button-link">STEP 1</a>
+                    <a href="#" class="action-button-link">STEP 2</a>
+                    <a href="#" class="action-button-link">STEP 3</a>
+                    <a href="#" class="action-button-link">STEP 4</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="members" class="bg-white">
+            <div class="container">
+                <h2>MEMBER</h2>
+                <div id="member-grid" class="member-grid">
+                    </div>
+            </div>
+        </section>
+        
+        <section id="news">
+            <div class="container">
+                <h2>NEWS</h2>
+                <div id="news-grid" class="action-grid">
+                    </div>
+            </div>
+        </section>
+        
+        <section id="faq" class="bg-white">
             <div class="container">
                 <h2>FAQ</h2>
-                <div class="faq-grid">
-                    <div class="faq-item-placeholder"></div>
-                    <div class="faq-item-placeholder"></div>
-                    <div class="faq-item-placeholder"></div>
-                    <div class="faq-item-placeholder"></div>
-                </div>
+                <div class="faq-container">
+                    </div>
             </div>
         </section>
     </main>
@@ -91,16 +89,17 @@
     <footer>
         <div class="container">
             <div class="social-media">
-                <a href="#"><i class="fab fa-instagram"></i></a>
-                <a href="#"><i class="fab fa-youtube"></i></a>
-                <a href="#"><i class="fab fa-tiktok"></i></a>
+                <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                <a href="#" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
             </div>
-            <p>COPYRIGHT</p>
+            <p id="footer-text"></p>
         </div>
     </footer>
-
-    <script src="slider.js"></script>
-    <script src="script.js"></script>
+    
+    <div class="modal-overlay" id="auth-modal"></div>
+    <script src="js/auth.js"></script>
+    <script src="js/script.js"></script>
 
 </body>
 </html>
