@@ -22,46 +22,57 @@
 <body>
 
     <header>
-        <nav class="container">
-            <a href="index.html" class="logo">
-                <img src="img/logo/apple-touch-icon.png" alt="Logo" style="height: 40px;">
-                <h1 id="logo-title">Mujōken no Umi</h1>
-            </a>
-            <ul class="nav-links" id="nav-links">
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">
+                    <img src="img/logo/apple-touch-icon.png" alt="Logo">
+                    <div class="logo-text">
+                        <strong>Mujōken no Umi</strong>
+                        <span>Official Website</span>
+                    </div>
+                </a>
+                <ul class="nav-links" id="nav-links">
+                    <li><a href="#hero">Tentang Kami</a></li>
+                    <li><a href="#">Schedule</a></li>
+                    <li><a href="#members">Member</a></li>
+                    <li><a href="#news">News</a></li>
+                    <li><a href="cheki.html" class="cheki-button">Pesan Tiket Cheki!</a></li>
                 </ul>
-            <div class="nav-auth-container">
-                 </div>
-            <button class="hamburger" id="hamburger-menu" aria-label="Buka menu">
-                <i class="fas fa-bars"></i>
-            </button>
-        </nav>
+                <div class="nav-auth-container">
+                    <a href="#" id="auth-icon-btn">Login/Register</a>
+                </div>
+                <button class="hamburger" id="hamburger-menu" aria-label="Buka menu">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </nav>
+        </div>
     </header>
 
     <main>
         <section id="hero">
-            <img id="hero-image" src="img/member/grup2.jpg" alt="Mujoken no Umi group photo">
-        </section>
-
-        <section id="about" class="bg-white">
-            <div class="container">
-                <h2 id="about-title"></h2>
+            <div class="hero-image-container">
+                 <img id="hero-image" src="" alt="">
+            </div>
+            <div class="container hero-text">
+                <h2 id="group-name"></h2>
+                <h3 id="group-tagline"></h3>
                 <p id="about-content"></p>
             </div>
         </section>
-        
-        <section id="how-to-order">
+
+        <section id="how-to-order" class="bg-gray">
              <div class="container">
                 <h2>CARA PESAN</h2>
                 <div class="action-grid">
-                    <a href="#" class="action-button-link">STEP 1</a>
-                    <a href="#" class="action-button-link">STEP 2</a>
-                    <a href="#" class="action-button-link">STEP 3</a>
-                    <a href="#" class="action-button-link">STEP 4</a>
+                    <div class="action-button-link">STEP 1</div>
+                    <div class="action-button-link">STEP 2</div>
+                    <div class="action-button-link">STEP 3</div>
+                    <div class="action-button-link">STEP 4</div>
                 </div>
             </div>
         </section>
 
-        <section id="members" class="bg-white">
+        <section id="members">
             <div class="container">
                 <h2>MEMBER</h2>
                 <div id="member-grid" class="member-grid">
@@ -69,15 +80,15 @@
             </div>
         </section>
         
-        <section id="news">
+        <section id="news" class="bg-gray">
             <div class="container">
                 <h2>NEWS</h2>
-                <div id="news-grid" class="action-grid">
+                <div id="news-grid" class="action-grid news-grid">
                     </div>
             </div>
         </section>
         
-        <section id="faq" class="bg-white">
+        <section id="faq">
             <div class="container">
                 <h2>FAQ</h2>
                 <div class="faq-container">

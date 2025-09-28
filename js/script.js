@@ -31,7 +31,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     async function loadWebsiteData() {
         try {
-            const response = await fetch('/api/products-and-stock');
+            // Menggunakan path langsung ke data.json karena ini adalah frontend
+            const response = await fetch('data.json');
             if (!response.ok) {
                 throw new Error(`Gagal mengambil data: ${response.statusText}`);
             }
@@ -41,51 +42,45 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error("Format data dari API tidak valid.");
             }
 
-            // Mengisi konten berdasarkan halaman yang aktif
             if (document.getElementById('hero')) {
                 populateIndexPage(data);
-            }
-            if (document.getElementById('gallery-grid')) {
-                populateGalleryPage(data);
             }
 
         } catch (error) {
             console.error("Gagal memuat data website:", error);
-            // Tambahkan fallback content jika perlu
         }
     }
 
     function populateIndexPage(data) {
-        document.title = `${data.group.name} (${data.group.name_japanese}) - Official Website`;
-        document.querySelector('#logo-title').textContent = data.group.name;
+        document.title = `${data.group.name} - Official Website`;
         
-        // Cek elemen sebelum mengisi untuk menghindari error
-        const heroImage = document.getElementById('hero-image');
-        if (heroImage && data.images.hero_background) {
-            heroImage.src = data.images.hero_background;
-            heroImage.alt = data.group.name;
-        }
-        
-        document.getElementById('about-title').textContent = data.group.name;
+        // Header & Hero
+        document.querySelector('.logo-text strong').textContent = data.group.name;
+        document.getElementById('hero-image').src = data.images.hero_background;
+        document.getElementById('hero-image').alt = data.group.name;
+        document.getElementById('group-name').textContent = data.group.name;
+        document.getElementById('group-tagline').textContent = data.group.tagline;
         document.getElementById('about-content').textContent = data.group.about;
-        document.getElementById('footer-text').innerHTML = `&copy; 2025 ${data.group.name}. All Rights Reserved.`;
 
+        // Member Section
         const memberGrid = document.getElementById('member-grid');
-        memberGrid.innerHTML = '';
+        memberGrid.innerHTML = ''; // Kosongkan grid sebelum mengisi
         data.members.forEach(member => {
             const card = document.createElement('div');
             card.className = 'member-card';
             card.innerHTML = `
                 <img src="${member.image}" alt="${member.name}" loading="lazy">
-                <div class="member-card-header">
+                <div class="member-info">
                     <h3>${member.name}</h3>
-                    <p class="role">${member.role}</p>
-                </div>`;
+                    <p>${member.role}</p>
+                </div>
+            `;
             memberGrid.appendChild(card);
         });
         
+        // News Section
         const newsGrid = document.getElementById('news-grid');
-        newsGrid.innerHTML = '';
+        newsGrid.innerHTML = ''; // Kosongkan grid
         data.news.forEach(item => {
             const newsLink = document.createElement('a');
             newsLink.className = 'action-button-link';
@@ -94,37 +89,29 @@ document.addEventListener('DOMContentLoaded', function () {
             newsGrid.appendChild(newsLink);
         });
 
+        // FAQ Section
         const faqContainer = document.querySelector('.faq-container');
         if (faqContainer && data.faq) {
-            faqContainer.innerHTML = '';
+            faqContainer.innerHTML = ''; // Kosongkan kontainer
             data.faq.forEach(faq => {
                 const faqItem = document.createElement('div');
                 faqItem.className = 'faq-item';
-                faqItem.innerHTML = `<button class="faq-question"><span>${faq.question}</span><i class="fas fa-chevron-down"></i></button><div class="faq-answer"><p>${faq.answer}</p></div>`;
+                faqItem.textContent = faq.question;
                 faqContainer.appendChild(faqItem);
             });
-            initializeFaqAccordion();
         }
-    }
 
-    function initializeFaqAccordion() {
-        const faqItems = document.querySelectorAll('.faq-item');
-        faqItems.forEach(item => {
-            item.querySelector('.faq-question').addEventListener('click', () => {
-                const isActive = item.classList.contains('active');
-                faqItems.forEach(i => {
-                    i.classList.remove('active');
-                    i.querySelector('.faq-answer').style.maxHeight = null;
-                });
-                if (!isActive) {
-                    item.classList.add('active');
-                    const answer = item.querySelector('.faq-answer');
-                    answer.style.maxHeight = answer.scrollHeight + 'px';
-                }
-            });
-        });
+        // Footer
+        document.getElementById('footer-text').innerHTML = `&copy; 2025 ${data.group.name}. All Rights Reserved.`;
     }
 
     // Panggil fungsi utama
     loadWebsiteData();
+
+    // Hamburger Menu Toggle
+    const hamburger = document.getElementById('hamburger-menu');
+    const navLinks = document.getElementById('nav-links');
+    hamburger.addEventListener('click', () => {
+        navLinks.classList.toggle('active');
+    });
 });
