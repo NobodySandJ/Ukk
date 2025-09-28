@@ -165,7 +165,25 @@ app.post("/get-snap-token", authenticateToken, async (req, res) => {
         }]);
         if (error) throw error;
 
-        const transaction = await snap.createTransaction(orderData);
+        // --- MULAI PERBAIKAN ---
+        // Memastikan `customer_details` memiliki `first_name` dan `last_name`.
+        const nameParts = req.user.username.split(' ');
+        const firstName = nameParts.shift(); // Ambil bagian pertama sebagai nama depan
+        const lastName = nameParts.join(' ') || firstName; // Sisanya sebagai nama belakang, atau gunakan nama depan jika hanya satu kata.
+
+        const midtransParameter = {
+          transaction_details: orderData.transaction_details,
+          item_details: orderData.item_details,
+          customer_details: {
+            first_name: firstName,
+            last_name: lastName,
+            email: orderData.customer_details.email,
+            phone: orderData.customer_details.phone,
+          },
+        };
+        // --- SELESAI PERBAIKAN ---
+
+        const transaction = await snap.createTransaction(midtransParameter); // Gunakan parameter yang sudah diperbaiki
         res.json({ token: transaction.token });
     } catch (e) {
         console.error("GAGAL MEMBUAT TOKEN:", e);
