@@ -1,14 +1,60 @@
 document.addEventListener('DOMContentLoaded', function () {
     const navLinksContainer = document.getElementById('nav-links');
-    if (!navLinksContainer) {
-        console.error('Elemen navigasi #nav-links tidak ditemukan!');
-        return;
-    }
+    const authModal = document.getElementById('auth-modal');
+
+    // Cek jika elemen-elemen penting ada
+    if (!authModal) return;
+
+    // --- REVISI: Mengganti konten modal dari file HTML statis ke JS ---
+    authModal.innerHTML = `
+        <div class="modal-container">
+            <button class="modal-close-btn" id="modal-close-btn">&times;</button>
+            <div id="login-view">
+                <div class="modal-form-container">
+                    <h2>Login Akun</h2>
+                    <form id="login-form" class="modal-form">
+                        <input type="email" id="login-email" placeholder="Email" required>
+                        <input type="password" id="login-password" placeholder="Password" required>
+                        <a href="forgot-password.html" style="text-align: right; font-size: 0.9em; margin-top: -0.5rem;">Lupa Sandi?</a>
+                        <button type="submit" class="cta-button">Login</button>
+                        <p id="login-error" class="error-message" style="text-align: center;"></p>
+                    </form>
+                    <p class="modal-switch-link">
+                        Belum punya akun? <a id="show-register-link">Daftar di sini</a>
+                    </p>
+                </div>
+            </div>
+            <div id="register-view" style="display: none;">
+                <div class="modal-form-container">
+                    <h2>Buat Akun Baru</h2>
+                    <form id="register-form" class="modal-form">
+                        <input type="text" id="register-username" placeholder="Username" required>
+                        <input type="email" id="register-email" placeholder="Email Aktif" required>
+                        <input type="password" id="register-password" placeholder="Password" required>
+                        <input type="text" id="register-whatsapp" placeholder="No. WhatsApp" required>
+                        <input type="text" id="register-instagram" placeholder="Username Instagram" required>
+                        <div class="sk-agreement">
+                            <input type="checkbox" id="sk-checkbox" required>
+                            <label for="sk-checkbox">Saya setuju dengan <a href="sk.html" target="_blank">Syarat & Ketentuan</a>.</label>
+                        </div>
+                        <button type="submit" class="cta-button">Daftar</button>
+                        <p id="register-error" class="error-message" style="text-align: center;"></p>
+                    </form>
+                    <p class="modal-switch-link">
+                        Sudah punya akun? <a id="show-login-link">Login di sini</a>
+                    </p>
+                </div>
+            </div>
+        </div>`;
 
     const token = localStorage.getItem('userToken');
     const userData = JSON.parse(localStorage.getItem('userData'));
+    const loginView = document.getElementById('login-view');
+    const registerView = document.getElementById('register-view');
 
     function initializeApp() {
+        if (!navLinksContainer) return;
+        
         let navHTML = `
             <li><a href="index.html#about">Tentang Kami</a></li>
             <li><a href="index.html#members">Member</a></li>
@@ -16,36 +62,39 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
         navLinksContainer.innerHTML = navHTML;
 
-        let userIconHTML = '';
-        if (token && userData) {
+        // Cek jika sudah login, ganti tombol dengan ikon dashboard
+        const navAuthButtons = document.querySelector('.nav-auth-buttons');
+        if (token && userData && navAuthButtons) {
             const destination = userData.peran === 'admin' ? 'admin.html' : 'dashboard.html';
-            userIconHTML = `<a href="${destination}" title="Akun Saya" class="nav-user-icon"><i class="fas fa-user-circle"></i></a>`;
-        } else {
-            userIconHTML = `<a href="#" id="auth-icon-btn" title="Login/Daftar" class="nav-user-icon"><i class="fas fa-user-circle"></i></a>`;
-        }
-        
-        const hamburgerMenu = document.getElementById('hamburger-menu');
-        if (hamburgerMenu) {
-            hamburgerMenu.insertAdjacentHTML('beforebegin', userIconHTML);
-        }
-
-        const authIconBtn = document.getElementById('auth-icon-btn');
-        const authModal = document.getElementById('auth-modal');
-        if (authIconBtn && authModal) {
-            authIconBtn.addEventListener('click', (e) => {
-                e.preventDefault();
-                authModal.classList.add('active');
-            });
+            navAuthButtons.innerHTML = `<a href="${destination}" title="Akun Saya" class="nav-user-icon"><i class="fas fa-user-circle"></i></a>`;
+            const style = document.createElement('style');
+            style.innerHTML = `.nav-user-icon { color: var(--text-color); font-size: 2rem; }`;
+            document.head.appendChild(style);
         }
     }
 
     function setupModalListeners() {
-        const authModal = document.getElementById('auth-modal');
-        if (!authModal) return;
-
+        const loginBtn = document.getElementById('login-btn');
+        const registerBtn = document.getElementById('register-btn');
         const closeModalBtn = document.getElementById('modal-close-btn');
         const showRegisterLink = document.getElementById('show-register-link');
         const showLoginLink = document.getElementById('show-login-link');
+
+        // REVISI: Event listener untuk tombol Login
+        loginBtn?.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginView.style.display = 'block';
+            registerView.style.display = 'none';
+            authModal.classList.add('active');
+        });
+
+        // REVISI: Event listener untuk tombol Register
+        registerBtn?.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginView.style.display = 'none';
+            registerView.style.display = 'block';
+            authModal.classList.add('active');
+        });
 
         closeModalBtn?.addEventListener('click', () => authModal.classList.remove('active'));
         authModal.addEventListener('click', (e) => {
@@ -54,14 +103,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
         showRegisterLink?.addEventListener('click', (e) => {
             e.preventDefault();
-            document.getElementById('login-view').style.display = 'none';
-            document.getElementById('register-view').style.display = 'block';
+            loginView.style.display = 'none';
+            registerView.style.display = 'block';
         });
 
         showLoginLink?.addEventListener('click', (e) => {
             e.preventDefault();
-            document.getElementById('register-view').style.display = 'none';
-            document.getElementById('login-view').style.display = 'block';
+            registerView.style.display = 'none';
+            loginView.style.display = 'block';
         });
     }
 
@@ -92,7 +141,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 localStorage.setItem('userToken', result.token);
                 localStorage.setItem('userData', JSON.stringify(result.user));
-                showToast(`Login berhasil! Selamat datang, ${result.user.nama_pengguna}!`);
+                
+                // Menggunakan fungsi showToast global dari script.js
+                if (typeof showToast === 'function') {
+                    showToast(`Login berhasil! Selamat datang, ${result.user.nama_pengguna}!`);
+                }
 
                 setTimeout(() => {
                     window.location.href = result.user?.peran === 'admin' ? 'admin.html' : 'dashboard.html';
@@ -100,7 +153,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             } catch (error) {
                 formError.textContent = error.message;
-                showToast(error.message, false);
                 submitButton.disabled = false;
                 submitButton.textContent = 'Login';
             }
@@ -131,33 +183,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.message || 'Gagal mendaftar.');
 
-                showToast('Pendaftaran berhasil! Silakan login.');
+                if (typeof showToast === 'function') {
+                    showToast('Pendaftaran berhasil! Silakan login.');
+                }
                 registerForm.reset();
-                document.getElementById('login-view').style.display = 'block';
-                document.getElementById('register-view').style.display = 'none';
+                loginView.style.display = 'block';
+                registerView.style.display = 'none';
 
             } catch (error) {
                 formError.textContent = error.message;
-                showToast(error.message, false);
             } finally {
                 submitButton.disabled = false;
                 submitButton.textContent = 'Daftar';
             }
         });
     }
-    
-    // Menambahkan style untuk ikon pengguna secara dinamis
-    const style = document.createElement('style');
-    style.innerHTML = `
-        .nav-user-icon {
-            color: var(--light-text-color);
-            font-size: 1.8rem;
-            cursor: pointer;
-            display: block;
-            margin-left: 1rem;
-        }
-    `;
-    document.head.appendChild(style);
 
     initializeApp();
     setupModalListeners();

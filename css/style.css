@@ -111,227 +111,398 @@ ul.nav-links a:hover {
     background-color: var(--accent-color);
 }
 
-.nav-auth-container a {
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 0.9rem;
-    color: var(--secondary-text-color);
+.hamburger { 
+    display: none; 
+    background: none; 
+    border: none; 
+    font-size: 1.8rem; 
+    cursor: pointer; 
 }
 
-.hamburger { display: none; background: none; border: none; font-size: 1.8rem; cursor: pointer; }
+/* REVISI: Tombol Header Login/Register */
+.nav-auth-buttons { 
+    display: flex; 
+    align-items: center; 
+    gap: 0.8rem; 
+}
+.nav-button { 
+    font-family: 'Poppins', sans-serif; 
+    cursor: pointer; 
+    text-decoration: none; 
+    font-weight: 500; 
+    font-size: 0.9rem; 
+    padding: 0.5rem 1.2rem; 
+    border-radius: 50px; 
+    transition: all 0.3s ease; 
+    border: 1px solid var(--primary-color); 
+}
+.nav-button.cta { 
+    background-color: var(--primary-color); 
+    color: var(--light-text-color); 
+}
+.nav-button.cta:hover { 
+    background-color: var(--accent-color); 
+    border-color: var(--accent-color); 
+}
+.nav-button:not(.cta) { 
+    color: var(--primary-color); 
+    background-color: transparent; 
+}
+.nav-button:not(.cta):hover { 
+    background-color: var(--primary-color); 
+    color: var(--light-text-color); 
+}
 
-/* Hero Section */
+
+/* Hero Section & Slider */
 #hero { 
     padding: 0; 
 }
-.hero-image-container {
-    width: 100%;
-    max-height: 450px;
-    overflow: hidden;
-}
-#hero img { 
+.slider-container { 
     width: 100%; 
-    height: 100%;
-    object-fit: cover;
-    object-position: center 25%;
-    display: block;
+    max-height: 450px; 
+    overflow: hidden; 
+    position: relative; 
 }
-.hero-text {
-    padding: 3rem 1.5rem;
-    text-align: center;
+.slider { 
+    display: flex; 
+    width: 100%; 
+    height: 450px; 
+    transition: transform 0.5s ease-in-out; 
 }
-.hero-text h2 {
-    font-size: 2.5rem;
-    font-weight: 800;
-    margin-bottom: 0.5rem;
+.slide { 
+    min-width: 100%; 
+    height: 100%; 
+    position: absolute; 
+    top: 0; 
+    left: 0; 
+    opacity: 0; 
+    transition: opacity 1s ease-in-out; 
 }
-.hero-text h3 {
-    font-size: 1.5rem;
-    font-weight: 400;
-    color: var(--secondary-text-color);
-    margin-bottom: 1.5rem;
+.slide.active { 
+    opacity: 1; 
 }
-.hero-text p {
-    color: var(--primary-color);
-    max-width: 700px;
-    margin: 0 auto;
-    font-size: 1.1rem;
-    font-weight: 500;
+.slide img { 
+    width: 100%; 
+    height: 100%; 
+    object-fit: cover; 
+    object-position: center 25%; 
+    display: block; 
+}
+.slider-nav { 
+    position: absolute; 
+    top: 50%; 
+    width: 100%; 
+    display: flex; 
+    justify-content: space-between; 
+    transform: translateY(-50%); 
+    padding: 0 1rem; 
+}
+.slider-nav button { 
+    background-color: rgba(0, 0, 0, 0.5); 
+    color: white; border: none; 
+    padding: 0.5rem 1rem; 
+    font-size: 1.5rem; 
+    cursor: pointer; 
+    border-radius: 50%; 
+    width: 50px; 
+    height: 50px; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    transition: background-color 0.3s; 
+}
+.slider-nav button:hover { 
+    background-color: rgba(0, 0, 0, 0.8); 
+}
+.slider-dots { 
+    position: absolute; 
+    bottom: 20px; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    display: flex; 
+    gap: 10px; 
+}
+.dot { 
+    width: 12px; 
+    height: 12px; 
+    border-radius: 50%; 
+    background-color: rgba(255, 255, 255, 0.7); 
+    cursor: pointer; 
+    transition: background-color 0.3s; 
+}
+.dot.active { 
+    background-color: white; 
+}
+.hero-text { 
+    padding: 3rem 1.5rem; 
+    text-align: center; 
+}
+.hero-text h2 { 
+    font-size: 2.5rem; 
+    font-weight: 800; 
+    margin-bottom: 0.5rem; 
+}
+.hero-text h3 { 
+    font-size: 1.5rem; 
+    font-weight: 400; 
+    color: var(--secondary-text-color); 
+    margin-bottom: 1.5rem; 
+}
+.hero-text p { 
+    max-width: 700px; 
+    margin: 0 auto; 
+    font-size: 1.1rem; 
 }
 
 /* Bagian Umum */
-section { padding: 4rem 0; }
-section h2 {
-    font-size: 2.2rem;
-    font-weight: 700;
-    margin-bottom: 3rem;
-    color: var(--text-color);
-    text-align: center;
+section { 
+    padding: 4rem 0; 
+}
+section h2 { 
+    font-size: 2.2rem; 
+    font-weight: 700; 
+    margin-bottom: 3rem; 
+    color: var(--text-color); 
+    text-align: center; 
 }
 
-/* Tombol Aksi (Untuk Cara Pesan & News) */
-.action-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.5rem;
-    width: 100%;
-    margin: 0 auto;
-}
-.news-grid {
-    grid-template-columns: repeat(2, 1fr);
-    max-width: 900px;
-}
-
-.action-button-link {
-    background-color: var(--primary-color);
-    color: var(--light-text-color);
-    padding: 2.5rem 1.5rem;
-    border-radius: var(--border-radius);
-    font-size: 1.25rem;
-    font-weight: 600;
-    text-decoration: none;
-    transition: transform 0.3s ease, background-color 0.3s ease;
-    text-align: center;
-}
-.action-button-link:hover {
-    background-color: var(--accent-color);
-    transform: translateY(-5px);
-}
-
-/* Member Section */
-.member-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-    gap: 2rem;
-    justify-content: center;
-}
-.member-card {
-    background: var(--card-bg);
-    border-radius: var(--border-radius);
-    overflow: hidden;
-    text-align: center;
-    box-shadow: var(--shadow-light);
-    transition: transform 0.3s ease;
-}
-.member-card:hover {
-    transform: translateY(-8px);
-}
-.member-card img {
-    width: 100%;
-    height: 300px;
-    object-fit: cover;
-    display: block;
-}
-.member-info {
-    padding: 1.2rem;
-}
-.member-info h3 {
-    font-size: 1.2rem;
-    font-weight: 600;
-}
-.member-info p {
-    font-size: 0.9rem;
-    color: var(--primary-color);
-}
-
-
-/* FAQ Section */
-.faq-container { 
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 1rem;
-    max-width: 900px; 
+/* REVISI: Cara Pesan */
+.how-to-order-container { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 1.5rem; 
+    max-width: 800px; 
     margin: 0 auto; 
-    text-align: left; 
+}
+.order-step { 
+    display: flex; 
+    align-items: center; 
+    gap: 1.5rem; 
+    background: var(--card-bg); 
+    padding: 1.5rem; 
+    border-radius: var(--border-radius); 
+    box-shadow: var(--shadow-light); 
+}
+.order-step .step-number { 
+    background-color: var(--primary-color); 
+    color: var(--light-text-color); 
+    min-width: 50px; 
+    height: 50px; 
+    border-radius: 50%; 
+    display: grid; 
+    place-items: center; 
+    font-size: 1.5rem; 
+    font-weight: 700; 
+}
+.order-step h3 { 
+    font-size: 1.2rem; 
+    margin-bottom: 0.25rem; 
+}
+.order-step p { 
+    color: var(--secondary-text-color); 
+}
+
+/* REVISI: Member Section (Detailed) */
+.member-grid-detailed { 
+    display: grid; 
+    grid-template-columns: 1fr; 
+    gap: 2.5rem; 
+    max-width: 800px; 
+    margin: 0 auto; 
+}
+.member-card-detailed { 
+    background: var(--card-bg); 
+    border-radius: var(--border-radius); 
+    box-shadow: var(--shadow-light); 
+    display: flex; 
+    overflow: hidden; 
+    gap: 2rem; 
+}
+.member-card-detailed.group-card { 
+    flex-direction: column; 
+    text-align: center; 
+}
+.member-card-detailed img { 
+    width: 250px; 
+    height: auto; 
+    object-fit: cover; 
+}
+.member-card-detailed.group-card img { 
+    width: 100%; 
+    height: 300px; 
+}
+.member-details { 
+    padding: 1.5rem; 
+    padding-left: 0; 
+}
+.member-card-detailed.group-card .member-details { 
+    padding: 1.5rem; 
+}
+.member-details .role { 
+    background-color: var(--primary-color); 
+    color: var(--light-text-color); 
+    padding: 0.2rem 0.8rem; 
+    border-radius: 50px; 
+    font-size: 0.8rem; 
+    display: inline-block; 
+    margin-bottom: 1rem; 
+}
+.member-details h3 { 
+    font-size: 1.8rem; 
+    margin-bottom: 0.5rem; 
+}
+.member-details .jiko { 
+    font-style: italic; 
+    color: var(--secondary-text-color); 
+    margin-bottom: 1.5rem; 
+    display: block; 
+}
+.member-details ul { 
+    list-style: none; 
+    padding: 0; 
+}
+.member-details ul li { 
+    margin-bottom: 0.5rem; 
+}
+.member-details ul li strong { 
+    color: var(--primary-color); 
+    margin-right: 0.5rem; 
+}
+
+/* REVISI: News Section */
+.news-container { 
+    display: flex; 
+    flex-direction: column; 
+    gap: 1.5rem; 
+    max-width: 800px; 
+    margin: 0 auto; 
+}
+.news-item { 
+    background: var(--card-bg); 
+    border-left: 5px solid var(--primary-color); 
+    padding: 1.5rem; 
+    border-radius: 8px; 
+    box-shadow: var(--shadow-light); 
+}
+.news-item h3 { 
+    font-size: 1.3rem; 
+    margin-bottom: 0.5rem; 
+}
+.news-item .date { 
+    font-size: 0.9rem; 
+    color: var(--secondary-text-color); 
+    margin-bottom: 1rem; 
+}
+.news-item p { 
+    color: var(--text-color); 
+}
+
+/* REVISI: FAQ (Accordion) */
+.faq-container { 
+    max-width: 800px; 
+    margin: 0 auto; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 1rem; 
 }
 .faq-item { 
     background: var(--card-bg); 
-    border: 1px solid #e0e0e0; 
     border-radius: var(--border-radius); 
-    padding: 1.25rem 1.5rem;
-    font-size: 1.1rem; 
-    font-weight: 500; 
-    text-align: left; 
+    box-shadow: var(--shadow-light); 
+    overflow: hidden; 
+}
+.faq-question { 
+    padding: 1.5rem; 
+    font-weight: 600; 
+    cursor: pointer; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+}
+.faq-question::after { 
+    content: '+'; 
+    font-size: 1.5rem; 
+    color: var(--primary-color); 
+    transition: transform 0.3s ease; 
+}
+.faq-item.active .faq-question::after { 
+    transform: rotate(45deg); 
+}
+.faq-answer { 
+    max-height: 0; 
+    overflow: hidden; 
+    transition: max-height 0.5s ease, padding 0.5s ease; 
+}
+.faq-answer p { 
+    padding: 0 1.5rem 1.5rem; 
+    border-top: 1px solid #eee; 
+    margin-top: -1px; 
+}
+.faq-item.active .faq-answer { 
+    max-height: 300px; 
 }
 
+
 /* Footer */
-footer {
-    background-color: var(--primary-color);
-    color: var(--light-text-color);
-    padding: 3rem 0;
-    text-align: center;
+footer { 
+    background-color: var(--primary-color); 
+    color: var(--light-text-color); 
+    padding: 3rem 0; 
+    text-align: center; 
 }
-.social-media { display: flex; justify-content: center; gap: 2rem; margin-bottom: 1.5rem; }
-.social-media a { color: var(--light-text-color); font-size: 1.8rem; }
-footer p { opacity: 0.9; }
+.social-media { 
+    display: flex; 
+    justify-content: center; 
+    gap: 2rem; 
+    margin-bottom: 1.5rem; 
+}
+.social-media a { 
+    color: var(--light-text-color); 
+    font-size: 1.8rem; 
+}
+footer p { 
+    opacity: 0.9; 
+}
 
 /* Responsivitas */
 @media (max-width: 992px) {
     .nav-links { 
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        width: 100%;
-        background-color: var(--card-bg);
-        flex-direction: column;
-        padding: 1rem 0;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        display: none; 
+        position: absolute; 
+        top: 100%; 
+        left: 0; 
+        width: 100%; 
+        background-color: var(--card-bg); 
+        flex-direction: column; 
+        padding: 1rem 0; 
+        box-shadow: 0 4px 10px rgba(0,0,0,0.05); 
     }
-    .nav-links.active {
-        display: flex;
+    .nav-links.active { 
+        display: flex; 
     }
-    .nav-auth-container { display: none; }
-    .hamburger { display: block; }
+    .nav-auth-buttons { 
+        display: none; 
+    }
+    .hamburger { 
+        display: block; 
+    }
 }
 @media (max-width: 768px) {
-    section { padding: 3rem 0; }
-    section h2 { font-size: 1.8rem; }
-    
-    .action-grid, .news-grid {
-        grid-template-columns: 1fr;
+    section { 
+        padding: 3rem 0; 
     }
-    .member-grid { 
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    section h2 { 
+        font-size: 1.8rem; 
     }
-}
-/* Tambahkan ini di akhir file css/style.css */
-.nav-auth-buttons {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-}
-
-.nav-button {
-    text-decoration: none;
-    font-weight: 500;
-    font-size: 0.9rem;
-    padding: 0.5rem 1.2rem;
-    border-radius: 50px;
-    transition: all 0.3s ease;
-    border: 1px solid transparent;
-}
-
-.nav-button.cta {
-    background-color: var(--primary-color);
-    color: var(--light-text-color);
-    border-color: var(--primary-color);
-}
-.nav-button.cta:hover {
-    background-color: var(--accent-color);
-    border-color: var(--accent-color);
-}
-
-.nav-button:not(.cta) {
-    color: var(--secondary-text-color);
-}
-
-.nav-button:not(.cta):hover {
-    color: var(--primary-color);
-}
-
-@media (max-width: 992px) {
-    .nav-auth-buttons {
-        display: none; /* Sembunyikan di desktop nav, akan dihandle JS untuk mobile */
+    .member-card-detailed { 
+        flex-direction: column; 
+    }
+    .member-card-detailed img { 
+        width: 100%; 
+        height: 300px; 
+    }
+    .member-details { 
+        padding: 1.5rem; 
     }
 }

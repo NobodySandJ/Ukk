@@ -33,13 +33,13 @@
                 </a>
                 <ul class="nav-links" id="nav-links">
                     <li><a href="#hero">Tentang Kami</a></li>
-                    <li><a href="#">Schedule</a></li>
                     <li><a href="#members">Member</a></li>
                     <li><a href="#news">News</a></li>
                     <li><a href="cheki.html" class="cheki-button">Pesan Tiket Cheki!</a></li>
                 </ul>
-                <div class="nav-auth-container">
-                    <a href="#" id="auth-icon-btn">Login/Register</a>
+                <div class="nav-auth-buttons">
+                    <button class="nav-button" id="login-btn">Login</button>
+                    <button class="nav-button cta" id="register-btn">Register</button>
                 </div>
                 <button class="hamburger" id="hamburger-menu" aria-label="Buka menu">
                     <i class="fas fa-bars"></i>
@@ -50,8 +50,13 @@
 
     <main>
         <section id="hero">
-            <div class="hero-image-container">
-                 <img id="hero-image" src="" alt="Hero Image">
+            <div class="slider-container">
+                <div class="slider" id="image-slider"></div>
+                <div class="slider-nav">
+                    <button class="prev-btn">&lt;</button>
+                    <button class="next-btn">&gt;</button>
+                </div>
+                <div class="slider-dots" id="slider-dots"></div>
             </div>
             <div class="container hero-text">
                 <h2 id="group-name"></h2>
@@ -63,19 +68,15 @@
         <section id="how-to-order" class="bg-gray">
              <div class="container">
                 <h2>CARA PESAN</h2>
-                <div class="action-grid">
-                    <div class="action-button-link">Login/Daftar</div>
-                    <div class="action-button-link">Pilih Cheki</div>
-                    <div class="action-button-link">Bayar Pesanan</div>
-                    <div class="action-button-link">Dapatkan Tiket</div>
-                </div>
+                <div class="how-to-order-container" id="how-to-order-container">
+                    </div>
             </div>
         </section>
 
         <section id="members">
             <div class="container">
                 <h2>MEMBER</h2>
-                <div id="member-grid" class="member-grid">
+                <div id="member-grid" class="member-grid-detailed">
                     </div>
             </div>
         </section>
@@ -83,7 +84,7 @@
         <section id="news" class="bg-gray">
             <div class="container">
                 <h2>NEWS</h2>
-                <div id="news-grid" class="action-grid news-grid">
+                <div id="news-container" class="news-container">
                     </div>
             </div>
         </section>
