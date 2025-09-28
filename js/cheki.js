@@ -15,32 +15,14 @@ document.addEventListener('DOMContentLoaded', function () {
         let cart = {};
         let availableStock = 0;
         
-        async function loadMidtransScript() {
-            try {
-                const response = await fetch('/api/midtrans-client-key');
-                if (!response.ok) throw new Error('Gagal mendapatkan client key Midtrans.');
-                const data = await response.json();
-                const clientKey = data.clientKey;
-
-                if (clientKey) {
-                    const script = document.createElement('script');
-                    script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
-                    script.setAttribute('data-client-key', clientKey);
-                    document.head.appendChild(script);
-                } else {
-                    throw new Error('Client key Midtrans tidak ditemukan.');
-                }
-            } catch (error) {
-                console.error(error);
-                submitButton.disabled = true;
-                formErrorEl.textContent = 'Gagal memuat konfigurasi pembayaran.';
-            }
-        }
+        // Memuat script Midtrans di awal
+        loadMidtransScript();
 
         function checkUrlForSuccess() {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('transaction_status') === 'settlement' || urlParams.get('transaction_status') === 'capture') {
-                showToast(`Terima kasih! Tiket Anda ada di dashboard.`);
+                showToast(`Pembayaran berhasil! Tiket Anda sudah tersedia di dashboard.`);
+                // Membersihkan parameter dari URL agar notifikasi tidak muncul lagi saat refresh
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
@@ -48,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function () {
         async function loadChekiProducts() {
             try {
                 const response = await fetch('/api/products-and-stock');
-                if (!response.ok) throw new Error('Data produk tidak ditemukan');
+                if (!response.ok) throw new Error('Data produk tidak dapat dimuat.');
                 const data = await response.json();
                 
                 membersData = data.members;
@@ -61,31 +43,36 @@ document.addEventListener('DOMContentLoaded', function () {
                 renderProducts();
             } catch (error) {
                 console.error("Gagal memuat produk cheki:", error);
-                chekiListContainer.innerHTML = "<p>Gagal memuat produk. Coba segarkan halaman.</p>";
+                chekiListContainer.innerHTML = `<p style="text-align:center;">${error.message}</p>`;
             }
         }
         
-        // REVISI: Fungsi membuat kartu member yang lebih simpel
+        // REVISI: Fungsi membuat kartu member dengan rasio gambar yang benar
         function createProductCard(product) {
             const card = document.createElement('div');
             card.className = 'cheki-member-card';
             const isOutOfStock = availableStock === 0;
             
             card.innerHTML = `
-                <img src="${product.image}" alt="Cheki ${product.name}">
-                <h3>${product.name}</h3>
-                <div class="quantity-selector">
-                    <button class="quantity-btn" data-id="${product.id}" data-action="decrease" ${isOutOfStock ? 'disabled' : ''}>-</button>
-                    <input type="number" class="quantity-input" data-id="${product.id}" value="0" min="0" readonly>
-                    <button class="quantity-btn" data-id="${product.id}" data-action="increase" ${isOutOfStock ? 'disabled' : ''}>+</button>
+                <div class="card-image-wrapper">
+                    <img src="${product.image}" alt="Cheki ${product.name}" loading="lazy">
                 </div>
-                ${isOutOfStock ? '<p style="color: red; font-size: 0.8rem; margin-top: 10px;">Stok Habis</p>' : ''}
+                <div class="card-content">
+                    <h3>${product.name}</h3>
+                    <div class="quantity-selector">
+                        <button class="quantity-btn" data-id="${product.id}" data-action="decrease" ${isOutOfStock ? 'disabled' : ''}>-</button>
+                        <input type="number" class="quantity-input" data-id="${product.id}" value="0" min="0" readonly>
+                        <button class="quantity-btn" data-id="${product.id}" data-action="increase" ${isOutOfStock ? 'disabled' : ''}>+</button>
+                    </div>
+                </div>
+                ${isOutOfStock ? '<p style="color: red; font-size: 0.8rem; padding-bottom: 1rem;">Stok Habis</p>' : ''}
             `;
             return card;
         }
         
         function renderProducts() {
             chekiListContainer.innerHTML = '';
+            // Selalu tampilkan kartu grup terlebih dahulu jika ada
             if (groupChekiData?.id) {
                 chekiListContainer.appendChild(createProductCard(groupChekiData));
             }
@@ -101,11 +88,14 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         function updateQuantity(productId, action) {
-            let product = membersData.find(m => m.id === productId) || (productId === groupChekiData.id ? groupChekiData : null);
+            const product = membersData.find(m => m.id === productId) || (productId === groupChekiData.id ? groupChekiData : null);
             if (!product) return;
 
-            cart[productId] = cart[productId] || { quantity: 0, name: product.name, price: product.price };
-
+            // Inisialisasi item di keranjang jika belum ada
+            if (!cart[productId]) {
+                cart[productId] = { quantity: 0, name: product.name, price: product.price, id: product.id };
+            }
+        
             if (action === 'increase') {
                 const totalInCart = Object.values(cart).reduce((sum, item) => sum + item.quantity, 0);
                 if (totalInCart >= availableStock) {
@@ -116,15 +106,17 @@ document.addEventListener('DOMContentLoaded', function () {
             } else if (action === 'decrease' && cart[productId].quantity > 0) {
                 cart[productId].quantity--;
             }
+        
+            // Update tampilan input
+            const inputEl = document.querySelector(`.quantity-input[data-id="${productId}"]`);
+            if(inputEl) inputEl.value = cart[productId].quantity;
 
-            document.querySelector(`.quantity-input[data-id="${productId}"]`).value = cart[productId].quantity;
             updateTotals();
         }
         
-        // REVISI: Fungsi update total dan ringkasan pesanan
         function updateTotals() {
             let totalPrice = 0;
-            orderSummaryItemsEl.innerHTML = ''; // Kosongkan daftar item
+            orderSummaryItemsEl.innerHTML = ''; 
 
             const hasItems = Object.values(cart).some(item => item.quantity > 0);
 
@@ -151,8 +143,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
         chekiListContainer.addEventListener('click', e => {
-            if (e.target.classList.contains('quantity-btn')) {
-                updateQuantity(e.target.dataset.id, e.target.dataset.action);
+            const button = e.target.closest('.quantity-btn');
+            if (button) {
+                updateQuantity(button.dataset.id, button.dataset.action);
             }
         });
 
@@ -160,19 +153,19 @@ document.addEventListener('DOMContentLoaded', function () {
             e.preventDefault();
 
             if (!token || !userData) {
-                formErrorEl.textContent = 'Anda harus login terlebih dahulu untuk memesan.';
+                showToast('Anda harus login untuk memesan.', false);
                 document.getElementById('auth-modal').classList.add('active');
                 return;
             }
 
             if (typeof window.snap === 'undefined') {
-                formErrorEl.textContent = 'Layanan pembayaran belum siap. Coba lagi sesaat.';
+                showToast('Layanan pembayaran belum siap. Coba lagi sesaat.', false);
                 return;
             }
             
             const totalItemsInCart = Object.values(cart).reduce((sum, item) => sum + item.quantity, 0);
             if (totalItemsInCart === 0) {
-                formErrorEl.textContent = 'Anda belum memilih cheki.';
+                showToast('Keranjang Anda masih kosong.', false);
                 return;
             }
 
@@ -193,13 +186,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const orderData = {
                 transaction_details: {
-                    order_id: 'CHEKI-' + new Date().getTime(),
+                    order_id: 'CHEKI-' + userData.id + '-' + new Date().getTime(),
                     gross_amount: gross_amount
                 },
                 customer_details: {
                     first_name: userData.nama_pengguna, 
                     email: userData.email,
-                    phone: userData.nomor_whatsapp || 'N/A',
+                    phone: userData.nomor_whatsapp || '',
                 },
                 item_details: item_details
             };
@@ -215,8 +208,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
 
                 const result = await response.json();
-                if (!response.ok) throw new Error(result.message || 'Gagal mendapatkan token pembayaran.');
+                if (!response.ok) throw new Error(result.message || 'Gagal memulai pembayaran.');
                 
+                // Proses pembayaran dengan Snap
                 window.snap.pay(result.token, {
                     onSuccess: function(result) {
                         fetch('/update-order-status', {
@@ -231,7 +225,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         window.location.href = `/cheki.html?order_id=${result.order_id}&transaction_status=${result.transaction_status}`;
                     },
                     onPending: function(result){
-                        showToast("Pembayaran Anda sedang diproses.", true, 5000);
+                        showToast("Menunggu pembayaran Anda...", true, 5000);
                         submitButton.disabled = false;
                         submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
                     },
@@ -241,21 +235,48 @@ document.addEventListener('DOMContentLoaded', function () {
                         submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
                     },
                     onClose: function () {
-                        formErrorEl.textContent = 'Anda menutup jendela pembayaran.';
+                        showToast('Anda menutup jendela pembayaran.', false);
                         submitButton.disabled = false;
                         submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
                     }
                 });
 
             } catch (error) {
-                formErrorEl.textContent = 'Terjadi kesalahan: ' + error.message;
+                showToast('Terjadi kesalahan: ' + error.message, false);
                 submitButton.disabled = false;
                 submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
             }
         });
         
+        // --- Inisialisasi Halaman ---
         checkUrlForSuccess();
         loadChekiProducts();
-        loadMidtransScript();
+    }
+
+    async function loadMidtransScript() {
+        if (document.querySelector('script[src*="midtrans"]')) return;
+        try {
+            const response = await fetch('/api/midtrans-client-key');
+            if (!response.ok) throw new Error('Gagal mendapatkan client key Midtrans.');
+            const data = await response.json();
+            const clientKey = data.clientKey;
+
+            if (clientKey) {
+                const script = document.createElement('script');
+                script.type = 'text/javascript';
+                script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
+                script.setAttribute('data-client-key', clientKey);
+                document.head.appendChild(script);
+            } else {
+                throw new Error('Client key Midtrans tidak ditemukan.');
+            }
+        } catch (error) {
+            console.error(error);
+            const submitBtn = document.getElementById('submit-button');
+            if(submitBtn) {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Pembayaran Error';
+            }
+        }
     }
 });

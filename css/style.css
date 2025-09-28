@@ -13,6 +13,7 @@
     --border-radius: 12px;
     --shadow-light: 0 4px 20px rgba(0, 0, 0, 0.07);
     --gray-bg: #f0f3f5;
+    --success-color: #28a745;
 }
 
 /* Reset dan Aturan Dasar */
@@ -497,13 +498,6 @@ footer p {
     }
 }
 
-/* Styling untuk grup tombol di navigasi */
-.nav-button-group {
-    display: flex;
-    align-items: center;
-    gap: 0.8rem;
-}
-
 /* General CTA Button */
 .cta-button {
     display: inline-block;
@@ -550,7 +544,6 @@ footer p {
     background-color: transparent;
     color: var(--primary-color);
     border: 2px solid var(--primary-color);
-    /* Sesuaikan padding agar ukuran total tombol sama */
     padding: calc(0.8rem - 2px) calc(2rem - 2px);
 }
 
@@ -561,7 +554,9 @@ footer p {
     box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
-/* REVISI HALAMAN CHEKI */
+/* ============================ */
+/* REVISI HALAMAN CHEKI (STYLE) */
+/* ============================ */
 #cheki-page {
     background-color: var(--gray-bg);
 }
@@ -585,75 +580,100 @@ footer p {
 }
 .cheki-main-layout {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 2.5fr 1.5fr; /* Kolom kiri lebih lebar */
     gap: 2rem;
     align-items: flex-start;
 }
 .cheki-member-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1rem;
+    gap: 1.5rem;
 }
 .cheki-member-card {
     background-color: var(--card-bg);
     border-radius: var(--border-radius);
-    padding: 1rem;
     text-align: center;
     box-shadow: var(--shadow-light);
     transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+}
+.cheki-member-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+.card-image-wrapper {
+    width: 100%;
+    overflow: hidden;
+    border-radius: var(--border-radius) var(--border-radius) 0 0;
 }
 .cheki-member-card img {
     width: 100%;
-    height: 150px; /* Atur tinggi gambar agar seragam */
+    height: auto;
+    display: block;
+    aspect-ratio: 4 / 5; /* Rasio potret yang umum */
     object-fit: cover;
-    border-radius: 8px;
-    margin-bottom: 1rem;
+}
+.card-content {
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1; /* Membuat konten mengisi sisa ruang */
 }
 .cheki-member-card h3 {
     font-size: 1.1rem;
     font-weight: 600;
-    margin-bottom: 1rem;
+    margin-bottom: auto; /* Mendorong tombol ke bawah */
+    padding-bottom: 1rem;
 }
 .quantity-selector {
     display: flex;
     justify-content: center;
     align-items: center;
     gap: 0.5rem;
+    margin-top: 1rem;
 }
-.quantity-selector .quantity-btn {
+.quantity-btn {
     background-color: var(--primary-color);
     color: var(--light-text-color);
     border: none;
-    width: 30px;
-    height: 30px;
+    width: 32px;
+    height: 32px;
     border-radius: 50%;
-    font-size: 1.2rem;
+    font-size: 1.5rem;
+    line-height: 32px;
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.3s;
 }
-.quantity-selector .quantity-btn:hover {
+.quantity-btn:hover {
     background-color: var(--accent-color);
 }
-.quantity-selector .quantity-btn:disabled {
+.quantity-btn:disabled {
     background-color: #ccc;
     cursor: not-allowed;
 }
-.quantity-selector .quantity-input {
-    width: 40px;
+.quantity-input {
+    width: 45px;
     text-align: center;
-    border: 1px solid #ccc;
+    border: 1px solid #ddd;
     border-radius: 8px;
-    padding: 0.3rem;
+    padding: 0.4rem;
     font-size: 1rem;
+    font-weight: 600;
+    -moz-appearance: textfield; /* Firefox */
+}
+.quantity-input::-webkit-outer-spin-button,
+.quantity-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 .order-summary-container {
     background-color: var(--card-bg);
     padding: 1.5rem;
     border-radius: var(--border-radius);
     box-shadow: var(--shadow-light);
-    position: sticky;
-    top: 100px; /* Header height + margin */
+    position: static; /* Dibuat statis sesuai permintaan */
 }
 .order-summary-container h3 {
     text-align: center;
@@ -671,10 +691,14 @@ footer p {
     font-size: 0.95rem;
 }
 .order-summary-total {
-    border-top: 1px solid #eee;
+    border-top: 2px solid var(--primary-color);
     padding-top: 1rem;
     font-weight: bold;
     font-size: 1.2rem;
+}
+.order-summary-total p {
+    display: flex;
+    justify-content: space-between;
 }
 .order-summary-total #total-price {
     color: var(--primary-color);
@@ -682,19 +706,21 @@ footer p {
 .order-summary-container .cta-button {
     width: 100%;
     margin-top: 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
 }
 .empty-cart-message {
     color: var(--secondary-text-color);
     text-align: center;
     font-style: italic;
 }
+
+/* Responsivitas untuk Halaman Cheki */
 @media (max-width: 992px) {
     .cheki-main-layout {
         grid-template-columns: 1fr;
-    }
-    .order-summary-container {
-        position: static;
-        top: auto;
     }
 }
 @media (max-width: 576px) {
