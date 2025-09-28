@@ -191,6 +191,7 @@ document.addEventListener('DOMContentLoaded', function () {
             };
             
             try {
+                // --- INILAH PERBAIKANNYA ---
                 const response = await fetch('/get-snap-token', {
                     method: 'POST',
                     headers: {
