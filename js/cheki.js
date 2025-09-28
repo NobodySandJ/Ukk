@@ -1,3 +1,4 @@
+// nobodysandj/ukk/Ukk-d62b0944c32f178929f123a2ed9509d1a235b007/js/cheki.js
 document.addEventListener('DOMContentLoaded', function () {
     if (document.getElementById('cheki-page')) {
         const token = localStorage.getItem('userToken');
@@ -15,14 +16,12 @@ document.addEventListener('DOMContentLoaded', function () {
         let cart = {};
         let availableStock = 0;
         
-        // Memuat script Midtrans di awal
         loadMidtransScript();
 
         function checkUrlForSuccess() {
             const urlParams = new URLSearchParams(window.location.search);
             if (urlParams.get('transaction_status') === 'settlement' || urlParams.get('transaction_status') === 'capture') {
                 showToast(`Pembayaran berhasil! Tiket Anda sudah tersedia di dashboard.`);
-                // Membersihkan parameter dari URL agar notifikasi tidak muncul lagi saat refresh
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
@@ -47,7 +46,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
         
-        // REVISI: Fungsi membuat kartu member dengan rasio gambar yang benar
         function createProductCard(product) {
             const card = document.createElement('div');
             card.className = 'cheki-member-card';
@@ -72,7 +70,6 @@ document.addEventListener('DOMContentLoaded', function () {
         
         function renderProducts() {
             chekiListContainer.innerHTML = '';
-            // Selalu tampilkan kartu grup terlebih dahulu jika ada
             if (groupChekiData?.id) {
                 chekiListContainer.appendChild(createProductCard(groupChekiData));
             }
@@ -91,7 +88,6 @@ document.addEventListener('DOMContentLoaded', function () {
             const product = membersData.find(m => m.id === productId) || (productId === groupChekiData.id ? groupChekiData : null);
             if (!product) return;
 
-            // Inisialisasi item di keranjang jika belum ada
             if (!cart[productId]) {
                 cart[productId] = { quantity: 0, name: product.name, price: product.price, id: product.id };
             }
@@ -107,7 +103,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 cart[productId].quantity--;
             }
         
-            // Update tampilan input
             const inputEl = document.querySelector(`.quantity-input[data-id="${productId}"]`);
             if(inputEl) inputEl.value = cart[productId].quantity;
 
@@ -140,7 +135,6 @@ document.addEventListener('DOMContentLoaded', function () {
             
             totalPriceEl.textContent = `Rp ${totalPrice.toLocaleString('id-ID')}`;
         }
-
 
         chekiListContainer.addEventListener('click', e => {
             const button = e.target.closest('.quantity-btn');
@@ -210,7 +204,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.message || 'Gagal memulai pembayaran.');
                 
-                // Proses pembayaran dengan Snap
                 window.snap.pay(result.token, {
                     onSuccess: function(result) {
                         fetch('/update-order-status', {
@@ -248,7 +241,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
         
-        // --- Inisialisasi Halaman ---
         checkUrlForSuccess();
         loadChekiProducts();
     }

@@ -1,102 +1,5 @@
+// nobodysandj/ukk/Ukk-d62b0944c32f178929f123a2ed9509d1a235b007/js/script.js
 document.addEventListener('DOMContentLoaded', function () {
-
-    // Fungsi notifikasi (jika diperlukan di halaman ini)
-    function showToast(message, isSuccess = true, duration = 3000) {
-        const oldToast = document.querySelector('.toast-notification');
-        if (oldToast) oldToast.remove();
-
-        const toast = document.createElement('div');
-        toast.className = 'toast-notification';
-        
-        if (/<[a-z][\s\S]*>/i.test(message)) {
-            toast.innerHTML = message;
-        } else {
-            toast.textContent = message;
-        }
-        
-        toast.style.backgroundColor = isSuccess ? 'var(--success-color)' : '#D33333';
-        document.body.appendChild(toast);
-
-        setTimeout(() => {
-            toast.classList.add('show');
-        }, 100);
-
-        const finalDuration = toast.querySelector('.toast-actions') ? 10000 : duration;
-
-        setTimeout(() => {
-            toast.classList.remove('show');
-            toast.addEventListener('transitionend', () => toast.remove());
-        }, finalDuration);
-    }
-
-    // --- Slider/Carousel Logic ---
-    const imageSlider = document.getElementById('image-slider');
-    const sliderDots = document.getElementById('slider-dots');
-    let sliderImages = [];
-    let currentSlide = 0;
-    let slideInterval;
-
-    function startSlider(images) {
-        if (!imageSlider || !sliderDots) return;
-        sliderImages = images;
-
-        // Create slides and dots
-        imageSlider.innerHTML = '';
-        sliderDots.innerHTML = '';
-        sliderImages.forEach((imgSrc, index) => {
-            const slide = document.createElement('div');
-            slide.className = 'slide';
-            slide.innerHTML = `<img src="${imgSrc}" alt="Header Image ${index + 1}">`;
-            imageSlider.appendChild(slide);
-
-            const dot = document.createElement('div');
-            dot.className = 'dot';
-            dot.addEventListener('click', () => {
-                goToSlide(index);
-                resetInterval();
-            });
-            sliderDots.appendChild(dot);
-        });
-
-        const prevBtn = document.querySelector('.slider-nav .prev-btn');
-        const nextBtn = document.querySelector('.slider-nav .next-btn');
-
-        if(prevBtn && nextBtn) {
-            prevBtn.addEventListener('click', () => {
-                goToSlide(currentSlide - 1);
-                resetInterval();
-            });
-    
-            nextBtn.addEventListener('click', () => {
-                goToSlide(currentSlide + 1);
-                resetInterval();
-            });
-        }
-
-        goToSlide(0);
-        slideInterval = setInterval(() => goToSlide(currentSlide + 1), 5000);
-    }
-
-    function goToSlide(index) {
-        const slides = document.querySelectorAll('.slide');
-        const dots = document.querySelectorAll('.dot');
-        if (slides.length === 0) return;
-
-        currentSlide = (index + slides.length) % slides.length;
-
-        slides.forEach(slide => slide.classList.remove('active'));
-        dots.forEach(dot => dot.classList.remove('active'));
-
-        slides[currentSlide].classList.add('active');
-        dots[currentSlide].classList.add('active');
-    }
-    
-    function resetInterval() {
-        clearInterval(slideInterval);
-        slideInterval = setInterval(() => goToSlide(currentSlide + 1), 5000);
-    }
-
-
     // --- Dynamic Content Loading ---
     async function loadWebsiteData() {
         try {
@@ -110,14 +13,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error("Format data dari API tidak valid.");
             }
             
-            // Periksa apakah elemen ada sebelum memanggil fungsi
             if (document.getElementById('group-name')) {
                 populatePage(data);
             }
             if (document.querySelector('.slider-container') && data.gallery) {
                  startSlider(data.gallery.map(item => item.src));
             }
-
 
         } catch (error) {
             console.error("Gagal memuat data website:", error);
@@ -128,12 +29,19 @@ document.addEventListener('DOMContentLoaded', function () {
         document.title = `${data.group.name} - Official Website`;
         
         // Header & Hero
-        document.querySelector('.logo-text strong').textContent = data.group.name;
-        document.getElementById('group-name').textContent = data.group.name;
-        document.getElementById('group-tagline').textContent = data.group.tagline;
-        document.getElementById('about-content').textContent = data.group.about;
+        const logoText = document.querySelector('.logo-text strong');
+        if (logoText) logoText.textContent = data.group.name;
         
-        // How to Order Section (NEW)
+        const groupName = document.getElementById('group-name');
+        if (groupName) groupName.textContent = data.group.name;
+        
+        const groupTagline = document.getElementById('group-tagline');
+        if (groupTagline) groupTagline.textContent = data.group.tagline;
+        
+        const aboutContent = document.getElementById('about-content');
+        if (aboutContent) aboutContent.textContent = data.group.about;
+        
+        // How to Order Section
         const howToOrderContainer = document.getElementById('how-to-order-container');
         if (howToOrderContainer && data.how_to_order) {
             howToOrderContainer.innerHTML = '';
@@ -151,12 +59,11 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-        // Member Section (UPDATED)
+        // Member Section
         const memberGrid = document.getElementById('member-grid');
         if (memberGrid) {
-            memberGrid.innerHTML = ''; // Kosongkan isi grid
+            memberGrid.innerHTML = ''; 
 
-            // 1. Buat elemen untuk grup terlebih dahulu
             const groupCard = document.createElement('div');
             groupCard.className = 'member-card-detailed group-card';
             groupCard.innerHTML = `
@@ -168,10 +75,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
             `;
             
-            // 2. Buat array dan langsung masukkan kartu grup
             const allElements = [groupCard];
 
-            // 3. Buat dan tambahkan elemen untuk setiap member ke array
             data.members.forEach(member => {
                 const card = document.createElement('div');
                 card.className = 'member-card-detailed';
@@ -190,7 +95,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 allElements.push(card);
             });
 
-            // 4. Tampilkan semua kartu dari array ke dalam grid
             allElements.forEach(element => {
                 memberGrid.appendChild(element);
             });
@@ -212,7 +116,6 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
-
         // FAQ Section
         const faqContainer = document.getElementById('faq-container');
         if (faqContainer) {
@@ -222,12 +125,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 faqItem.className = 'faq-item';
                 faqItem.innerHTML = `
                     <div class="faq-question">${faq.question}</div>
-                    <div class="faq-answer">
-                        <p>${faq.answer}</p>
-                    </div>`;
+                    <div class="faq-answer"><p>${faq.answer}</p></div>`;
                 faqContainer.appendChild(faqItem);
             });
-            // Add click listener for accordion
             faqContainer.addEventListener('click', function(e) {
                 const question = e.target.closest('.faq-question');
                 if (question) {
@@ -235,7 +135,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
         }
-
 
         // Footer
         const footerText = document.getElementById('footer-text');
@@ -252,7 +151,32 @@ document.addEventListener('DOMContentLoaded', function () {
             navLinks.classList.toggle('active');
         });
     }
-
-    // Panggil fungsi utama untuk memuat semua data
-    loadWebsiteData();
+    
+    // Panggil fungsi utama
+    if (document.body.id === 'home-page') {
+        loadWebsiteData();
+    }
 });
+
+// REVISI: Fungsi notifikasi global
+function showToast(message, isSuccess = true, duration = 4000) {
+    const oldToast = document.querySelector('.toast-notification');
+    if (oldToast) oldToast.remove();
+
+    const toast = document.createElement('div');
+    toast.className = 'toast-notification';
+    
+    toast.innerHTML = message;
+    
+    toast.style.backgroundColor = isSuccess ? 'var(--success-color)' : '#D33333';
+    document.body.appendChild(toast);
+
+    setTimeout(() => {
+        toast.classList.add('show');
+    }, 100);
+
+    setTimeout(() => {
+        toast.classList.remove('show');
+        toast.addEventListener('transitionend', () => toast.remove());
+    }, duration);
+}
