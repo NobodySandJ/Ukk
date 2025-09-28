@@ -198,7 +198,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ orderData }),
+                    body: JSON.stringify(orderData),
                 });
 
                 const result = await response.json();

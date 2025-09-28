@@ -144,7 +144,7 @@ app.get("/api/products-and-stock", async (req, res) => {
 
 app.post("/get-snap-token", authenticateToken, async (req, res) => {
     try {
-        const { orderData } = req.body;
+        const orderData = req.body;
         if (!orderData) {
             return res.status(400).json({ message: "Data pesanan tidak valid." });
         }
