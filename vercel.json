@@ -38,6 +38,7 @@
     { "src": "/api/admin/reset-user-password", "dest": "/backend/server.js" },
     { "src": "/api/admin/update-cheki-stock", "dest": "/backend/server.js" },
     { "src": "/api/products-and-stock", "dest": "/backend/server.js" },
+    { "src": "/api/midtrans-client-key", "dest": "/backend/server.js" },
     { "src": "/(.*)", "dest": "/$1" }
   ]
 }
