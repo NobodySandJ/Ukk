@@ -19,10 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
             });
 
             const result = await response.json();
-
-            if (!response.ok) {
-                throw new Error(result.message || 'Terjadi kesalahan.');
-            }
+            if (!response.ok) throw new Error(result.message || 'Terjadi kesalahan.');
 
             messageBox.style.color = 'var(--success-color)';
             messageBox.textContent = result.message;

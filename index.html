@@ -1,190 +1,106 @@
 <!DOCTYPE html>
-<html lang="id">
-
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mujōken no Umi (無条件の海) - Official Website</title>
-    <link rel="stylesheet" href="css/style.css">
-    <link rel="stylesheet" href="css/modal.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <link rel="apple-touch-icon" sizes="180x180" href="img/logo/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="img/logo/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="img/logo/favicon-16x16.png">
-    <link rel="manifest" href="img/logo/site.webmanifest">
+    <title>Mujōken no Umi - Official Website</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 </head>
-
 <body>
 
     <header>
         <nav class="container">
-            <div class="logo">
-                <a href="index.html">
-                    <img src="img/logo/apple-touch-icon.png" alt="Mujōken no Umi Logo"
-                        style="height: 40px; margin-right: 10px;">
-                </a>
-                <h1 id="logo-title"><a href="index.html">Mujōken no Umi</a></h1>
-            </div>
-
-            <ul class="nav-links" id="nav-links">
+            <a href="#" class="logo">
+                <h1>Mujōken no Umi</h1>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#intro">TENTANG KAMI</a></li>
+                <li><a href="#">SCHEDULE</a></li>
+                <li><a href="#members">MEMBER</a></li>
+                <li><a href="#news">NEWS</a></li>
             </ul>
-
-            <button class="hamburger" id="hamburger-menu" aria-label="Buka menu navigasi">
-                <i class="fas fa-bars"></i>
-            </button>
+            <div class="nav-auth">
+                <a href="#" class="login-link">Login/Register</a>
+                <a href="#" class="cta-button">PESAN TIKET ONLINE</a>
+            </div>
+            <button class="hamburger" id="hamburger-menu">☰</button>
         </nav>
     </header>
 
     <main>
         <section id="hero">
-            <div class="hero-content reveal">
-                <div class="hero-logo">
-                    <img src="img/logo/android-chrome-512x512.png" alt="Mujōken no Umi Logo">
-                </div>
-                <h2 id="hero-title"></h2>
-                <div class="hero-buttons">
-                    <a href="cheki.html" class="hero-button secondary">Pesan Cheki Sekarang!</a>
-                    <a href="gallery.html" class="hero-button secondary">Lihat Galeri</a>
-                </div>
-            </div>
+            <img src="https://via.placeholder.com/1200x400" alt="Mujoken no Umi group photo">
         </section>
 
-        <section id="about" class="reveal">
+        <section id="intro">
             <div class="container">
-                <h2 id="about-title"></h2>
-                <p class="about-tagline"></p>
-                <p id="about-content"></p>
+                <h2>Mujōken no Umi</h2>
+                <p>Laut tanpa syarat, Mujōken no Umi adalah grup idola yang berenang di lautan mimpi. Menyebarkan senyuman dan harapan kepada semua penggemar, kami di sini untuk menjadi cahaya dalam hari-harimu.</p>
             </div>
         </section>
 
-        <section id="members" class="reveal">
+        <section id="how-to-order">
             <div class="container">
-                <h2>Profil Member</h2>
-                <div class="member-grid" id="member-grid">
+                <h2>CARA PESAN</h2>
+                <div class="steps-grid">
+                    <a href="#" class="step-button">STEP 1</a>
+                    <a href="#" class="step-button">STEP 2</a>
+                    <a href="#" class="step-button">STEP 3</a>
+                    <a href="#" class="step-button">STEP 4</a>
                 </div>
             </div>
         </section>
 
-        <section id="news" class="reveal">
+        <section id="members">
             <div class="container">
-                <h2>Berita Terbaru</h2>
-                <div class="news-grid" id="news-grid">
+                <h2>MEMBER</h2>
+                <div class="member-grid">
+                    <div class="member-card-placeholder"></div>
+                    <div class="member-card-placeholder"></div>
+                    <div class="member-card-placeholder"></div>
+                    <div class="member-card-placeholder"></div>
+                    <div class="member-card-placeholder"></div>
                 </div>
             </div>
         </section>
 
-        <section id="how-to" class="reveal">
+        <section id="news">
             <div class="container">
-                <h2>Cara Penggunaan</h2>
-                <div class="stock-display">
-                    <h3>Sisa Stok Cheki Saat Ini: <span id="index-stock-display">Memuat...</span></h3>
-                </div>
-                <div class="how-to-grid">
-                    <div class="how-to-step-card">
-                        <div class="step-icon"><i class="fas fa-user-plus"></i></div>
-                        <h3>1. Daftar / Login</h3>
-                        <p>Klik ikon pengguna di pojok kanan atas untuk membuat akun baru atau masuk jika sudah punya
-                            akun.</p>
-                    </div>
-                    <div class="how-to-step-card">
-                        <div class="step-icon"><i class="fas fa-camera"></i></div>
-                        <h3>2. Pilih Cheki</h3>
-                        <p>Masuk ke halaman "Pesan Cheki" dan pilih member atau grup, lalu tentukan jumlah yang
-                            diinginkan.</p>
-                    </div>
-                    <div class="how-to-step-card">
-                        <div class="step-icon"><i class="fas fa-wallet"></i></div>
-                        <h3>3. Lakukan Pembayaran</h3>
-                        <p>Lanjutkan ke pembayaran dan pilih metode yang paling nyaman bagi Anda melalui payment gateway
-                            kami.</p>
-                    </div>
-                    <div class="how-to-step-card">
-                        <div class="step-icon"><i class="fas fa-qrcode"></i></div>
-                        <h3>4. Tukarkan Tiket</h3>
-                        <p>Setelah berhasil, QR Code akan muncul di halaman "Akun Saya". Tunjukkan pada staff di lokasi
-                            event.</p>
-                    </div>
+                <h2>NEWS</h2>
+                <div class="news-grid">
+                     <a href="#" class="news-button">NEWS 1</a>
+                     <a href="#" class="news-button">NEWS 2</a>
                 </div>
             </div>
         </section>
-
-        <section id="faq" class="reveal">
+        
+        <section id="faq">
             <div class="container">
                 <h2>FAQ</h2>
-                <div class="faq-container">
+                <div class="faq-grid">
+                    <div class="faq-item-placeholder"></div>
+                    <div class="faq-item-placeholder"></div>
+                    <div class="faq-item-placeholder"></div>
+                    <div class="faq-item-placeholder"></div>
                 </div>
             </div>
         </section>
     </main>
-    <div class="modal-overlay" id="auth-modal">
-        <div class="modal-container">
-            <button class="modal-close-btn" id="modal-close-btn">&times;</button>
-
-            <div id="login-view">
-                <div class="modal-form-container">
-                    <div class="modal-logo">
-                        <img src="img/logo/android-chrome-192x192.png" alt="Logo Mujōken no Umi">
-                    </div>
-                    <h2>Login Akun</h2>
-                    <form id="login-form" class="modal-form">
-                        <input type="email" id="login-email" placeholder="Email" required>
-                        <input type="password" id="login-password" placeholder="Password" required>
-                        <a href="forgot-password.html"
-                            style="text-align: right; font-size: 0.9em; margin-top: -0.5rem;">Lupa Sandi?</a>
-                        <button type="submit" class="cta-button">Login</button>
-                        <p id="login-error" class="error-message" style="text-align: center;"></p>
-                    </form>
-                    <p class="modal-switch-link">
-                        Belum punya akun? <a id="show-register-link">Daftar di sini</a>
-                    </p>
-                </div>
-            </div>
-
-            <div id="register-view">
-                <div class="modal-form-container">
-                    <div class="modal-logo">
-                        <img src="img/logo/android-chrome-192x192.png" alt="Logo Mujōken no Umi">
-                    </div>
-                    <h2>Buat Akun Baru</h2>
-                    <form id="register-form" class="modal-form">
-                        <input type="text" id="register-username" placeholder="Username" required>
-                        <input type="email" id="register-email" placeholder="Email Aktif" required>
-                        <input type="password" id="register-password" placeholder="Password" required>
-                        <input type="text" id="register-whatsapp" placeholder="No. WhatsApp" required>
-                        <input type="text" id="register-instagram" placeholder="Username Instagram" required>
-                        <div class="sk-agreement">
-                            <input type="checkbox" id="sk-checkbox" required>
-                            <label for="sk-checkbox">Saya setuju dengan <a href="sk.html" target="_blank">Syarat &
-                                    Ketentuan</a>.</label>
-                        </div>
-                        <button type="submit" class="cta-button">Daftar</button>
-                        <p id="register-error" class="error-message" style="text-align: center;"></p>
-                    </form>
-                    <p class="modal-switch-link">
-                        Sudah punya akun? <a id="show-login-link">Login di sini</a>
-                    </p>
-                </div>
-            </div>
-
-        </div>
-    </div>
 
     <footer>
         <div class="container">
             <div class="social-media">
-                <a href="#"><i class="fab fa-twitter"></i></a>
                 <a href="#"><i class="fab fa-instagram"></i></a>
                 <a href="#"><i class="fab fa-youtube"></i></a>
                 <a href="#"><i class="fab fa-tiktok"></i></a>
             </div>
-            <p id="footer-text">&copy; 2025. All Rights Reserved.</p>
+            <p>COPYRIGHT</p>
         </div>
     </footer>
 
-    <script src="js/auth.js"></script>
-    <script src="js/script.js"></script>
-    <script src="js/cheki.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1/build/qrcode.min.js"></script>
-</body>
+    <script src="slider.js"></script>
+    <script src="script.js"></script>
 
+</body>
 </html>

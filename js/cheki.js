@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', function () {
         let cart = {};
         let availableStock = 0;
         
-        // --- [START] REVISI: Fungsi untuk memuat skrip Midtrans secara dinamis ---
         async function loadMidtransScript() {
             try {
                 const response = await fetch('/api/midtrans-client-key');
@@ -28,14 +27,11 @@ document.addEventListener('DOMContentLoaded', function () {
 
                 if (clientKey) {
                     const script = document.createElement('script');
-                    script.type = 'text/javascript';
                     script.src = 'https://app.sandbox.midtrans.com/snap/snap.js';
                     script.setAttribute('data-client-key', clientKey);
                     document.head.appendChild(script);
                 } else {
-                    console.error('Client key Midtrans tidak ditemukan.');
-                    submitButton.disabled = true;
-                    formErrorEl.textContent = 'Konfigurasi pembayaran tidak tersedia.';
+                    throw new Error('Client key Midtrans tidak ditemukan.');
                 }
             } catch (error) {
                 console.error(error);
@@ -43,14 +39,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 formErrorEl.textContent = 'Gagal memuat konfigurasi pembayaran.';
             }
         }
-        // --- [END] REVISI ---
 
         function checkUrlForSuccess() {
             const urlParams = new URLSearchParams(window.location.search);
-            const orderId = urlParams.get('order_id');
-            const transactionStatus = urlParams.get('transaction_status');
-
-            if (orderId && (transactionStatus === 'settlement' || transactionStatus === 'capture')) {
+            if (urlParams.get('transaction_status') === 'settlement' || urlParams.get('transaction_status') === 'capture') {
                 const toastHTML = `
                     <div>Terima kasih sudah membeli cheki!</div>
                     <div class="toast-actions">
@@ -59,7 +51,6 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 `;
                 showToast(toastHTML, true, 10000);
-
                 window.history.replaceState({}, document.title, window.location.pathname);
             }
         }
@@ -77,7 +68,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (chekiStockDisplay) {
                     chekiStockDisplay.textContent = `${availableStock} tiket`;
                 }
-
                 renderProducts();
             } catch (error) {
                 console.error("Gagal memuat produk cheki:", error);
@@ -105,41 +95,12 @@ document.addEventListener('DOMContentLoaded', function () {
         
         function renderProducts() {
             chekiListContainer.innerHTML = '';
-            
-            if (groupChekiData && groupChekiData.id) {
-                const groupCard = createProductCard(groupChekiData);
-                chekiListContainer.appendChild(groupCard);
+            if (groupChekiData?.id) {
+                chekiListContainer.appendChild(createProductCard(groupChekiData));
             }
-            
             membersData.forEach(member => {
-                const memberCard = createProductCard(member);
-                chekiListContainer.appendChild(memberCard);
+                chekiListContainer.appendChild(createProductCard(member));
             });
-        }
-        
-        function showToast(message, isSuccess = true, duration = 3000) {
-            const oldToast = document.querySelector('.toast-notification');
-            if (oldToast) oldToast.remove();
-            
-            const toast = document.createElement('div');
-            toast.className = 'toast-notification';
-            toast.style.backgroundColor = isSuccess ? 'var(--success-color)' : '#D33333';
-            
-            if (/<[a-z][\s\S]*>/i.test(message)) {
-                toast.innerHTML = message;
-            } else {
-                toast.textContent = message;
-            }
-
-            document.body.appendChild(toast);
-            setTimeout(() => toast.classList.add('show'), 100);
-
-            if (duration !== 0) {
-                 setTimeout(() => {
-                    toast.classList.remove('show');
-                    toast.addEventListener('transitionend', () => toast.remove());
-                }, duration);
-            }
         }
 
         function giveFeedback() {
@@ -149,8 +110,7 @@ document.addEventListener('DOMContentLoaded', function () {
         
         function resetCart() {
             cart = {};
-            const inputs = document.querySelectorAll('.quantity-input');
-            inputs.forEach(input => input.value = 0);
+            document.querySelectorAll('.quantity-input').forEach(input => input.value = 0);
             updateTotals();
         }
 
@@ -158,7 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
             let product = membersData.find(m => m.id === productId) || (productId === groupChekiData.id ? groupChekiData : null);
             if (!product) return;
 
-            if (!cart[productId]) cart[productId] = 0;
+            cart[productId] = cart[productId] || 0;
 
             if (action === 'increase') {
                 const totalInCart = Object.values(cart).reduce((sum, count) => sum + count, 0);
@@ -179,7 +139,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         function updateTotals() {
-            let totalItems = 0, totalPrice = 0;
+            let totalItems = 0;
+            let totalPrice = 0;
             const allProducts = [...membersData, groupChekiData];
 
             for (const productId in cart) {
@@ -191,16 +152,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 }
             }
-            totalItemsEl.textContent = totalItems;
+            
             const formattedPrice = `Rp ${totalPrice.toLocaleString('id-ID')}`;
+            totalItemsEl.textContent = totalItems;
             totalPriceEl.textContent = formattedPrice;
-
-            if (totalItems > 0) {
-                mobileCart.classList.add('visible');
-                mobileCartTotal.textContent = formattedPrice;
-            } else {
-                mobileCart.classList.remove('visible');
-            }
+            mobileCartTotal.textContent = formattedPrice;
+            mobileCart.classList.toggle('visible', totalItems > 0);
         }
 
         chekiListContainer.addEventListener('click', e => {
@@ -227,8 +184,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            const totalItems = Object.values(cart).reduce((sum, count) => sum + count, 0);
-            if (totalItems === 0) {
+            if (Object.values(cart).reduce((sum, count) => sum + count, 0) === 0) {
                 formErrorEl.textContent = 'Anda belum memilih cheki.';
                 return;
             }
@@ -237,10 +193,8 @@ document.addEventListener('DOMContentLoaded', function () {
             submitButton.disabled = true;
             submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
 
-            let item_details = [];
-            let gross_amount = 0;
+            const item_details = [];
             const allProducts = [...membersData, groupChekiData];
-
             for (const productId in cart) {
                 if (cart[productId] > 0) {
                     const product = allProducts.find(p => p.id === productId);
@@ -251,10 +205,11 @@ document.addEventListener('DOMContentLoaded', function () {
                             quantity: cart[productId],
                             name: `Cheki ${product.name}`
                         });
-                        gross_amount += product.price * cart[productId];
                     }
                 }
             }
+            
+            const gross_amount = item_details.reduce((sum, item) => sum + (item.price * item.quantity), 0);
 
             const orderData = {
                 transaction_details: {
@@ -269,7 +224,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 item_details: item_details
             };
             
-            // --- [START] REVISI: Peningkatan Error Handling ---
             try {
                 const response = await fetch('/get-snap-token', {
                     method: 'POST',
@@ -281,13 +235,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
 
                 const result = await response.json();
-                if (!response.ok) {
-                     throw new Error(result.message || 'Gagal mendapatkan token pembayaran.');
-                }
+                if (!response.ok) throw new Error(result.message || 'Gagal mendapatkan token pembayaran.');
                 
                 window.snap.pay(result.token, {
-                    onSuccess: async function(result) {
-                        await fetch('/update-order-status', {
+                    onSuccess: function(result) {
+                        fetch('/update-order-status', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -299,7 +251,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         window.location.href = `/cheki.html?order_id=${result.order_id}&transaction_status=${result.transaction_status}`;
                     },
                     onPending: function(result){
-                        showToast("Pembayaran Anda sedang diproses. Status: " + result.transaction_status, true, 5000);
+                        showToast("Pembayaran Anda sedang diproses.", true, 5000);
                         submitButton.disabled = false;
                         submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
                     },
@@ -320,11 +272,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 submitButton.disabled = false;
                 submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
             }
-            // --- [END] REVISI ---
         });
         
         checkUrlForSuccess();
         loadChekiProducts();
-        loadMidtransScript(); // Panggil fungsi baru untuk memuat skrip
+        loadMidtransScript();
     }
 });

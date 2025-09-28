@@ -1,13 +1,11 @@
 // Fungsi notifikasi terpusat yang bisa dipanggil dari script lain
 function showToast(message, isSuccess = true, duration = 3000) {
-    // Hapus notifikasi lama jika ada
     const oldToast = document.querySelector('.toast-notification');
     if (oldToast) oldToast.remove();
 
     const toast = document.createElement('div');
     toast.className = 'toast-notification';
     
-    // Memastikan pesan yang mengandung HTML dapat dirender dengan benar
     if (/<[a-z][\s\S]*>/i.test(message)) {
         toast.innerHTML = message;
     } else {
@@ -17,15 +15,12 @@ function showToast(message, isSuccess = true, duration = 3000) {
     toast.style.backgroundColor = isSuccess ? 'var(--success-color)' : '#D33333';
     document.body.appendChild(toast);
 
-    // Memicu animasi muncul
     setTimeout(() => {
         toast.classList.add('show');
     }, 100);
 
-    // Atur durasi tampilnya notifikasi
     const finalDuration = toast.querySelector('.toast-actions') ? 10000 : duration;
 
-    // Memicu animasi hilang dan hapus elemen dari DOM
     setTimeout(() => {
         toast.classList.remove('show');
         toast.addEventListener('transitionend', () => toast.remove());
@@ -34,10 +29,10 @@ function showToast(message, isSuccess = true, duration = 3000) {
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    // Fungsi utama untuk mengambil semua data dari backend
+    // Mengambil semua data dari backend
     async function loadWebsiteData() {
         try {
-            const response = await fetch('/api/products-and-stock'); // Mengambil data dari backend
+            const response = await fetch('/api/products-and-stock');
             if (!response.ok) {
                 throw new Error(`Gagal mengambil data: ${response.statusText}`);
             }
@@ -47,13 +42,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error("Format data dari API tidak valid.");
             }
 
-            // Update jumlah stok di halaman utama
+            // Update stok di halaman utama
             const indexStockDisplay = document.getElementById('index-stock-display');
             if (indexStockDisplay) {
                 indexStockDisplay.textContent = `${data.cheki_stock} tiket`;
             }
 
-            // Mengisi konten dinamis berdasarkan halaman yang aktif
+            // Mengisi konten berdasarkan halaman yang aktif
             if (document.getElementById('hero')) {
                 populateIndexPage(data);
             }
@@ -83,7 +78,6 @@ document.addEventListener('DOMContentLoaded', function () {
             heroSection.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3)), url('${data.images.hero_background}')`;
         }
 
-        // Mengisi profil member
         const memberGrid = document.getElementById('member-grid');
         memberGrid.innerHTML = '';
         data.members.forEach(member => {
@@ -100,7 +94,6 @@ document.addEventListener('DOMContentLoaded', function () {
             memberGrid.appendChild(card);
         });
         
-        // Mengisi berita terbaru
         const newsGrid = document.getElementById('news-grid');
         newsGrid.innerHTML = '';
         data.news.forEach(item => {
@@ -110,7 +103,6 @@ document.addEventListener('DOMContentLoaded', function () {
             newsGrid.appendChild(newsItem);
         });
 
-        // Mengisi bagian FAQ
         const faqContainer = document.querySelector('.faq-container');
         if (faqContainer && data.faq) {
             faqContainer.innerHTML = '';
@@ -140,10 +132,9 @@ document.addEventListener('DOMContentLoaded', function () {
         initializeLightbox(data.gallery);
     }
     
-    // Panggil fungsi utama saat halaman dimuat
     loadWebsiteData();
 
-    // Inisialisasi menu hamburger untuk tampilan mobile
+    // Inisialisasi menu hamburger
     const hamburger = document.getElementById('hamburger-menu');
     const navLinks = document.querySelector('.nav-links');
     if (hamburger && navLinks) {
@@ -167,7 +158,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const showImage = (index) => {
             if (!galleryData || galleryData.length === 0) return;
-            currentIndex = (index + galleryData.length) % galleryData.length; // Loop gambar
+            currentIndex = (index + galleryData.length) % galleryData.length;
             const image = galleryData[currentIndex];
             lightboxImg.src = image.src;
             lightboxCaption.textContent = image.alt;
@@ -210,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function () {
     window.addEventListener("scroll", reveal);
     reveal();
     
-    // Inisialisasi akordion (buka-tutup) untuk FAQ
+    // Inisialisasi accordion untuk FAQ
     function initializeFaqAccordion() {
         const faqItems = document.querySelectorAll('.faq-item');
         faqItems.forEach(item => {

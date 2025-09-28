@@ -31,7 +31,6 @@ document.addEventListener('DOMContentLoaded', function() {
         submitButton.disabled = true;
         submitButton.textContent = 'Menyimpan...';
         messageBox.textContent = '';
-        messageBox.style.color = '';
 
         try {
             const response = await fetch('/api/reset-password', {
