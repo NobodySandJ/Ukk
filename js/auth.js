@@ -55,17 +55,11 @@ document.addEventListener('DOMContentLoaded', function () {
     function initializeApp() {
         if (!navLinksContainer) return;
         
-        // REVISI: Mengganti tombol cheki menjadi grup tombol dengan galeri
+        // REVISI: Tombol Galeri dan Pesan Tiket dihapus dari navbar
         let navHTML = `
             <li><a href="index.html#hero">Tentang Kami</a></li>
             <li><a href="index.html#members">Member</a></li>
             <li><a href="index.html#news">News</a></li>
-            <li>
-                <div class="nav-button-group">
-                    <a href="gallery.html" class="nav-button">Galeri</a>
-                    <a href="cheki.html" class="nav-button cta">Pesan Tiket Cheki!</a>
-                </div>
-            </li>
         `;
         navLinksContainer.innerHTML = navHTML;
     
@@ -132,7 +126,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 password: document.getElementById('login-password').value
             };
             submitButton.disabled = true;
-            // REVISI: Menambahkan ikon spinner saat loading
             submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Masuk...';
             formError.textContent = '';
 
@@ -158,7 +151,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
             } catch (error) {
                 formError.textContent = error.message;
-                // REVISI: Mengembalikan teks tombol jika gagal
                 submitButton.disabled = false;
                 submitButton.innerHTML = 'Login';
             }
@@ -177,7 +169,6 @@ document.addEventListener('DOMContentLoaded', function () {
             };
 
             submitButton.disabled = true;
-            // REVISI: Menambahkan ikon spinner saat loading
             submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mendaftar...';
             formError.textContent = '';
 
@@ -200,7 +191,6 @@ document.addEventListener('DOMContentLoaded', function () {
             } catch (error) {
                 formError.textContent = error.message;
             } finally {
-                // REVISI: Selalu kembalikan teks tombol setelah proses selesai
                 submitButton.disabled = false;
                 submitButton.innerHTML = 'Daftar';
             }
