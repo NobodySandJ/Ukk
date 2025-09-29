@@ -52,13 +52,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (order.status_tiket === 'pending') return;
 
             const card = document.createElement('div');
-            card.className = `ticket-card ${order.status_tiket === 'hangus' ? 'ticket-expired' : ''}`;
+            card.className = `ticket-card ${order.status_tiket === 'hangus' ? 'ticket-used' : ''}`;
             
             const itemsList = order.detail_item?.map(item => `${item.quantity}x ${item.name}`).join('<br>') || 'Tidak ada detail item.';
 
             const qrSectionHTML = order.status_tiket === 'berlaku'
                 ? `<div class="ticket-qr"><canvas id="qr-${order.id_pesanan}"></canvas></div>`
-                : `<div class="ticket-qr-expired"><span>EXPIRED</span></div>`;
+                : `<div class="ticket-qr-used"><span>SUDAH TERPAKAI</span></div>`;
 
             card.innerHTML = `
                 <div class="ticket-details">
