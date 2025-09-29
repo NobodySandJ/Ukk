@@ -1,5 +1,5 @@
 // File: backend/server.js
-// Versi final dan lengkap dengan semua endpoint yang berfungsi.
+// Versi final dan lengkap dengan semua perbaikan.
 
 const express = require("express");
 const midtransClient = require("midtrans-client");
@@ -24,7 +24,7 @@ if (missingEnv.length > 0) {
 
 // --- Inisialisasi Klien ---
 const snap = new midtransClient.Snap({
-    isProduction: false,
+    isProduction: false, // Ganti ke `true` saat production
     serverKey: process.env.MIDTRANS_SERVER_KEY,
     clientKey: process.env.MIDTRANS_CLIENT_KEY,
 });
@@ -34,10 +34,13 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANO
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
-    if (!token) return res.status(401).json({ message: "Token otentikasi tidak ditemukan." });
-    
+    if (!token) {
+        return res.status(401).json({ message: "Token otentikasi tidak ditemukan." });
+    }
     jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
-        if (err) return res.status(403).json({ message: "Token tidak valid." });
+        if (err) {
+            return res.status(403).json({ message: "Token tidak valid atau kedaluwarsa." });
+        }
         req.user = user;
         next();
     });
@@ -45,7 +48,11 @@ const authenticateToken = (req, res, next) => {
 
 // --- Fungsi Helper ---
 const getChekiStock = async () => {
-    const { data, error } = await supabase.from('pengaturan').select('nilai').eq('nama', 'stok_cheki').single();
+    const { data, error } = await supabase
+        .from('pengaturan')
+        .select('nilai')
+        .eq('nama', 'stok_cheki')
+        .single();
     if (error || !data) {
         console.error("Gagal mendapatkan stok dari Supabase:", error);
         return 0; 
@@ -54,7 +61,7 @@ const getChekiStock = async () => {
 };
 
 // ===================================
-// --- ENDPOINTS APLIKASI ---
+// --- ENDPOINTS ---
 // ===================================
 
 // --- Endpoint Otentikasi ---
@@ -108,9 +115,7 @@ app.post("/api/login", async (req, res) => {
     }
 });
 
-
-// --- INI ADALAH BAGIAN YANG DIPERBAIKI ---
-// Endpoint untuk Produk & Stok
+// --- Endpoint Produk & Pembayaran ---
 app.get("/api/products-and-stock", async (req, res) => {
     try {
         const responseData = JSON.parse(JSON.stringify(productData));
@@ -118,14 +123,10 @@ app.get("/api/products-and-stock", async (req, res) => {
         responseData.cheki_stock = currentStock;
         res.json(responseData);
     } catch (e) {
-        console.error("Gagal memuat data produk dan stok:", e.message);
         res.status(500).json({ message: "Tidak dapat memuat data produk." });
     }
 });
-// --- AKHIR DARI PERBAIKAN ---
 
-
-// --- Endpoint Pembayaran Midtrans ---
 app.get("/api/midtrans-client-key", (req, res) => {
     res.json({ clientKey: process.env.MIDTRANS_CLIENT_KEY });
 });
@@ -143,7 +144,7 @@ app.post("/get-snap-token", authenticateToken, async (req, res) => {
             return res.status(400).json({ message: `Stok tidak mencukupi. Sisa stok: ${currentStock}` });
         }
         
-        await supabase.from("pesanan").insert([{
+        const { error: insertError } = await supabase.from("pesanan").insert([{
             id_pesanan: transaction_details.order_id,
             total_harga: transaction_details.gross_amount,
             nama_pelanggan: req.user.username,
@@ -154,12 +155,21 @@ app.post("/get-snap-token", authenticateToken, async (req, res) => {
             status_tiket: "pending",
         }]);
 
-        const nameParts = req.user.username.split(' ');
+        if (insertError) {
+            console.error("Supabase insert error:", insertError);
+            throw new Error("Gagal menyimpan pesanan ke database.");
+        }
+
+        const nameParts = (req.user.username || 'Pengguna').split(' ');
+        const firstName = nameParts.shift();
+        const lastName = nameParts.join(' ') || firstName;
+        
         const midtransParameter = {
-          transaction_details, item_details,
+          transaction_details,
+          item_details,
           customer_details: {
-            first_name: nameParts.shift(),
-            last_name: nameParts.join(' ') || '.',
+            first_name: firstName,
+            last_name: lastName,
             email: customer_details.email,
             phone: customer_details.phone,
           },
@@ -167,13 +177,56 @@ app.post("/get-snap-token", authenticateToken, async (req, res) => {
         
         const transaction = await snap.createTransaction(midtransParameter);
         res.json({ token: transaction.token });
+
     } catch (error) {
+        console.error("GAGAL MEMBUAT TOKEN SNAP:", error);
         res.status(500).json({ message: "Gagal membuat token pembayaran.", error: error.message });
     }
 });
 
-app.post("/update-order-status", async (req, res) => { /* ... (kode ini sudah benar, tidak perlu diubah) ... */ });
-app.get("/api/my-orders", authenticateToken, async (req, res) => { /* ... (kode ini sudah benar, tidak perlu diubah) ... */ });
+app.post("/update-order-status", async (req, res) => {
+    try {
+        const { order_id, transaction_status } = req.body;
+        if (!order_id || !transaction_status) {
+            return res.status(400).json({ message: "Data notifikasi tidak lengkap." });
+        }
+
+        if (transaction_status === "settlement" || transaction_status === "capture") {
+            const { data: updatedOrder, error } = await supabase
+                .from("pesanan")
+                .update({ status_tiket: "berlaku" })
+                .eq("id_pesanan", order_id)
+                .select().single();
+            if (error) throw error;
+            if (!updatedOrder) throw new Error("Pesanan tidak ditemukan.");
+            
+            const totalItemsPurchased = updatedOrder.detail_item.reduce((sum, item) => sum + item.quantity, 0);
+            if (totalItemsPurchased > 0) {
+                const { error: stockError } = await supabase.rpc('update_cheki_stock', { change_value: -totalItemsPurchased });
+                if (stockError) console.error(`PENTING: Gagal mengurangi stok untuk ${order_id}:`, stockError.message);
+            }
+            res.status(200).json({ message: "Status tiket berhasil diupdate." });
+        } else {
+            res.status(200).json({ message: "Status pembayaran diterima." });
+        }
+    } catch (e) {
+        res.status(500).json({ message: "Gagal memproses notifikasi.", error: e.message });
+    }
+});
+
+app.get("/api/my-orders", authenticateToken, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from("pesanan")
+            .select("*")
+            .eq("id_pengguna", req.user.userId)
+            .order("dibuat_pada", { ascending: false });
+        if (error) throw error;
+        res.json(data);
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengambil pesanan." });
+    }
+});
 
 
 // --- Server Listener ---
