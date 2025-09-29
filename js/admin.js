@@ -1,10 +1,10 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Cek otentikasi admin
+    // --- Cek Otentikasi & Otorisasi ---
     const token = localStorage.getItem('userToken');
     const userData = JSON.parse(localStorage.getItem('userData'));
 
     if (!token || !userData || userData.peran !== 'admin') {
-        alert('Akses ditolak. Anda bukan admin atau sesi Anda telah berakhir.');
+        alert('Akses ditolak. Silakan login sebagai admin.');
         localStorage.clear();
         window.location.href = 'index.html';
         return;
@@ -13,206 +13,89 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Selektor DOM ---
     const adminWelcome = document.getElementById('admin-welcome');
     const logoutBtn = document.getElementById('admin-logout-btn');
-    
-    // View utama (Dashboard)
-    const dashboardView = {
-        stats: document.getElementById('statistics'),
-        stock: document.getElementById('stock-management'),
-        orders: document.getElementById('orders-management')
-    };
+    const statsGrid = document.getElementById('stats-grid');
     const ordersTbody = document.getElementById('orders-tbody');
     const searchInput = document.getElementById('search-input');
-    
-    // View Reset Password
-    const resetPasswordView = document.getElementById('reset-password-view');
-    const userListTbody = document.getElementById('user-list-tbody');
-    const userSearchInput = document.getElementById('user-search-input');
+    const currentStockEl = document.getElementById('current-stock');
+    const stockChangeInput = document.getElementById('stock-change-value');
+    const increaseBtn = document.getElementById('increase-stock-btn');
+    const decreaseBtn = document.getElementById('decrease-stock-btn');
 
-    // Tombol Navigasi
-    const navDashboard = document.getElementById('nav-dashboard');
-    const navResetPassword = document.getElementById('nav-reset-password');
-    const backToDashboardBtn = document.getElementById('back-to-dashboard-btn');
-    
-    let allOrders = [];
-    let allUsers = [];
+    let allOrders = []; // Cache untuk data pesanan
 
-    // --- Fungsi Navigasi View ---
-    function showView(viewName) {
-        // Sembunyikan semua view
-        Object.values(dashboardView).forEach(el => el.style.display = 'none');
-        if (resetPasswordView) resetPasswordView.style.display = 'none';
-
-        // Tampilkan view yang dipilih
-        if (viewName === 'dashboard') {
-            Object.values(dashboardView).forEach(el => el.style.display = 'block'); // atau 'grid' untuk stats
-            dashboardView.stats.style.display = 'grid';
-            navDashboard.classList.add('active');
-            navResetPassword.classList.remove('active');
-        } else if (viewName === 'resetPassword') {
-            if (resetPasswordView) resetPasswordView.style.display = 'block';
-            navDashboard.classList.remove('active');
-            navResetPassword.classList.add('active');
-            fetchAllUsers(); // Muat data pengguna saat view dibuka
-        }
-    }
-    
-    // Listener untuk navigasi
-    navDashboard.addEventListener('click', (e) => {
-        e.preventDefault();
-        showView('dashboard');
-    });
-    navResetPassword.addEventListener('click', (e) => {
-        e.preventDefault();
-        showView('resetPassword');
-    });
-    backToDashboardBtn.addEventListener('click', () => showView('dashboard'));
-
-
-    // --- Fungsi Inisialisasi & Fetch Data ---
+    // --- Inisialisasi ---
     if (adminWelcome && userData.nama_pengguna) {
         adminWelcome.textContent = `Selamat Datang, ${userData.nama_pengguna}!`;
     }
 
-    logoutBtn?.addEventListener('click', () => {
-        localStorage.clear();
-        window.location.href = 'index.html';
-    });
-    
-    async function fetchAdminDashboardData() {
+    // --- Fungsi Fetch Data ---
+    const fetchAdminData = async () => {
         try {
-            const [statsRes, ordersRes] = await Promise.all([
+            const [statsRes, ordersRes, stockRes] = await Promise.all([
                 fetch('/api/admin/stats', { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch('/api/admin/all-orders', { headers: { 'Authorization': `Bearer ${token}` } })
+                fetch('/api/admin/all-orders', { headers: { 'Authorization': `Bearer ${token}` } }),
+                fetch('/api/products-and-stock', { headers: { 'Authorization': `Bearer ${token}` } })
             ]);
 
-            if (!statsRes.ok || !ordersRes.ok) throw new Error('Gagal memuat data admin.');
+            if (!statsRes.ok || !ordersRes.ok || !stockRes.ok) throw new Error('Gagal memuat data admin.');
 
             const stats = await statsRes.json();
             allOrders = await ordersRes.json();
+            const stockData = await stockRes.json();
             
             renderStats(stats);
             renderOrders(allOrders);
+            currentStockEl.textContent = stockData.cheki_stock;
         } catch (error) {
             alert(error.message);
         }
-    }
+    };
 
-    async function fetchAllUsers() {
-        if (allUsers.length > 0) return; // Jangan fetch ulang jika sudah ada
-        try {
-            const response = await fetch('/api/admin/all-users', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (!response.ok) throw new Error('Gagal memuat daftar pengguna.');
-            allUsers = await response.json();
-            renderUsers(allUsers);
-        } catch (error) {
-            userListTbody.innerHTML = `<tr><td colspan="3">${error.message}</td></tr>`;
-        }
-    }
-
-
-    // --- Fungsi Render ---
+    // --- Fungsi Render Tampilan ---
     function renderStats(stats) {
-        const statsGrid = document.getElementById('stats-grid');
+        if (!statsGrid) return;
         statsGrid.innerHTML = `
             <div class="stat-card"><h3>Total Pendapatan</h3><p>Rp ${stats.totalRevenue.toLocaleString('id-ID')}</p></div>
-            <div class="stat-card"><h3>Total Cheki Terjual</h3><p>${stats.totalCheki}</p></div>`;
-        const memberCard = document.createElement('div');
-        memberCard.className = 'stat-card';
-        let memberStatsHTML = '<h3>Cheki per Member</h3><ul style="text-align:left; font-size: 1rem; list-style-position: inside;">';
-        for (const member in stats.chekiPerMember) {
-            memberStatsHTML += `<li><strong>${member}:</strong> ${stats.chekiPerMember[member]} pcs</li>`;
-        }
-        memberCard.innerHTML += memberStatsHTML + '</ul>';
-        statsGrid.appendChild(memberCard);
+            <div class="stat-card"><h3>Total Cheki Terjual</h3><p>${stats.totalCheki}</p></div>
+            <div class="stat-card"><h3>Cheki per Member</h3><ul style="text-align:left; font-size: 0.9rem; list-style: inside;">
+                ${Object.entries(stats.chekiPerMember).map(([name, count]) => `<li><strong>${name}:</strong> ${count} pcs</li>`).join('')}
+            </ul></div>
+        `;
     }
     
+    // PERBAIKAN: Logika render status dan tombol
     function renderOrders(orders) {
+        if (!ordersTbody) return;
         ordersTbody.innerHTML = '';
         if (orders.length === 0) {
-            ordersTbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Tidak ada pesanan.</td></tr>`;
+            ordersTbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Tidak ada tiket yang perlu dikelola.</td></tr>`;
             return;
         }
         orders.forEach(order => {
             const row = document.createElement('tr');
-            let items = order.detail_item?.map(item => `${item.quantity}x ${item.name}`).join('<br>') || 'Tidak ada detail';
-            let statusClass = { berlaku: 'status-berlaku', hangus: 'status-hangus' }[order.status_tiket] || 'status-pending';
-            let statusText = { berlaku: 'Berlaku', hangus: 'Hangus' }[order.status_tiket] || 'Pending';
+            const items = order.detail_item?.map(item => `${item.quantity}x ${item.name.replace('Cheki ', '')}`).join(', ') || 'N/A';
+            
+            // Logika Status Baru
+            const isUsed = order.status_tiket === 'sudah_dipakai';
+            const statusClass = isUsed ? 'status-hangus' : 'status-berlaku';
+            const statusText = isUsed ? 'Sudah Dipakai' : 'Berlaku';
+
             row.innerHTML = `
-                <td data-label="ID Pesanan">${order.id_pesanan}</td>
-                <td data-label="Pelanggan">${order.nama_pelanggan}<br><small>${order.email_pelanggan}</small></td>
+                <td data-label="ID Pesanan"><small>${order.id_pesanan}</small></td>
+                <td data-label="Pelanggan">${order.nama_pelanggan}</td>
                 <td data-label="Detail Item">${items}</td>
                 <td data-label="Status Tiket"><span class="status-badge ${statusClass}">${statusText}</span></td>
-                <td data-label="Aksi"><button class="action-btn btn-delete" data-orderid="${order.id_pesanan}">Hapus</button></td>
+                <td data-label="Aksi">
+                    <button class="action-btn btn-use" data-orderid="${order.id_pesanan}" ${isUsed ? 'disabled' : ''}>
+                        <i class="fas fa-check"></i> Gunakan
+                    </button>
+                </td>
             `;
             ordersTbody.appendChild(row);
         });
     }
 
-    function renderUsers(users) {
-        userListTbody.innerHTML = '';
-        if (users.length === 0) {
-            userListTbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">Tidak ada pengguna.</td></tr>`;
-            return;
-        }
-        users.forEach(user => {
-            const row = document.createElement('tr');
-            row.innerHTML = `
-                <td data-label="Username">${user.nama_pengguna}</td>
-                <td data-label="Email">${user.email}</td>
-                <td data-label="Aksi">
-                    <button class="action-btn btn-reset" data-userid="${user.id}" data-username="${user.nama_pengguna}">
-                        <i class="fas fa-key"></i> Reset Password
-                    </button>
-                </td>
-            `;
-            userListTbody.appendChild(row);
-        });
-    }
-
-    // --- Event Listeners untuk Aksi ---
-    searchInput?.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        const filteredOrders = allOrders.filter(order => 
-            order.nama_pelanggan?.toLowerCase().includes(searchTerm) ||
-            order.id_pesanan?.toLowerCase().includes(searchTerm)
-        );
-        renderOrders(filteredOrders);
-    });
-
-    userSearchInput?.addEventListener('input', (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        const filteredUsers = allUsers.filter(user => 
-            user.nama_pengguna?.toLowerCase().includes(searchTerm)
-        );
-        renderUsers(filteredUsers);
-    });
-    
-    // Listener untuk tombol hapus di tabel order
-    ordersTbody?.addEventListener('click', async function(e) {
-        const deleteButton = e.target.closest('.btn-delete');
-        if (deleteButton) {
-            const orderId = deleteButton.dataset.orderid;
-            if (confirm(`YAKIN ingin MENGHAPUS pesanan ${orderId} secara permanen?`)) {
-                deleteOrder(orderId);
-            }
-        }
-    });
-
-    // Listener untuk tombol reset di tabel user
-    userListTbody?.addEventListener('click', async function(e) {
-        const resetButton = e.target.closest('.btn-reset');
-        if (resetButton) {
-            const userId = resetButton.dataset.userid;
-            const username = resetButton.dataset.username;
-            if (confirm(`Yakin ingin mereset password untuk user ${username}?`)) {
-                resetUserPassword(userId);
-            }
-        }
-    });
-
-    // --- Fungsi API Request ---
+    // --- Fungsi Aksi (API Calls) ---
     async function apiRequest(url, options) {
         try {
             const response = await fetch(url, options);
@@ -221,29 +104,78 @@ document.addEventListener('DOMContentLoaded', function() {
             return result;
         } catch (error) {
             alert('Terjadi kesalahan: ' + error.message);
-            throw error;
+            throw error; // Lempar error agar bisa ditangkap oleh pemanggil
         }
     }
 
-    async function deleteOrder(orderId) {
-        await apiRequest(`/api/admin/delete-order/${orderId}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        alert('Pesanan berhasil dihapus.');
-        fetchAdminDashboardData(); // Refresh data
+    // PERBAIKAN: Fungsi untuk menggunakan tiket
+    async function useTicket(orderId) {
+        try {
+            await apiRequest('/api/admin/update-ticket-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ order_id: orderId, new_status: 'sudah_dipakai' })
+            });
+            alert('Tiket berhasil digunakan.');
+            fetchAdminData(); // Muat ulang data untuk refresh tampilan
+        } catch (error) {
+            // Error sudah ditangani di apiRequest
+        }
     }
 
-    async function resetUserPassword(userId) {
-        const result = await apiRequest('/api/admin/reset-user-password', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-            body: JSON.stringify({ userId })
-        });
-        alert(`${result.message}\nPassword Sementara: ${result.temporaryPassword}`);
+    // PERBAIKAN: Fungsi untuk update stok
+    async function updateChekiStock(change) {
+        try {
+            const result = await apiRequest('/api/admin/update-cheki-stock', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ changeValue: change })
+            });
+            alert(result.message);
+            currentStockEl.textContent = result.newStock;
+            stockChangeInput.value = '';
+        } catch (error) {
+           // Error sudah ditangani di apiRequest
+        }
     }
+
+    // --- Event Listeners ---
+    logoutBtn?.addEventListener('click', () => {
+        localStorage.clear();
+        window.location.href = 'index.html';
+    });
+
+    searchInput?.addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        const filtered = allOrders.filter(o => 
+            o.nama_pelanggan.toLowerCase().includes(term) || 
+            o.id_pesanan.toLowerCase().includes(term)
+        );
+        renderOrders(filtered);
+    });
+
+    ordersTbody?.addEventListener('click', e => {
+        const useButton = e.target.closest('.btn-use');
+        if (useButton) {
+            const orderId = useButton.dataset.orderid;
+            if (confirm(`Yakin ingin menggunakan tiket untuk pesanan ${orderId}?`)) {
+                useTicket(orderId);
+            }
+        }
+    });
+    
+    increaseBtn?.addEventListener('click', () => {
+        const value = parseInt(stockChangeInput.value);
+        if (value > 0) updateChekiStock(value);
+        else alert('Masukkan jumlah yang valid.');
+    });
+
+    decreaseBtn?.addEventListener('click', () => {
+        const value = parseInt(stockChangeInput.value);
+        if (value > 0) updateChekiStock(-value);
+        else alert('Masukkan jumlah yang valid.');
+    });
 
     // --- Inisialisasi Halaman ---
-    fetchAdminDashboardData();
-    showView('dashboard'); // Tampilkan dashboard sebagai default
+    fetchAdminData();
 });
