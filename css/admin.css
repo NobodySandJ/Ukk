@@ -63,9 +63,7 @@ body {
 }
 
 .sidebar-nav {
-    flex-grow: 1;
     padding: 1rem 0;
-    /* Tambahkan baris ini */
     display: flex;
     flex-direction: column; 
 }
