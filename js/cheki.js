@@ -214,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 phone: userData.nomor_whatsapp || ''
             },
             transaction_details: {
-                order_id: `CHEKI-${userData.id}-${Date.now()}`,
+                order_id: `MNU-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
                 gross_amount: itemsInCart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
             }
         };

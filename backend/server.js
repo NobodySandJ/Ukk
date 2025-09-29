@@ -138,6 +138,11 @@ app.post("/get-snap-token", authenticateToken, async (req, res) => {
             return res.status(400).json({ message: "Data pesanan tidak lengkap." });
         }
 
+        // --- FIX: Ensure order_id is not too long ---
+        if (transaction_details.order_id && transaction_details.order_id.length > 50) {
+            transaction_details.order_id = transaction_details.order_id.substring(0, 50);
+        }
+
         const totalItemsInCart = item_details.reduce((sum, item) => sum + item.quantity, 0);
         const currentStock = await getChekiStock();
         if (totalItemsInCart > currentStock) {
