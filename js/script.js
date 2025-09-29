@@ -1,5 +1,84 @@
 document.addEventListener('DOMContentLoaded', function () {
-    // --- Dynamic Content Loading ---
+
+    // --- FUNGSI SLIDER GAMBAR ---
+    // Logika ini dipindahkan ke sini untuk memperbaiki error 'startSlider is not defined'
+    function startSlider(imageSources) {
+        const slider = document.getElementById('image-slider');
+        const dotsContainer = document.getElementById('slider-dots');
+        const prevBtn = document.querySelector('.slider-nav .prev-btn');
+        const nextBtn = document.querySelector('.slider-nav .next-btn');
+
+        if (!slider || !dotsContainer || imageSources.length === 0) {
+            return;
+        }
+
+        let currentSlide = 0;
+        let autoSlideInterval;
+
+        // Buat slide dan dots
+        slider.innerHTML = '';
+        dotsContainer.innerHTML = '';
+        imageSources.forEach((src, index) => {
+            const slide = document.createElement('div');
+            slide.className = 'slide';
+            slide.innerHTML = `<img src="${src}" alt="Gallery image ${index + 1}">`;
+            slider.appendChild(slide);
+
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.addEventListener('click', () => {
+                goToSlide(index);
+                resetAutoSlide();
+            });
+            dotsContainer.appendChild(dot);
+        });
+
+        const slides = document.querySelectorAll('.slide');
+        const dots = document.querySelectorAll('.dot');
+
+        function goToSlide(slideIndex) {
+            slides.forEach(s => s.classList.remove('active'));
+            dots.forEach(d => d.classList.remove('active'));
+
+            currentSlide = (slideIndex + slides.length) % slides.length;
+
+            slides[currentSlide].classList.add('active');
+            dots[currentSlide].classList.add('active');
+        }
+
+        function nextSlide() {
+            goToSlide(currentSlide + 1);
+        }
+
+        function prevSlide() {
+            goToSlide(currentSlide - 1);
+        }
+
+        function startAutoSlide() {
+            autoSlideInterval = setInterval(nextSlide, 5000);
+        }
+
+        function resetAutoSlide() {
+            clearInterval(autoSlideInterval);
+            startAutoSlide();
+        }
+
+        nextBtn.addEventListener('click', () => {
+            nextSlide();
+            resetAutoSlide();
+        });
+
+        prevBtn.addEventListener('click', () => {
+            prevSlide();
+            resetAutoSlide();
+        });
+
+        goToSlide(0);
+        startAutoSlide();
+    }
+
+
+    // --- FUNGSI PEMUATAN DATA WEBSITE ---
     async function loadWebsiteData() {
         try {
             const response = await fetch('data.json');
@@ -12,11 +91,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 throw new Error("Format data dari API tidak valid.");
             }
             
-            if (document.getElementById('group-name')) {
-                populatePage(data);
-            }
+            // Panggil fungsi untuk mengisi konten halaman
+            populatePage(data);
+            
+            // Panggil fungsi slider jika ada galeri
             if (document.querySelector('.slider-container') && data.gallery) {
-                 startSlider(data.gallery.map(item => item.src));
+                 startSlider(data.gallery.map(item => item.src)); // INI PERBAIKANNYA
             }
 
         } catch (error) {
@@ -151,25 +231,51 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
     
-    // Panggil fungsi utama jika ini adalah halaman utama
-    if (document.querySelector('#hero')) { // Cek elemen yang hanya ada di index.html
+    // Panggil fungsi utama jika ini adalah halaman utama (index.html)
+    if (document.querySelector('#hero')) {
         loadWebsiteData();
     }
 });
 
-// REVISI: Fungsi notifikasi global yang bisa diakses file lain
+// Fungsi notifikasi global yang bisa diakses file lain
 function showToast(message, isSuccess = true, duration = 4000) {
     const oldToast = document.querySelector('.toast-notification');
     if (oldToast) oldToast.remove();
 
     const toast = document.createElement('div');
     toast.className = 'toast-notification';
-    
     toast.innerHTML = message;
     
-    toast.style.backgroundColor = isSuccess ? 'var(--success-color)' : '#D33333';
+    // Pastikan variabel CSS ada atau berikan fallback
+    toast.style.backgroundColor = isSuccess ? 'var(--success-color, #28a745)' : '#D33333';
     document.body.appendChild(toast);
 
+    // Tambahkan style untuk toast jika belum ada
+    if (!document.getElementById('toast-style')) {
+        const style = document.createElement('style');
+        style.id = 'toast-style';
+        style.innerHTML = `
+            .toast-notification {
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%) translateY(100px);
+                background-color: #333;
+                color: white;
+                padding: 1rem 2rem;
+                border-radius: 50px;
+                z-index: 9999;
+                opacity: 0;
+                transition: transform 0.5s ease, opacity 0.5s ease;
+            }
+            .toast-notification.show {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
     setTimeout(() => {
         toast.classList.add('show');
     }, 100);
