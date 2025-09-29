@@ -4,48 +4,69 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Panel - Mujōken no Umi</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/admin.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
     <link rel="apple-touch-icon" sizes="180x180" href="img/logo/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="img/logo/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="img/logo/favicon-16x16.png">
     <link rel="manifest" href="img/logo/site.webmanifest">
 </head>
 <body>
-    <header>
-        <nav class="container">
-            <div class="logo"><h1><a href="index.html">Admin Panel</a></h1></div>
-            <ul class="nav-links" id="nav-links"></ul>
-        </nav>
-    </header>
-
-    <main class="admin-panel">
-        <div class="container">
-            <div class="admin-header">
-                <h2 id="admin-welcome">Selamat Datang, Admin!</h2>
-                <button id="admin-logout-btn">
+    <div class="admin-layout">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="index.html" class="logo">
+                    <img src="img/logo/apple-touch-icon.png" alt="Logo">
+                    <span>Admin Panel</span>
+                </a>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-link active"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                <a href="#" class="nav-link"><i class="fas fa-ticket-alt"></i> Manajemen Tiket</a>
+                <a href="#" class="nav-link"><i class="fas fa-box"></i> Manajemen Stok</a>
+                <a href="index.html" class="nav-link"><i class="fas fa-home"></i> Kembali ke Situs</a>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="admin-logout-btn" class="logout-button">
                     <i class="fas fa-sign-out-alt"></i> Logout
                 </button>
             </div>
-            
+        </aside>
+
+        <main class="main-content">
+            <header class="main-header">
+                <h1 id="admin-welcome">Selamat Datang, Admin!</h1>
+            </header>
+
             <section id="statistics">
-                <div class="stats-grid" id="stats-grid"></div>
+                <div class="stats-grid" id="stats-grid">
+                    </div>
             </section>
 
-            <section id="stock-management" class="management-section" style="margin-bottom: 2rem;">
-                <h3>Manajemen Stok Cheki</h3>
+            <section id="stock-management" class="content-card">
+                <h2 class="section-title">Manajemen Stok Cheki</h2>
                 <div class="stock-controls">
-                    <p>Stok Saat Ini: <strong id="current-stock">Memuat...</strong></p>
-                    <input type="number" id="stock-change-value" placeholder="Jumlah" min="1">
-                    <button id="increase-stock-btn" class="action-btn btn-use">Tambah Stok</button>
-                    <button id="decrease-stock-btn" class="action-btn btn-delete">Kurangi Stok</button>
+                    <div class="stock-info">
+                        Stok Saat Ini: <strong id="current-stock">Memuat...</strong>
+                    </div>
+                    <div class="stock-actions">
+                        <input type="number" id="stock-change-value" placeholder="Jumlah" min="1">
+                        <button id="increase-stock-btn" class="action-btn btn-success"><i class="fas fa-plus"></i> Tambah</button>
+                        <button id="decrease-stock-btn" class="action-btn btn-danger"><i class="fas fa-minus"></i> Kurangi</button>
+                    </div>
                 </div>
             </section>
 
-            <section id="orders-management" class="management-section">
+            <section id="orders-management" class="content-card">
                 <div class="management-header">
-                    <h3>Manajemen Tiket</h3>
+                    <h2 class="section-title">Manajemen Tiket</h2>
                     <div class="search-bar">
                         <i class="fas fa-search"></i>
                         <input type="text" id="search-input" placeholder="Cari berdasarkan nama atau ID pesanan...">
@@ -62,15 +83,14 @@
                                 <th>Aksi</th>
                             </tr>
                         </thead>
-                        <tbody id="orders-tbody"></tbody>
+                        <tbody id="orders-tbody">
+                            </tbody>
                     </table>
                 </div>
             </section>
-        </div>
-    </main>
+        </main>
+    </div>
     
-    <script src="js/script.js"></script> 
-    <script src="js/auth.js"></script>
     <script src="js/admin.js"></script>
 </body>
 </html>
