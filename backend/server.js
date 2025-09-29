@@ -46,6 +46,15 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
+// --- Middleware Otorisasi Admin ---
+const authorizeAdmin = (req, res, next) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ message: "Akses ditolak. Hanya untuk admin." });
+    }
+    next();
+};
+
+
 // --- Fungsi Helper ---
 const getChekiStock = async () => {
     const { data, error } = await supabase
@@ -233,6 +242,48 @@ app.get("/api/my-orders", authenticateToken, async (req, res) => {
     }
 });
 
+
+// --- Endpoint Admin ---
+app.get("/api/admin/stats", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { data: orders, error } = await supabase
+            .from('pesanan')
+            .select('total_harga, detail_item')
+            .in('status_tiket', ['berlaku', 'hangus']);
+
+        if (error) throw error;
+
+        let totalRevenue = 0;
+        let totalCheki = 0;
+        const chekiPerMember = {};
+
+        orders.forEach(order => {
+            totalRevenue += order.total_harga;
+            order.detail_item.forEach(item => {
+                totalCheki += item.quantity;
+                const memberName = item.name.replace('Cheki ', '');
+                chekiPerMember[memberName] = (chekiPerMember[memberName] || 0) + item.quantity;
+            });
+        });
+
+        res.json({ totalRevenue, totalCheki, chekiPerMember });
+    } catch (e) {
+        res.status(500).json({ message: 'Gagal mengambil statistik.', error: e.message });
+    }
+});
+
+app.get("/api/admin/all-orders", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('pesanan')
+            .select('*')
+            .order('dibuat_pada', { ascending: false });
+        if (error) throw error;
+        res.json(data);
+    } catch (e) {
+        res.status(500).json({ message: 'Gagal mengambil semua pesanan.', error: e.message });
+    }
+});
 
 // --- Server Listener ---
 const PORT = process.env.PORT || 3000;
