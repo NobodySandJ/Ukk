@@ -1,7 +1,7 @@
 /**
  * File: js/cheki.js
- * Dibuat ulang untuk memperbaiki masalah kartu produk yang tidak muncul
- * dan menambahkan tampilan harga pada setiap kartu.
+ * Versi final dan lengkap untuk halaman pemesanan Cheki.
+ * Memperbaiki masalah kartu produk yang tidak muncul dan menyertakan semua fungsi.
  */
 document.addEventListener('DOMContentLoaded', () => {
     // Pastikan skrip ini hanya berjalan di halaman cheki
@@ -29,8 +29,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const initializePage = async () => {
         loadMidtransScript();
         await fetchProductsAndStock();
-        // Pastikan render dipanggil setelah data berhasil diambil
-        if (products.members.length > 0 || products.group.id) {
+        // Hanya render jika data produk berhasil didapatkan
+        if ((products.members && products.members.length > 0) || (products.group && products.group.id)) {
             renderProducts();
         }
         addEventListeners();
@@ -78,17 +78,10 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- Fungsi Render Tampilan ---
-    
-    /**
-     * Membuat kartu HTML untuk satu produk, SEKARANG DENGAN HARGA.
-     * @param {object} product - Objek produk (member atau grup).
-     * @returns {HTMLDivElement} - Elemen div kartu produk.
-     */
     const createProductCard = (product) => {
         const card = document.createElement('div');
         card.className = 'cheki-member-card';
         const isOutOfStock = availableStock === 0;
-        // Format harga ke format Rupiah
         const formattedPrice = `Rp ${product.price.toLocaleString('id-ID')}`;
 
         card.innerHTML = `
@@ -152,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Fungsi Logika Keranjang (Cart) ---
     const updateCart = (productId, action) => {
         const allProducts = [products.group, ...products.members];
-        const product = allProducts.find(p => p && p.id === productId); // Pastikan produk ada
+        const product = allProducts.find(p => p && p.id === productId);
         if (!product) return;
 
         let currentQuantity = cart[productId]?.quantity || 0;
@@ -185,8 +178,92 @@ document.addEventListener('DOMContentLoaded', () => {
         updateOrderSummary();
     };
     
-    // --- Logika Pembayaran (Sama seperti sebelumnya) ---
-    const handlePayment = async () => { /* ... (Fungsi ini tidak perlu diubah) ... */ };
+    // --- Logika Pembayaran ---
+    const handlePayment = async () => {
+        const token = localStorage.getItem('userToken');
+        const userData = JSON.parse(localStorage.getItem('userData'));
+
+        if (!token || !userData) {
+            showToast('Anda harus login untuk memesan.', false);
+            document.getElementById('auth-modal')?.classList.add('active');
+            return;
+        }
+
+        if (!isMidtransScriptLoaded || typeof window.snap === 'undefined') {
+            showToast('Layanan pembayaran belum siap. Coba lagi sesaat.', false);
+            return;
+        }
+
+        const itemsInCart = Object.values(cart).filter(item => item.quantity > 0);
+        if (itemsInCart.length === 0) {
+            showToast('Keranjang Anda masih kosong.', false);
+            return;
+        }
+
+        setPaymentButtonLoading(true);
+
+        const orderDetails = {
+            item_details: itemsInCart.map(item => ({
+                id: item.id,
+                price: item.price,
+                quantity: item.quantity,
+                name: `Cheki ${item.name}`
+            })),
+            customer_details: {
+                email: userData.email,
+                phone: userData.nomor_whatsapp || ''
+            },
+            transaction_details: {
+                order_id: `CHEKI-${userData.id}-${Date.now()}`,
+                gross_amount: itemsInCart.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+            }
+        };
+
+        try {
+            const response = await fetch('/get-snap-token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify(orderDetails)
+            });
+
+            const result = await response.json();
+            if (!response.ok) throw new Error(result.message || 'Gagal memulai pembayaran.');
+
+            window.snap.pay(result.token, {
+                onSuccess: (midtransResult) => {
+                    fetch('/update-order-status', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            order_id: midtransResult.order_id,
+                            transaction_status: midtransResult.transaction_status
+                        })
+                    });
+                    resetCart();
+                    window.location.href = `/cheki.html?order_id=${midtransResult.order_id}&transaction_status=${midtransResult.transaction_status}`;
+                },
+                onPending: () => {
+                    showToast("Menunggu pembayaran Anda...", true, 5000);
+                    setPaymentButtonLoading(false);
+                },
+                onError: () => {
+                    showToast("Pembayaran gagal! Silakan coba lagi.", false);
+                    setPaymentButtonLoading(false);
+                },
+                onClose: () => {
+                    showToast('Anda menutup jendela pembayaran.', false);
+                    setPaymentButtonLoading(false);
+                }
+            });
+
+        } catch (error) {
+            showToast(`Terjadi kesalahan: ${error.message}`, false);
+            setPaymentButtonLoading(false);
+        }
+    };
     
     // --- Fungsi Utilitas ---
     const disablePaymentButton = (text) => {
@@ -194,8 +271,26 @@ document.addEventListener('DOMContentLoaded', () => {
         submitButton.disabled = true;
         submitButton.innerHTML = `<i class="fas fa-times-circle"></i> ${text}`;
     };
-    const setPaymentButtonLoading = (isLoading) => { /* ... (Fungsi ini tidak perlu diubah) ... */ };
-    const checkUrlForSuccess = () => { /* ... (Fungsi ini tidak perlu diubah) ... */ };
+
+    const setPaymentButtonLoading = (isLoading) => {
+        if (!submitButton) return;
+        if (isLoading) {
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+        } else {
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
+        }
+    };
+
+    const checkUrlForSuccess = () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const status = urlParams.get('transaction_status');
+        if (status === 'settlement' || status === 'capture') {
+            showToast('Pembayaran berhasil! Tiket Anda sudah tersedia di dashboard.');
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    };
 
     // --- Event Listeners ---
     const addEventListeners = () => {
@@ -204,6 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
         chekiListContainer.addEventListener('click', (e) => {
             const button = e.target.closest('.quantity-btn');
             if (!button) return;
+
             const productId = button.dataset.id;
             const action = button.classList.contains('increase') ? 'increase' : 'decrease';
             updateCart(productId, action);
