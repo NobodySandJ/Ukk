@@ -11,10 +11,14 @@
     <link rel="icon" type="image/png" sizes="16x16" href="img/logo/favicon-16x16.png">
     <link rel="manifest" href="img/logo/site.webmanifest">
     <style>
-        body { background-color: #fff; }
+        body { background-color: #f4f7f9; }
         .dashboard-container {
             max-width: 800px;
             margin: 4rem auto;
+            padding: 2rem;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
             text-align: center;
         }
         .welcome-header h2 {
@@ -24,18 +28,20 @@
         }
         .welcome-header h1 {
             font-size: 2.5rem;
-            margin-bottom: 2rem;
+            margin-bottom: 0.5rem;
             color: var(--text-color);
         }
         .ticket-list-header {
-            font-weight: 500;
+            font-weight: 600;
+            font-size: 1.2rem;
             color: #333;
             margin-bottom: 2rem;
             border-top: 1px solid #eee;
             padding-top: 2rem;
+            margin-top: 2rem;
         }
         .ticket-card {
-            background-color: #f0f0f0;
+            background-color: #f9f9f9;
             border-radius: 10px;
             padding: 1.5rem;
             margin-bottom: 1.5rem;
@@ -44,6 +50,7 @@
             align-items: center;
             text-align: left;
             transition: all 0.3s ease;
+            border: 1px solid #eee;
         }
         .ticket-details p {
             margin: 0;
@@ -52,9 +59,9 @@
         }
         .ticket-details p strong {
             display: inline-block;
-            min-width: 100px; /* Disesuaikan agar lebih rapi */
+            min-width: 100px;
         }
-        .item-list { /* Style untuk daftar item */
+        .item-list {
             display: block;
             margin-top: 0.5rem;
             padding-left: 1rem;
@@ -66,7 +73,7 @@
             border-radius: 5px;
         }
         .dashboard-actions {
-            margin-top: 3rem;
+            margin-bottom: 2rem;
             display: flex;
             justify-content: center;
             gap: 1rem;
@@ -75,35 +82,33 @@
             background-color: #e9e9e9;
             color: #333;
             border: none;
-            padding: 0.8rem 2rem;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 500;
+            padding: 0.6rem 1.5rem;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: background-color 0.3s;
+            transition: all 0.3s ease;
+            text-decoration: none;
         }
         .action-btn.logout {
             background-color: #f8d7da;
             color: #721c24;
         }
         .action-btn:hover {
-            background-color: #dcdcdc;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
         }
         .action-btn.logout:hover {
             background-color: #f5c6cb;
         }
-
-        /* GAYA UNTUK TIKET EXPIRED */
         .ticket-card.ticket-expired {
-            background-color: #f8d7da; /* Warna latar merah muda */
+            background-color: #f8d7da;
             border: 1px solid #f5c6cb;
-            opacity: 0.7; /* Sedikit transparan */
+            opacity: 0.7;
         }
-
         .ticket-card.ticket-expired .ticket-details p {
-            color: #721c24; /* Warna teks merah tua */
+            color: #721c24;
         }
-
         .ticket-qr-expired {
             display: flex;
             align-items: center;
@@ -116,14 +121,20 @@
             font-weight: bold;
             font-size: 1.5rem;
             text-align: center;
-            transform: rotate(-15deg); /* Efek stempel miring */
+            transform: rotate(-15deg);
         }
     </style>
 </head>
 <body>
     <header>
         <nav class="container">
-            <div class="logo"><h1><a href="index.html">Mujōken no Umi</a></h1></div>
+            <a href="index.html" class="logo">
+                <img src="img/logo/apple-touch-icon.png" alt="Mujōken no Umi Logo">
+                <div class="logo-text">
+                    <strong>Mujōken no Umi</strong>
+                    <span>Official Website</span>
+                </div>
+            </a>
             <ul class="nav-links" id="nav-links"></ul>
             <button class="hamburger" id="hamburger-menu" aria-label="Buka menu navigasi"><i class="fas fa-bars"></i></button>
         </nav>
@@ -136,14 +147,15 @@
                 <h1 id="username-display">...</h1>
             </div>
             
+            <div class="dashboard-actions">
+                <a href="edit-profile.html" class="action-btn"><i class="fas fa-user-edit"></i> Edit Profile</a>
+                <button id="logout-btn" class="action-btn logout"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+
             <h3 class="ticket-list-header">RIWAYAT TIKET ANDA</h3>
 
             <div id="ticket-container">
-                </div>
-
-            <div class="dashboard-actions">
-                <a href="edit-profile.html" class="action-btn">Edit Profile</a>
-                <button id="logout-btn" class="action-btn logout">Logout</button>
+                <p>Memuat tiket...</p>
             </div>
         </div>
     </main>
