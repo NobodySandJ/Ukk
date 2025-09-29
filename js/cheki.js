@@ -40,7 +40,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadMidtransScript = async () => {
         if (window.snap || isMidtransScriptLoaded) return;
         try {
-            const response = await fetch('/api/midtrans-client-key');
+            // PERBAIKAN: Menggunakan URL relatif, bukan absolut
+            const response = await fetch('/api/midtrans-client-key'); 
             if (!response.ok) throw new Error('Gagal mendapatkan kunci API pembayaran.');
             const data = await response.json();
             const clientKey = data.clientKey;
