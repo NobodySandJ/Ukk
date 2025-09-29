@@ -147,7 +147,6 @@ app.post("/get-snap-token", authenticateToken, async (req, res) => {
             return res.status(400).json({ message: "Data pesanan tidak lengkap." });
         }
 
-        // --- FIX: Ensure order_id is not too long ---
         if (transaction_details.order_id && transaction_details.order_id.length > 50) {
             transaction_details.order_id = transaction_details.order_id.substring(0, 50);
         }
@@ -242,7 +241,6 @@ app.get("/api/my-orders", authenticateToken, async (req, res) => {
     }
 });
 
-
 // --- Endpoint Admin ---
 app.get("/api/admin/stats", authenticateToken, authorizeAdmin, async (req, res) => {
     try {
@@ -284,6 +282,22 @@ app.get("/api/admin/all-orders", authenticateToken, authorizeAdmin, async (req, 
         res.status(500).json({ message: 'Gagal mengambil semua pesanan.', error: e.message });
     }
 });
+
+app.get("/api/admin/all-users", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('pengguna')
+            .select('id, nama_pengguna, email')
+            .neq('peran', 'admin') // Jangan tampilkan admin lain
+            .order('nama_pengguna', { ascending: true });
+
+        if (error) throw error;
+        res.json(data);
+    } catch (e) {
+        res.status(500).json({ message: 'Gagal mengambil data pengguna.', error: e.message });
+    }
+});
+
 
 // --- Server Listener ---
 const PORT = process.env.PORT || 3000;
