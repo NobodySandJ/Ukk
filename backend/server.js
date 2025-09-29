@@ -1,5 +1,5 @@
 // File: backend/server.js
-// Versi final dan lengkap dengan semua perbaikan, termasuk endpoint untuk Midtrans.
+// Versi final dengan penambahan fitur reset password oleh admin.
 
 const express = require("express");
 const midtransClient = require("midtrans-client");
@@ -64,7 +64,7 @@ const getChekiStock = async () => {
 // --- ENDPOINTS ---
 // ===================================
 
-// --- Endpoint Konfigurasi Midtrans (BARU) ---
+// --- Endpoint Konfigurasi Midtrans ---
 app.get("/api/midtrans-client-key", (req, res) => {
     res.json({ clientKey: process.env.MIDTRANS_CLIENT_KEY });
 });
@@ -131,27 +131,13 @@ app.get("/api/products-and-stock", async (req, res) => {
     }
 });
 
-// --- Endpoint Membuat Token Pembayaran (BARU) ---
 app.post("/get-snap-token", authenticateToken, async (req, res) => {
     try {
         const { transaction_details, item_details, customer_details } = req.body;
-        
-        // Menambahkan detail pengguna dari token JWT
-        const enhanced_customer_details = {
-            ...customer_details,
-            first_name: req.user.username,
-            email: req.user.email
-        };
-
-        const parameter = {
-            transaction_details,
-            item_details,
-            customer_details: enhanced_customer_details,
-        };
-        
+        const enhanced_customer_details = { ...customer_details, first_name: req.user.username, email: req.user.email };
+        const parameter = { transaction_details, item_details, customer_details: enhanced_customer_details };
         const token = await snap.createTransactionToken(parameter);
 
-        // Simpan pesanan ke database dengan status 'pending'
         const { error } = await supabase.from("pesanan").insert([{
             id_pesanan: transaction_details.order_id,
             id_pengguna: req.user.userId,
@@ -162,15 +148,11 @@ app.post("/get-snap-token", authenticateToken, async (req, res) => {
         }]);
 
         if (error) throw new Error(`Gagal menyimpan pesanan awal: ${error.message}`);
-        
         res.json({ token });
-
     } catch (error) {
-        console.error("Error creating snap token:", error);
         res.status(500).json({ message: "Gagal membuat token pembayaran.", error: error.message });
     }
 });
-
 
 app.post("/update-order-status", async (req, res) => {
     try {
@@ -183,8 +165,6 @@ app.post("/update-order-status", async (req, res) => {
                 .eq("id_pesanan", order_id).select().single();
 
             if (error || !updatedOrder) throw new Error("Gagal update status pesanan.");
-
-            // Perbaikan: Cek jika detail_item ada sebelum di-loop
             const totalItems = (updatedOrder.detail_item || []).reduce((sum, item) => sum + item.quantity, 0);
             if (totalItems > 0) {
                 await supabase.rpc('update_cheki_stock', { change_value: -totalItems });
@@ -202,7 +182,6 @@ app.get("/api/my-orders", authenticateToken, async (req, res) => {
         const { data, error } = await supabase.from("pesanan")
             .select("*").eq("id_pengguna", req.user.userId)
             .order("dibuat_pada", { ascending: false });
-
         if (error) throw error;
         res.json(data);
     } catch (e) {
@@ -215,15 +194,11 @@ app.get("/api/admin/stats", authenticateToken, authorizeAdmin, async (req, res) 
     try {
         const { data: orders, error } = await supabase.from('pesanan').select('total_harga, detail_item')
             .in('status_tiket', ['berlaku', 'sudah_dipakai']);
-
         if (error) throw error;
-
         let totalRevenue = 0, totalCheki = 0;
         const chekiPerMember = {};
-
         orders.forEach(order => {
             totalRevenue += order.total_harga;
-            // PERBAIKAN UTAMA: Tambahkan '|| []' untuk mencegah error jika detail_item null
             (order.detail_item || []).forEach(item => {
                 totalCheki += item.quantity;
                 const member = item.name.replace('Cheki ', '');
@@ -241,7 +216,6 @@ app.get("/api/admin/all-orders", authenticateToken, authorizeAdmin, async (req, 
         const { data, error } = await supabase.from('pesanan').select('*')
             .neq('status_tiket', 'pending')
             .order('dibuat_pada', { ascending: false });
-
         if (error) throw error;
         res.json(data);
     } catch (e) {
@@ -253,10 +227,7 @@ app.post("/api/admin/update-ticket-status", authenticateToken, authorizeAdmin, a
     try {
         const { order_id, new_status } = req.body;
         if (!order_id || !new_status) return res.status(400).json({ message: "Data tidak lengkap." });
-
-        const { error } = await supabase.from('pesanan')
-            .update({ status_tiket: new_status }).eq('id_pesanan', order_id);
-
+        const { error } = await supabase.from('pesanan').update({ status_tiket: new_status }).eq('id_pesanan', order_id);
         if (error) throw error;
         res.json({ message: `Status tiket berhasil diubah.` });
     } catch (e) {
@@ -268,16 +239,50 @@ app.post('/api/admin/update-cheki-stock', authenticateToken, authorizeAdmin, asy
     try {
         const { changeValue } = req.body;
         if (typeof changeValue !== 'number') return res.status(400).json({ message: 'Nilai tidak valid.' });
-
         const { error } = await supabase.rpc('update_cheki_stock', { change_value: changeValue });
         if (error) throw new Error(`Gagal update stok: ${error.message}`);
-
         const newStock = await getChekiStock();
         res.json({ message: 'Stok berhasil diperbarui!', newStock });
     } catch (e) {
         res.status(500).json({ message: e.message });
     }
 });
+
+// --- Endpoint Admin Manajemen Pengguna (BARU) ---
+app.get("/api/admin/all-users", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('pengguna')
+            .select('id, nama_pengguna, email')
+            .neq('peran', 'admin'); // Jangan tampilkan admin
+        if (error) throw error;
+        res.json(data);
+    } catch(e) {
+        res.status(500).json({ message: "Gagal mengambil data pengguna.", error: e.message });
+    }
+});
+
+app.post("/api/admin/reset-user-password", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { userId } = req.body;
+        if (!userId) return res.status(400).json({ message: "User ID tidak ditemukan." });
+
+        const newPassword = "password123"; // Password default baru
+        const salt = await bcrypt.genSalt(10);
+        const password_hash = await bcrypt.hash(newPassword, salt);
+
+        const { error } = await supabase
+            .from('pengguna')
+            .update({ kata_sandi: password_hash })
+            .eq('id', userId);
+
+        if (error) throw error;
+        res.json({ message: `Password berhasil direset. Password baru adalah: ${newPassword}` });
+    } catch(e) {
+        res.status(500).json({ message: "Gagal mereset password.", error: e.message });
+    }
+});
+
 
 // --- Server Listener ---
 const PORT = process.env.PORT || 3000;

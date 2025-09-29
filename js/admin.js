@@ -1,3 +1,6 @@
+// File: js/admin.js
+// Versi final dengan penambahan fitur reset password.
+
 document.addEventListener('DOMContentLoaded', function() {
     // --- Cek Otentikasi & Otorisasi ---
     const token = localStorage.getItem('userToken');
@@ -13,6 +16,20 @@ document.addEventListener('DOMContentLoaded', function() {
     // --- Selektor DOM ---
     const adminWelcome = document.getElementById('admin-welcome');
     const logoutBtn = document.getElementById('admin-logout-btn');
+
+    // Selektor View
+    const dashboardViews = [
+        document.getElementById('statistics'),
+        document.getElementById('stock-management'),
+        document.getElementById('orders-management')
+    ];
+    const resetPasswordView = document.getElementById('reset-password-view');
+    
+    // Selektor Navigasi
+    const navDashboard = document.getElementById('nav-dashboard');
+    const navResetPassword = document.getElementById('nav-reset-password');
+
+    // Selektor Dashboard
     const statsGrid = document.getElementById('stats-grid');
     const ordersTbody = document.getElementById('orders-tbody');
     const searchInput = document.getElementById('search-input');
@@ -21,11 +38,33 @@ document.addEventListener('DOMContentLoaded', function() {
     const increaseBtn = document.getElementById('increase-stock-btn');
     const decreaseBtn = document.getElementById('decrease-stock-btn');
 
-    let allOrders = []; // Cache untuk data pesanan
+    // Selektor Reset Password
+    const userSearchInput = document.getElementById('user-search-input');
+    const userListTbody = document.getElementById('user-list-tbody');
+    const backToDashboardBtn = document.getElementById('back-to-dashboard-btn');
+
+    let allOrders = [];
+    let allUsers = [];
 
     // --- Inisialisasi ---
     if (adminWelcome && userData.nama_pengguna) {
         adminWelcome.textContent = `Selamat Datang, ${userData.nama_pengguna}!`;
+    }
+
+    // --- Fungsi Navigasi ---
+    function showDashboard() {
+        dashboardViews.forEach(view => view.style.display = 'block');
+        resetPasswordView.style.display = 'none';
+        navDashboard.classList.add('active');
+        navResetPassword.classList.remove('active');
+    }
+
+    function showResetPassword() {
+        dashboardViews.forEach(view => view.style.display = 'none');
+        resetPasswordView.style.display = 'block';
+        navDashboard.classList.remove('active');
+        navResetPassword.classList.add('active');
+        fetchAllUsers(); // Panggil fungsi untuk memuat data pengguna
     }
 
     // --- Fungsi Fetch Data ---
@@ -45,13 +84,13 @@ document.addEventListener('DOMContentLoaded', function() {
             
             renderStats(stats);
             renderOrders(allOrders);
-            currentStockEl.textContent = stockData.cheki_stock;
+            if(currentStockEl) currentStockEl.textContent = stockData.cheki_stock;
         } catch (error) {
             alert(error.message);
         }
     };
-
-    // --- Fungsi Render Tampilan ---
+    
+    // --- Fungsi Render Tampilan (Dashboard) ---
     function renderStats(stats) {
         if (!statsGrid) return;
         statsGrid.innerHTML = `
@@ -63,7 +102,6 @@ document.addEventListener('DOMContentLoaded', function() {
         `;
     }
     
-    // PERBAIKAN: Logika render status dan tombol
     function renderOrders(orders) {
         if (!ordersTbody) return;
         ordersTbody.innerHTML = '';
@@ -74,8 +112,6 @@ document.addEventListener('DOMContentLoaded', function() {
         orders.forEach(order => {
             const row = document.createElement('tr');
             const items = order.detail_item?.map(item => `${item.quantity}x ${item.name.replace('Cheki ', '')}`).join(', ') || 'N/A';
-            
-            // Logika Status Baru
             const isUsed = order.status_tiket === 'sudah_dipakai';
             const statusClass = isUsed ? 'status-hangus' : 'status-berlaku';
             const statusText = isUsed ? 'Sudah Dipakai' : 'Berlaku';
@@ -95,6 +131,29 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // --- Fungsi Render Tampilan (Reset Password) ---
+    function renderUsers(users) {
+        if (!userListTbody) return;
+        userListTbody.innerHTML = '';
+        if (users.length === 0) {
+            userListTbody.innerHTML = `<tr><td colspan="3" style="text-align:center;">Tidak ada pengguna ditemukan.</td></tr>`;
+            return;
+        }
+        users.forEach(user => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td data-label="Username">${user.nama_pengguna}</td>
+                <td data-label="Email">${user.email}</td>
+                <td data-label="Aksi">
+                    <button class="action-btn btn-reset" data-userid="${user.id}" data-username="${user.nama_pengguna}">
+                        <i class="fas fa-key"></i> Reset Password
+                    </button>
+                </td>
+            `;
+            userListTbody.appendChild(row);
+        });
+    }
+
     // --- Fungsi Aksi (API Calls) ---
     async function apiRequest(url, options) {
         try {
@@ -104,11 +163,10 @@ document.addEventListener('DOMContentLoaded', function() {
             return result;
         } catch (error) {
             alert('Terjadi kesalahan: ' + error.message);
-            throw error; // Lempar error agar bisa ditangkap oleh pemanggil
+            throw error;
         }
     }
 
-    // PERBAIKAN: Fungsi untuk menggunakan tiket
     async function useTicket(orderId) {
         try {
             await apiRequest('/api/admin/update-ticket-status', {
@@ -117,13 +175,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 body: JSON.stringify({ order_id: orderId, new_status: 'sudah_dipakai' })
             });
             alert('Tiket berhasil digunakan.');
-            fetchAdminData(); // Muat ulang data untuk refresh tampilan
-        } catch (error) {
-            // Error sudah ditangani di apiRequest
-        }
+            fetchAdminData();
+        } catch (error) { /* Error ditangani di apiRequest */ }
     }
 
-    // PERBAIKAN: Fungsi untuk update stok
     async function updateChekiStock(change) {
         try {
             const result = await apiRequest('/api/admin/update-cheki-stock', {
@@ -134,9 +189,29 @@ document.addEventListener('DOMContentLoaded', function() {
             alert(result.message);
             currentStockEl.textContent = result.newStock;
             stockChangeInput.value = '';
-        } catch (error) {
-           // Error sudah ditangani di apiRequest
-        }
+        } catch (error) { /* Error ditangani di apiRequest */ }
+    }
+
+    // --- Fungsi Aksi Reset Password (BARU) ---
+    async function fetchAllUsers() {
+        try {
+            const users = await apiRequest('/api/admin/all-users', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            allUsers = users;
+            renderUsers(allUsers);
+        } catch (error) { /* Error ditangani di apiRequest */ }
+    }
+    
+    async function resetUserPassword(userId) {
+        try {
+            const result = await apiRequest('/api/admin/reset-user-password', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ userId: userId })
+            });
+            alert(result.message); // Tampilkan password baru dari server
+        } catch (error) { /* Error ditangani di apiRequest */ }
     }
 
     // --- Event Listeners ---
@@ -144,7 +219,13 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.clear();
         window.location.href = 'index.html';
     });
+    
+    // Navigasi
+    navDashboard?.addEventListener('click', (e) => { e.preventDefault(); showDashboard(); });
+    navResetPassword?.addEventListener('click', (e) => { e.preventDefault(); showResetPassword(); });
+    backToDashboardBtn?.addEventListener('click', showDashboard);
 
+    // Dashboard
     searchInput?.addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
         const filtered = allOrders.filter(o => 
@@ -166,16 +247,33 @@ document.addEventListener('DOMContentLoaded', function() {
     
     increaseBtn?.addEventListener('click', () => {
         const value = parseInt(stockChangeInput.value);
-        if (value > 0) updateChekiStock(value);
-        else alert('Masukkan jumlah yang valid.');
+        if (value > 0) updateChekiStock(value); else alert('Masukkan jumlah yang valid.');
     });
 
     decreaseBtn?.addEventListener('click', () => {
         const value = parseInt(stockChangeInput.value);
-        if (value > 0) updateChekiStock(-value);
-        else alert('Masukkan jumlah yang valid.');
+        if (value > 0) updateChekiStock(-value); else alert('Masukkan jumlah yang valid.');
+    });
+
+    // Reset Password
+    userSearchInput?.addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        const filtered = allUsers.filter(u => u.nama_pengguna.toLowerCase().includes(term));
+        renderUsers(filtered);
+    });
+
+    userListTbody?.addEventListener('click', e => {
+        const resetButton = e.target.closest('.btn-reset');
+        if (resetButton) {
+            const userId = resetButton.dataset.userid;
+            const username = resetButton.dataset.username;
+            if (confirm(`Anda yakin ingin mereset password untuk pengguna "${username}"?`)) {
+                resetUserPassword(userId);
+            }
+        }
     });
 
     // --- Inisialisasi Halaman ---
+    showDashboard();
     fetchAdminData();
 });
