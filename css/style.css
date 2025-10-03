@@ -741,7 +741,10 @@ footer p {
     }
     .member-card-detailed img {
         width: 100%;
-        height: 300px;
+        height: auto;
+    }
+    .member-card-detailed.group-card img {
+        height: auto; /* Membuat tinggi gambar grup otomatis di mobile */
     }
     .member-details {
         padding: 1.5rem;

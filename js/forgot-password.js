@@ -1,36 +1,35 @@
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('forgot-password-form');
-    const emailInput = document.getElementById('email-input');
-    const messageBox = document.getElementById('message-box');
-    const submitButton = form.querySelector('button');
+    if (!form) return;
 
-    form.addEventListener('submit', async function(e) {
+    form.addEventListener('submit', function(e) {
         e.preventDefault();
-        submitButton.disabled = true;
-        submitButton.textContent = 'Mengirim...';
-        messageBox.textContent = '';
-        messageBox.style.color = '';
 
-        try {
-            const response = await fetch('/api/forgot-password', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: emailInput.value })
-            });
+        // Ambil data dari input
+        const username = document.getElementById('username').value;
+        const email = document.getElementById('email').value;
+        
+        // Nomor WhatsApp tujuan
+        const adminWhatsAppNumber = '6285765907580';
 
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.message || 'Terjadi kesalahan.');
+        // Buat template pesan
+        const message = `Halo Admin,
 
-            messageBox.style.color = 'var(--success-color)';
-            messageBox.textContent = result.message;
-            form.reset();
-            
-        } catch (error) {
-            messageBox.style.color = '#D33333';
-            messageBox.textContent = error.message;
-        } finally {
-            submitButton.disabled = false;
-            submitButton.textContent = 'Kirim Link Reset';
-        }
+Saya lupa password akun saya di website Mujōken no Umi.
+Berikut adalah data akun saya:
+- Username: ${username}
+- Email: ${email}
+
+Mohon bantuannya untuk mereset password saya.
+Terima kasih.`;
+
+        // Encode pesan agar sesuai format URL
+        const encodedMessage = encodeURIComponent(message);
+
+        // Buat URL WhatsApp
+        const whatsappUrl = `https://wa.me/${adminWhatsAppNumber}?text=${encodedMessage}`;
+
+        // Buka WhatsApp di tab baru
+        window.open(whatsappUrl, '_blank');
     });
 });
