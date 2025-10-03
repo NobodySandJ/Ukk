@@ -63,9 +63,10 @@ body {
 }
 
 .sidebar-nav {
-    padding: 1rem 0;
+    padding: 1rem; /* Memberi jarak dari tepi sidebar */
     display: flex;
-    flex-direction: column; 
+    flex-direction: column;
+    gap: 0.5rem; /* Memberi jarak antar tombol menu */
 }
 
 .nav-link {
@@ -78,15 +79,21 @@ body {
     font-weight: 500;
     transition: all 0.2s ease;
     border-left: 3px solid transparent;
+    border-radius: 8px; /* Membuat sudut kotak lebih tumpul */
+    
+    /* Perubahan Kunci: Tambahkan baris ini untuk memberi latar belakang ke semua tombol */
+    background-color: var(--sidebar-active-bg);
 }
+
 .nav-link:hover {
-    background-color: var(--sidebar-active-bg);
     color: var(--sidebar-text-hover);
+    filter: brightness(1.2); /* Sedikit lebih terang saat kursor di atasnya */
 }
+
 .nav-link.active {
-    background-color: var(--sidebar-active-bg);
     color: var(--sidebar-text-hover);
-    border-left-color: var(--primary-accent);
+    border-left-color: var(--primary-accent); /* Indikator utama untuk link yang aktif */
+    filter: brightness(1); /* Kembalikan ke kecerahan normal saat aktif */
 }
 .nav-link i {
     width: 20px;
