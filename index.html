@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mujōken no Umi - Official Website</title>
-    
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
+
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/modal.css">
 
@@ -19,6 +21,7 @@
     <link rel="icon" type="image/png" sizes="16x16" href="img/logo/favicon-16x16.png">
     <link rel="manifest" href="img/logo/site.webmanifest">
 </head>
+
 <body>
 
     <header>
@@ -31,11 +34,13 @@
                         <span>Official Website</span>
                     </div>
                 </a>
-                <ul class="nav-links" id="nav-links">
+                <div class="nav-menu" id="nav-menu">
+                    <ul class="nav-links" id="nav-links">
                     </ul>
-                <div class="nav-auth-buttons">
-                    <button class="nav-button" id="login-btn">Login</button>
-                    <button class="nav-button cta" id="register-btn">Register</button>
+                    <div class="nav-auth-buttons">
+                        <button class="nav-button" id="login-btn">Login</button>
+                        <button class="nav-button cta" id="register-btn">Register</button>
+                    </div>
                 </div>
                 <button class="hamburger" id="hamburger-menu" aria-label="Buka menu">
                     <i class="fas fa-bars"></i>
@@ -63,41 +68,39 @@
         </section>
 
         <section id="how-to-order" class="bg-gray">
-             <div class="container">
+            <div class="container">
                 <h2>CARA PESAN</h2>
                 <div class="how-to-order-container" id="how-to-order-container">
-                    </div>
+                </div>
             </div>
         </section>
-        
-        <section id="page-actions">
-            <div class="container page-actions-container">
-                <a href="gallery.html" class="cta-button secondary">Lihat Galeri Kami</a>
-                <a href="cheki.html" class="cta-button">Pesan Tiket Cheki Sekarang!</a>
-            </div>
-        </section>
+
+
 
         <section id="members">
             <div class="container">
                 <h2>MEMBER</h2>
+                <div class="gallery-link-container">
+                    <a href="gallery.html" class="cta-button secondary">Lihat Galeri Kami</a>
+                </div>
                 <div id="member-grid" class="member-grid-detailed">
-                    </div>
+                </div>
             </div>
         </section>
-        
+
         <section id="news" class="bg-gray">
             <div class="container">
                 <h2>NEWS</h2>
                 <div id="news-container" class="news-container">
-                    </div>
+                </div>
             </div>
         </section>
-        
+
         <section id="faq">
             <div class="container">
                 <h2>FAQ</h2>
                 <div class="faq-container" id="faq-container">
-                    </div>
+                </div>
             </div>
         </section>
     </main>
@@ -112,10 +115,11 @@
             <p id="footer-text"></p>
         </div>
     </footer>
-    
+
     <div class="modal-overlay" id="auth-modal"></div>
     <script src="js/auth.js"></script>
     <script src="js/script.js"></script>
 
 </body>
+
 </html>

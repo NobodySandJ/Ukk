@@ -90,13 +90,13 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!data || !data.group) {
                 throw new Error("Format data dari API tidak valid.");
             }
-            
+
             // Panggil fungsi untuk mengisi konten halaman
             populatePage(data);
-            
+
             // Panggil fungsi slider jika ada galeri
             if (document.querySelector('.slider-container') && data.gallery) {
-                 startSlider(data.gallery.map(item => item.src)); // INI PERBAIKANNYA
+                startSlider(data.gallery.map(item => item.src)); // INI PERBAIKANNYA
             }
 
         } catch (error) {
@@ -106,20 +106,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function populatePage(data) {
         document.title = `${data.group.name} - Official Website`;
-        
+
         // Header & Hero
         const logoText = document.querySelector('.logo-text strong');
         if (logoText) logoText.textContent = data.group.name;
-        
+
         const groupName = document.getElementById('group-name');
         if (groupName) groupName.textContent = data.group.name;
-        
+
         const groupTagline = document.getElementById('group-tagline');
         if (groupTagline) groupTagline.textContent = data.group.tagline;
-        
+
         const aboutContent = document.getElementById('about-content');
         if (aboutContent) aboutContent.textContent = data.group.about;
-        
+
         // How to Order Section
         const howToOrderContainer = document.getElementById('how-to-order-container');
         if (howToOrderContainer && data.how_to_order) {
@@ -141,7 +141,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Member Section
         const memberGrid = document.getElementById('member-grid');
         if (memberGrid) {
-            memberGrid.innerHTML = ''; 
+            memberGrid.innerHTML = '';
 
             const groupCard = document.createElement('div');
             groupCard.className = 'member-card-detailed group-card';
@@ -153,7 +153,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <p>${data.group.about}</p>
                 </div>
             `;
-            
+
             const allElements = [groupCard];
 
             data.members.forEach(member => {
@@ -178,7 +178,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 memberGrid.appendChild(element);
             });
         }
-        
+
         // News Section
         const newsContainer = document.getElementById('news-container');
         if (newsContainer) {
@@ -207,7 +207,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     <div class="faq-answer"><p>${faq.answer}</p></div>`;
                 faqContainer.appendChild(faqItem);
             });
-            faqContainer.addEventListener('click', function(e) {
+            faqContainer.addEventListener('click', function (e) {
                 const question = e.target.closest('.faq-question');
                 if (question) {
                     question.parentElement.classList.toggle('active');
@@ -224,13 +224,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Hamburger Menu Toggle
     const hamburger = document.getElementById('hamburger-menu');
-    const navLinks = document.getElementById('nav-links');
-    if(hamburger && navLinks){
+    const navMenu = document.getElementById('nav-menu');
+    if (hamburger && navMenu) {
         hamburger.addEventListener('click', () => {
-            navLinks.classList.toggle('active');
+            navMenu.classList.toggle('active');
         });
     }
-    
+
     // Panggil fungsi utama jika ini adalah halaman utama (index.html)
     if (document.querySelector('#hero')) {
         loadWebsiteData();
@@ -245,7 +245,7 @@ function showToast(message, isSuccess = true, duration = 4000) {
     const toast = document.createElement('div');
     toast.className = 'toast-notification';
     toast.innerHTML = message;
-    
+
     // Pastikan variabel CSS ada atau berikan fallback
     toast.style.backgroundColor = isSuccess ? 'var(--success-color, #28a745)' : '#D33333';
     document.body.appendChild(toast);
@@ -275,7 +275,7 @@ function showToast(message, isSuccess = true, duration = 4000) {
         `;
         document.head.appendChild(style);
     }
-    
+
     setTimeout(() => {
         toast.classList.add('show');
     }, 100);
