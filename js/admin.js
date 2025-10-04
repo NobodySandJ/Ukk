@@ -1,5 +1,5 @@
 // File: js/admin.js
-// Versi final dengan penambahan fitur reset password.
+// Versi final dengan perbaikan fetch data dan penambahan fitur reset password.
 
 document.addEventListener('DOMContentLoaded', function() {
     // --- Cek Otentikasi & Otorisasi ---
@@ -67,26 +67,40 @@ document.addEventListener('DOMContentLoaded', function() {
         fetchAllUsers(); // Panggil fungsi untuk memuat data pengguna
     }
 
-    // --- Fungsi Fetch Data ---
+    // --- **PERBAIKAN UTAMA ADA DI FUNGSI INI** ---
     const fetchAdminData = async () => {
         try {
-            const [statsRes, ordersRes, stockRes] = await Promise.all([
-                fetch('/api/admin/stats', { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch('/api/admin/all-orders', { headers: { 'Authorization': `Bearer ${token}` } }),
-                fetch('/api/products-and-stock', { headers: { 'Authorization': `Bearer ${token}` } })
+            // Panggil API yang butuh otorisasi
+            const authHeaders = { 'Authorization': `Bearer ${token}` };
+
+            const [statsRes, ordersRes] = await Promise.all([
+                fetch('/api/admin/stats', { headers: authHeaders }),
+                fetch('/api/admin/all-orders', { headers: authHeaders })
             ]);
 
-            if (!statsRes.ok || !ordersRes.ok || !stockRes.ok) throw new Error('Gagal memuat data admin.');
+            if (!statsRes.ok) throw new Error(`Gagal memuat statistik (Error: ${statsRes.status}). Pastikan Anda adalah admin.`);
+            if (!ordersRes.ok) throw new Error(`Gagal memuat pesanan (Error: ${ordersRes.status}).`);
 
             const stats = await statsRes.json();
             allOrders = await ordersRes.json();
-            const stockData = await stockRes.json();
             
             renderStats(stats);
             renderOrders(allOrders);
+
+            // Panggil API publik untuk stok secara terpisah
+            const stockRes = await fetch('/api/products-and-stock');
+            if (!stockRes.ok) throw new Error('Gagal memuat data stok.');
+            
+            const stockData = await stockRes.json();
             if(currentStockEl) currentStockEl.textContent = stockData.cheki_stock;
+
         } catch (error) {
             alert(error.message);
+            // Jika ada error otorisasi, lebih baik logout paksa
+            if (error.message.includes("403") || error.message.includes("admin")) {
+                localStorage.clear();
+                window.location.href = 'index.html';
+            }
         }
     };
     
