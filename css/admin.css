@@ -92,7 +92,7 @@ body {
 
 .nav-link.active {
     color: var(--sidebar-text-hover);
-    border-left-color: var(--primary-accent); /* Indikator utama untuk link yang aktif */
+    /* border-left-color: var(--primary-accent); Indikator utama untuk link yang aktif */
     filter: brightness(1); /* Kembalikan ke kecerahan normal saat aktif */
 }
 .nav-link i {
