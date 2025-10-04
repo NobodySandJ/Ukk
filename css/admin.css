@@ -78,22 +78,18 @@ body {
     text-decoration: none;
     font-weight: 500;
     transition: all 0.2s ease;
-    border-left: 3px solid transparent;
-    border-radius: 8px; /* Membuat sudut kotak lebih tumpul */
-    
-    /* Perubahan Kunci: Tambahkan baris ini untuk memberi latar belakang ke semua tombol */
+    border-radius: 8px;
     background-color: var(--sidebar-active-bg);
+    /* Baris 'border-left' dihapus dari sini agar semua tombol sama */
 }
 
 .nav-link:hover {
-    color: var(--sidebar-text-hover);
     filter: brightness(1.2); /* Sedikit lebih terang saat kursor di atasnya */
 }
 
 .nav-link.active {
     color: var(--sidebar-text-hover);
-    /* border-left-color: var(--primary-accent); Indikator utama untuk link yang aktif */
-    filter: brightness(1); /* Kembalikan ke kecerahan normal saat aktif */
+    filter: brightness(1.3); /* Dibuat sedikit lebih terang untuk menandakan aktif */
 }
 .nav-link i {
     width: 20px;
