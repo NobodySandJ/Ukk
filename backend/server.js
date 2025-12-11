@@ -177,6 +177,87 @@ app.post("/update-order-status", async (req, res) => {
 });
 
 // --- Endpoint Pengguna ---
+app.get("/api/user/profile", authenticateToken, async (req, res) => {
+    try {
+        const { data: user, error } = await supabase
+            .from("pengguna")
+            .select("id, nama_pengguna, email, nomor_whatsapp, instagram, peran")
+            .eq("id", req.user.userId)
+            .single();
+        
+        if (error || !user) return res.status(404).json({ message: "Profil tidak ditemukan." });
+        res.json(user);
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengambil profil.", error: e.message });
+    }
+});
+
+app.put("/api/user/profile", authenticateToken, async (req, res) => {
+    try {
+        const { nama_pengguna, email, nomor_whatsapp, instagram, password } = req.body;
+        
+        if (!nama_pengguna || !email) {
+            return res.status(400).json({ message: "Username dan email tidak boleh kosong." });
+        }
+
+        // Check if username or email is already taken by another user
+        const { data: existingUser, error: checkError } = await supabase
+            .from("pengguna")
+            .select("id")
+            .or(`nama_pengguna.eq.${nama_pengguna},email.eq.${email}`)
+            .neq("id", req.user.userId);
+
+        if (checkError) throw checkError;
+        if (existingUser && existingUser.length > 0) {
+            return res.status(409).json({ message: "Username atau email sudah digunakan oleh pengguna lain." });
+        }
+
+        // Prepare update data
+        const updateData = {
+            nama_pengguna,
+            email,
+            nomor_whatsapp: nomor_whatsapp || null,
+            instagram: instagram || null
+        };
+
+        // If password is provided, hash it
+        if (password && password.trim() !== "") {
+            if (password.length < 6) {
+                return res.status(400).json({ message: "Password minimal 6 karakter." });
+            }
+            const salt = await bcrypt.genSalt(10);
+            updateData.kata_sandi = await bcrypt.hash(password, salt);
+        }
+
+        // Update user data
+        const { data: updatedUser, error: updateError } = await supabase
+            .from("pengguna")
+            .update(updateData)
+            .eq("id", req.user.userId)
+            .select("id, nama_pengguna, email, nomor_whatsapp, instagram, peran")
+            .single();
+
+        if (updateError) throw updateError;
+
+        // Generate new token with updated data
+        const payload = { 
+            userId: updatedUser.id, 
+            username: updatedUser.nama_pengguna, 
+            email: updatedUser.email, 
+            role: updatedUser.peran 
+        };
+        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1d" });
+
+        res.json({ 
+            message: "Profil berhasil diperbarui!", 
+            token, 
+            user: updatedUser 
+        });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal memperbarui profil.", error: e.message });
+    }
+});
+
 app.get("/api/my-orders", authenticateToken, async (req, res) => {
     try {
         const { data, error } = await supabase.from("pesanan")
