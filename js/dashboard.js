@@ -40,30 +40,52 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function renderTickets(orders) {
+        console.log('Orders received:', orders); // Debug log
+        
         if (orders.length === 0) {
             ticketContainer.innerHTML = '<p>Anda belum memiliki tiket.</p>';
             return;
         }
 
+        // Sort: berlaku first, then others
         orders.sort((a, b) => (a.status_tiket === 'berlaku' && b.status_tiket !== 'berlaku') ? -1 : 1);
 
         ticketContainer.innerHTML = ''; 
         orders.forEach(order => {
+            console.log('Processing order:', order); // Debug log
+            
+            // Skip pending orders
             if (order.status_tiket === 'pending') return;
 
             const card = document.createElement('div');
-            card.className = `ticket-card ${order.status_tiket === 'hangus' ? 'ticket-used' : ''}`;
+            const isUsed = order.status_tiket !== 'berlaku';
+            card.className = `ticket-card ${isUsed ? 'ticket-used' : ''}`;
             
             const itemsList = order.detail_item?.map(item => `${item.quantity}x ${item.name}`).join('<br>') || 'Tidak ada detail item.';
 
+            // Determine status badge
+            let statusBadge = '';
+            let statusText = '';
+            if (order.status_tiket === 'berlaku') {
+                statusBadge = '<span style="background:#28a745;color:white;padding:4px 12px;border-radius:20px;font-size:0.85rem;font-weight:bold;">✓ BERLAKU</span>';
+                statusText = 'Masih Berlaku';
+            } else if (order.status_tiket === 'hangus' || order.status_tiket === 'sudah_dipakai') {
+                statusBadge = '<span style="background:#6c757d;color:white;padding:4px 12px;border-radius:20px;font-size:0.85rem;font-weight:bold;">✗ SUDAH TERPAKAI</span>';
+                statusText = 'Sudah Terpakai';
+            } else {
+                statusBadge = `<span style="background:#ffc107;color:#000;padding:4px 12px;border-radius:20px;font-size:0.85rem;font-weight:bold;">${order.status_tiket.toUpperCase()}</span>`;
+                statusText = order.status_tiket;
+            }
+
             const qrSectionHTML = order.status_tiket === 'berlaku'
                 ? `<div class="ticket-qr"><canvas id="qr-${order.id_pesanan}"></canvas></div>`
-                : `<div class="ticket-qr-used"><span>SUDAH TERPAKAI</span></div>`;
+                : `<div class="ticket-qr-used"><span>SUDAH<br>TERPAKAI</span></div>`;
 
             card.innerHTML = `
                 <div class="ticket-details">
                     <p><strong>ID Pesanan</strong>: ${order.id_pesanan}</p>
                     <p><strong>Total</strong>: Rp ${order.total_harga.toLocaleString('id-ID')}</p>
+                    <p><strong>Status</strong>: ${statusBadge}</p>
                     <p><strong>Item Dibeli</strong>: <br><span class="item-list">${itemsList}</span></p>
                 </div>
                 ${qrSectionHTML}
@@ -71,6 +93,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             ticketContainer.appendChild(card);
             
+            // Generate QR code for valid tickets
             if (order.status_tiket === 'berlaku') {
                 const qrCanvas = document.getElementById(`qr-${order.id_pesanan}`);
                 if (qrCanvas) {
@@ -78,7 +101,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const qrData = `ID Pesanan: ${order.id_pesanan}\nPelanggan: ${userData.nama_pengguna}\nItem: ${qrItems}`;
                     
                     QRCode.toCanvas(qrCanvas, qrData, { width: 120, margin: 1 }, (error) => {
-                        if (error) console.error(error);
+                        if (error) console.error('QR Code Error:', error);
                     });
                 }
             }
