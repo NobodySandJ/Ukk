@@ -1,9 +1,9 @@
 {
   "group": {
-    "name": "Mujōken no Umi",
-    "name_japanese": "無条件の海",
-    "tagline": "Laut Tanpa Syarat",
-    "about": "Mujōken no Umi adalah grup idola yang berenang di lautan mimpi, menyebarkan cinta tanpa syarat melalui musik dan tarian. Kami di sini untuk menjadi cahaya dalam hari-harimu!"
+    "name": "Refresh Breeze",
+    "name_japanese": "リフレッシュブリーズ",
+    "tagline": "Angin segar yang siap menyejukan kalian semua.",
+    "about": "Berasal dari Tulungagung, Jawa Timur, Refresh Breeze hadir untuk membawa hembusan angin segar ke panggung idola Indonesia. "
   },
   "how_to_order": [
     {
@@ -22,73 +22,99 @@
   "group_cheki": {
     "id": "grup",
     "name": "Grup",
-    "image": "img/member/group.jpg",
+    "image": "img/member/group.webp",
     "price": 30000
   },
   "images": {
-    "hero_background": "img/member/grup2.jpg"
+    "hero_background": "img/member/grup2.webp"
   },
   "members": [
     {
-      "id": "hina",
-      "name": "Hina",
-      "role": "Center",
-      "image": "img/member/chartHina.jpg",
-      "price": 25000,
-      "details": {
-        "sifat": "Ceria dan Enerjik",
-        "hobi": "Menyanyi dan Menari",
-        "jiko": "Seperti lumba-lumba yang melompat riang, aku akan membawamu ke lautan kebahagiaan! Aku Hina!"
-      }
-    },
-    {
-      "id": "runa",
-      "name": "Runa",
-      "role": "Vokalis Utama",
-      "image": "img/member/chartRuna.jpg",
-      "price": 25000,
-      "details": {
-        "sifat": "Tenang dan Anggun",
-        "hobi": "Membaca Puisi",
-        "jiko": "Dengan suara selembut ombak, aku akan menenangkan hatimu. Namaku Runa."
-      }
-    },
-    {
-      "id": "ami",
-      "name": "Ami",
-      "role": "Penari Utama",
-      "image": "img/member/chartAmi.jpg",
-      "price": 25000,
-      "details": {
-        "sifat": "Ramah dan Humoris",
-        "hobi": "Menonton Film Komedi",
-        "jiko": "Siap tertawa bersamaku? Aku Ami, si ikan badut yang akan mewarnai harimu!"
-      }
-    },
-    {
-      "id": "rina",
-      "name": "Rina",
-      "role": "Visual",
-      "image": "img/member/chartRina.jpg",
-      "price": 25000,
-      "details": {
-        "sifat": "Pemalu tapi Perhatian",
-        "hobi": "Fotografi",
-        "jiko": "Aku akan mengabadikan setiap momen indah kita bersama. Aku Rina."
-      }
-    },
-    {
-      "id": "anzu",
-      "name": "Anzu",
+      "id": "Aca",
+      "name": "Aca",
       "role": "Kapten",
-      "image": "img/member/chartAnzu.jpg",
+      "image": "img/member/CVRaca.webp",
       "price": 25000,
       "details": {
-        "sifat": "Dewasa dan Bijaksana",
-        "hobi": "Minum Teh",
-        "jiko": "Sebagai kapten kapal ini, aku akan memandu kita semua menuju lautan mimpi. Aku Anzu."
+        "sifat": "Ceria, Usil, Lincah",
+        "hobi": "Nyanyi, turu, main emel, berak, repeat",
+        "jiko": "Citcitcutcuit dengarlah kicauanku yang akan meramaikan hatimuuu"
+      }
+    },
+    {
+      "id": "Sinta",
+      "name": "Sinta",
+      "role": "Vokalis Utama",
+      "image": "img/member/CVRSinta.webp",
+      "price": 25000,
+      "details": {
+        "sifat": "Pemalu, Penasaran",
+        "hobi": "Memasak, menyanyi, menari, nonton anime, tidur",
+        "jiko": "Si pemalu tetapi suka hal-hal baru, haloo aku Sintaa"
+      }
+    },
+    {
+      "id": "Cissi",
+      "name": "Cissi",
+      "role": "Dancer Utama",
+      "image": "img/member/CVRCissi.webp",
+      "price": 25000,
+      "details": {
+        "sifat": "Imajinatif, Humoris",
+        "hobi": "Dance dan melamun",
+        "jiko": "Aiyaiya, i'm your little butterfly~ Kupu-kupu yang suka menari dan bisa membuatmu bahagia, halo halo semuanya aku Cissi"
+      }
+    },
+    {
+      "id": "Channie",
+      "name": "Channie",
+      "role": "Dancer",
+      "image": "img/member/CVRChannie.webp",
+      "price": 25000,
+      "details": {
+        "sifat": "Kreatif, Aktif",
+        "hobi": "Dance, bikin koreo, nulis, makan gorengan",
+        "jiko": "Semungil bintang yang akan menerangi hatimu seperti bulan, halo semuanya aku Channie!"
+      }
+    },
+    {
+      "id": "Cally",
+      "name": "Cally",
+      "role": "Vocal",
+      "image": "img/member/CVRCally.webp",
+      "price": 25000,
+      "details": {
+        "sifat": "Lembut, Weirdo",
+        "hobi": "Menonton film, mempertanyakan eksistensi diri sendiri, menyanyi",
+        "jiko": "Mengapung lembut dihatimu seperti ubur ubur yang menari di laut🪼~ Hallo aku Cally!!!"
+      }
+    },
+    {
+      "id": "Yanyee",
+      "name": "Yanyee",
+      "role": "Dancer",
+      "image": "img/member/CVRYanyee.webp",
+      "price": 25000,
+      "details": {
+        "sifat": "Anggun, Hangat, Cerah",
+        "hobi": "Makeup, dance, baking",
+        "jiko": "manis, lembut, dan selalu siap membuat harimu jadi lebih hangat seperti cookies yang baru matang🍪. haloo semuaa, aku yan yee!🪽"
+      }
+    },
+    {
+      "id": "Piya",
+      "name": "Piya",
+      "role": "Vocal",
+      "image": "img/member/CVRPiya.webp",
+      "price": 25000,
+      "details": {
+        "sifat": "Periang,lucu,",
+        "hobi": "Gambar dan main rosbloz",
+        "jiko": "Pyon! pyon! seperti kelinci yang melompat tinggi aku akan melompat ke posisi tertinggi di hatimu 🐰 ~ Hallo aku Piya !!"
       }
     }
+
+
   ],
   "news": [
     {
@@ -104,27 +130,35 @@
   ],
   "gallery": [
     {
-      "src": "img/member/group.jpg",
+      "src": "img/member/group.webp",
       "alt": "Mujōken no Umi di atas panggung"
     },
     {
-      "src": "img/member/hina.jpg",
+      "src": "img/member/NEaca.webp",
       "alt": "Hina saat tampil solo"
     },
     {
-      "src": "img/member/Runa.jpg",
+      "src": "img/member/NEsinta.webp",
       "alt": "Runa dalam sesi foto"
     },
     {
-      "src": "img/member/Ami.jpg",
+      "src": "img/member/NEcissi.webp",
       "alt": "Ami menyapa penggemar"
     },
     {
-      "src": "img/member/Rina.jpg",
+      "src": "img/member/NEchannie.webp",
       "alt": "Rina dengan senyum manisnya"
     },
     {
-      "src": "img/member/Anzu.jpg",
+      "src": "img/member/NEcally.webp",
+      "alt": "Anzu dengan tatapan karismatik"
+    },
+    {
+      "src": "img/member/NEyanyee.webp",
+      "alt": "Anzu dengan tatapan karismatik"
+    },
+    {
+      "src": "img/member/NEpiya.webp",
       "alt": "Anzu dengan tatapan karismatik"
     }
   ],

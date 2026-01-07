@@ -1,8 +1,3 @@
-/**
- * File: js/cheki.js
- * Versi final dan lengkap untuk halaman pemesanan Cheki.
- * Memperbaiki masalah kartu produk yang tidak muncul dan menyertakan semua fungsi.
- */
 document.addEventListener('DOMContentLoaded', () => {
     // Pastikan skrip ini hanya berjalan di halaman cheki
     if (!document.getElementById('cheki-page')) {
