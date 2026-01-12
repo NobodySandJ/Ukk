@@ -881,3 +881,17 @@ footer p {
     color: white;
     transform: rotate(90deg);
 }
+
+/* File: css/style.css */
+
+/* Style khusus untuk tombol Beli di Dashboard */
+.action-btn.buy {
+    background-color: var(--primary-color);
+    color: white;
+    border: 1px solid var(--primary-color);
+}
+
+.action-btn.buy:hover {
+    background-color: var(--accent-color);
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3); /* Efek bayangan hijau */
+}

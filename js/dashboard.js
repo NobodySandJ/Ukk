@@ -40,12 +40,20 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function renderTickets(orders) {
-        console.log('Orders received:', orders); // Debug log
-        
-        if (orders.length === 0) {
-            ticketContainer.innerHTML = '<p>Anda belum memiliki tiket.</p>';
-            return;
-        }
+    console.log('Orders received:', orders);
+    
+    // MODIFIKASI BAGIAN INI (JIKA KOSONG)
+    if (orders.length === 0) {
+        ticketContainer.innerHTML = `
+            <div style="text-align: center; padding: 2rem 0;">
+                <p style="margin-bottom: 1.5rem; color: #6c757d;">Anda belum memiliki tiket saat ini.</p>
+                <a href="cheki.html" class="cta-button">
+                    <i class="fas fa-ticket-alt"></i> Beli Tiket Cheki Sekarang
+                </a>
+            </div>
+        `;
+        return;
+    }
 
         // Sort: berlaku first, then others
         orders.sort((a, b) => (a.status_tiket === 'berlaku' && b.status_tiket !== 'berlaku') ? -1 : 1);
