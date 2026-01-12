@@ -1,3 +1,5 @@
+// File: js/dashboard.js
+
 document.addEventListener('DOMContentLoaded', function() {
     const token = localStorage.getItem('userToken');
     const userData = JSON.parse(localStorage.getItem('userData'));
@@ -10,6 +12,15 @@ document.addEventListener('DOMContentLoaded', function() {
         window.location.href = 'admin.html';
         return;
     }
+
+    // --- LOGIKA NOTIFIKASI PEMBAYARAN SUKSES (BARU) ---
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('payment_success') === 'true') {
+        alert('Pembayaran Berhasil! Tiket Anda sudah tersedia di bawah.');
+        // Membersihkan URL agar notifikasi tidak muncul lagi saat refresh
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    // --------------------------------------------------
 
     const usernameDisplay = document.getElementById('username-display');
     const ticketContainer = document.getElementById('ticket-container');
@@ -40,28 +51,25 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function renderTickets(orders) {
-    console.log('Orders received:', orders);
-    
-    // MODIFIKASI BAGIAN INI (JIKA KOSONG)
-    if (orders.length === 0) {
-        ticketContainer.innerHTML = `
-            <div style="text-align: center; padding: 2rem 0;">
-                <p style="margin-bottom: 1.5rem; color: #6c757d;">Anda belum memiliki tiket saat ini.</p>
-                <a href="cheki.html" class="cta-button">
-                    <i class="fas fa-ticket-alt"></i> Beli Tiket Cheki Sekarang
-                </a>
-            </div>
-        `;
-        return;
-    }
+        console.log('Orders received:', orders);
+        
+        if (orders.length === 0) {
+            ticketContainer.innerHTML = `
+                <div style="text-align: center; padding: 2rem 0;">
+                    <p style="margin-bottom: 1.5rem; color: #6c757d;">Anda belum memiliki tiket saat ini.</p>
+                    <a href="cheki.html" class="cta-button">
+                        <i class="fas fa-ticket-alt"></i> Beli Tiket Cheki Sekarang
+                    </a>
+                </div>
+            `;
+            return;
+        }
 
         // Sort: berlaku first, then others
         orders.sort((a, b) => (a.status_tiket === 'berlaku' && b.status_tiket !== 'berlaku') ? -1 : 1);
 
         ticketContainer.innerHTML = ''; 
         orders.forEach(order => {
-            console.log('Processing order:', order); // Debug log
-            
             // Skip pending orders
             if (order.status_tiket === 'pending') return;
 
@@ -108,9 +116,12 @@ document.addEventListener('DOMContentLoaded', function() {
                     const qrItems = order.detail_item?.map(item => `${item.quantity}x ${item.name}`).join(', ') || 'N/A';
                     const qrData = `ID Pesanan: ${order.id_pesanan}\nPelanggan: ${userData.nama_pengguna}\nItem: ${qrItems}`;
                     
-                    QRCode.toCanvas(qrCanvas, qrData, { width: 120, margin: 1 }, (error) => {
-                        if (error) console.error('QR Code Error:', error);
-                    });
+                    // Pastikan library QRCode sudah diload di dashboard.html
+                    if (typeof QRCode !== 'undefined') {
+                        QRCode.toCanvas(qrCanvas, qrData, { width: 120, margin: 1 }, (error) => {
+                            if (error) console.error('QR Code Error:', error);
+                        });
+                    }
                 }
             }
         });

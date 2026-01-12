@@ -1,3 +1,5 @@
+// File: js/cheki.js
+
 document.addEventListener('DOMContentLoaded', () => {
     // Pastikan skrip ini hanya berjalan di halaman cheki
     if (!document.getElementById('cheki-page')) {
@@ -35,7 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadMidtransScript = async () => {
         if (window.snap || isMidtransScriptLoaded) return;
         try {
-            // PERBAIKAN: Menggunakan URL relatif, bukan absolut
             const response = await fetch('/api/midtrans-client-key'); 
             if (!response.ok) throw new Error('Gagal mendapatkan kunci API pembayaran.');
             const data = await response.json();
@@ -239,7 +240,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         })
                     });
                     resetCart();
-                    window.location.href = `/cheki.html?order_id=${midtransResult.order_id}&transaction_status=${midtransResult.transaction_status}`;
+                    
+                    // --- PERUBAHAN UTAMA DISINI ---
+                    // Mengarahkan langsung ke dashboard dengan parameter sukses
+                    window.location.href = `/dashboard.html?payment_success=true&order_id=${midtransResult.order_id}`;
                 },
                 onPending: () => {
                     showToast("Menunggu pembayaran Anda...", true, 5000);
@@ -280,11 +284,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const checkUrlForSuccess = () => {
+        // Cek jika ada status transaksi di URL (fallback)
         const urlParams = new URLSearchParams(window.location.search);
         const status = urlParams.get('transaction_status');
         if (status === 'settlement' || status === 'capture') {
-            showToast('Pembayaran berhasil! Tiket Anda sudah tersedia di dashboard.');
-            window.history.replaceState({}, document.title, window.location.pathname);
+            // Jika user masih di halaman cheki tapi status sukses, arahkan juga ke dashboard
+            window.location.href = `/dashboard.html?payment_success=true`;
         }
     };
 
