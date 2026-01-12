@@ -1,21 +1,29 @@
+// File: js/auth.js
+
 document.addEventListener('DOMContentLoaded', function () {
     const navLinksContainer = document.getElementById('nav-links');
     const authModal = document.getElementById('auth-modal');
 
-    // Cek jika elemen-elemen penting ada
+    // Cek jika elemen modal ada
     if (!authModal) return;
 
-    // --- REVISI: Mengganti konten modal dari file HTML statis ke JS ---
+    // --- STRUKTUR HTML MODAL DIPERBARUI ---
     authModal.innerHTML = `
         <div class="modal-container">
             <button class="modal-close-btn" id="modal-close-btn">&times;</button>
+            
             <div id="login-view">
                 <div class="modal-form-container">
                     <h2>Login Akun</h2>
                     <form id="login-form" class="modal-form">
                         <input type="email" id="login-email" placeholder="Email" required>
-                        <input type="password" id="login-password" placeholder="Password" required>
-                        <a href="forgot-password.html" style="text-align: right; font-size: 0.9em; margin-top: -0.5rem;">Lupa Sandi?</a>
+                        
+                        <div style="position: relative; width: 100%;">
+                            <input type="password" id="login-password" placeholder="Password" required style="padding-right: 40px; width: 100%;">
+                            <i id="toggle-login-pass" class="fas fa-eye" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888;"></i>
+                        </div>
+
+                        <a href="forgot-password.html" style="text-align: right; font-size: 0.9em; margin-top: 0.5rem;">Lupa Sandi?</a>
                         <button type="submit" class="cta-button">Login</button>
                         <p id="login-error" class="error-message" style="text-align: center;"></p>
                     </form>
@@ -24,15 +32,21 @@ document.addEventListener('DOMContentLoaded', function () {
                     </p>
                 </div>
             </div>
+
             <div id="register-view" style="display: none;">
                 <div class="modal-form-container">
                     <h2>Buat Akun Baru</h2>
                     <form id="register-form" class="modal-form">
                         <input type="text" id="register-username" placeholder="Username" required>
                         <input type="email" id="register-email" placeholder="Email Aktif" required>
+                        
                         <input type="password" id="register-password" placeholder="Password" required>
+                        <input type="password" id="register-confirm-password" placeholder="Konfirmasi Password" required>
+
                         <input type="text" id="register-whatsapp" placeholder="No. WhatsApp" required>
-                        <input type="text" id="register-instagram" placeholder="Username Instagram" required>
+                        
+                        <input type="text" id="register-instagram" placeholder="Username Instagram (Opsional)">
+                        
                         <div class="sk-agreement">
                             <input type="checkbox" id="sk-checkbox" required>
                             <label for="sk-checkbox">Saya setuju dengan <a href="sk.html" target="_blank">Syarat & Ketentuan</a>.</label>
@@ -55,7 +69,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function initializeApp() {
         if (!navLinksContainer) return;
         
-        // REVISI: Tombol Galeri dan Pesan Tiket dihapus dari navbar
+        // Setup navbar menu
         let navHTML = `
             <li><a href="index.html#hero">Tentang Kami</a></li>
             <li><a href="index.html#members">Member</a></li>
@@ -63,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
         navLinksContainer.innerHTML = navHTML;
     
-        // Cek jika sudah login, ganti tombol dengan ikon dashboard
+        // Update ikon user jika sudah login
         const navAuthButtons = document.querySelector('.nav-auth-buttons');
         if (token && userData && navAuthButtons) {
             const destination = userData.peran === 'admin' ? 'admin.html' : 'dashboard.html';
@@ -81,6 +95,22 @@ document.addEventListener('DOMContentLoaded', function () {
         const showRegisterLink = document.getElementById('show-register-link');
         const showLoginLink = document.getElementById('show-login-link');
 
+        // --- FITUR SHOW/HIDE PASSWORD LOGIN ---
+        const toggleLoginPassBtn = document.getElementById('toggle-login-pass');
+        const loginPassInput = document.getElementById('login-password');
+
+        if (toggleLoginPassBtn && loginPassInput) {
+            toggleLoginPassBtn.addEventListener('click', () => {
+                const type = loginPassInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                loginPassInput.setAttribute('type', type);
+                
+                // Toggle icon class
+                toggleLoginPassBtn.classList.toggle('fa-eye');
+                toggleLoginPassBtn.classList.toggle('fa-eye-slash');
+            });
+        }
+
+        // Event Listeners Modal Navigasi
         loginBtn?.addEventListener('click', (e) => {
             e.preventDefault();
             loginView.style.display = 'block';
@@ -96,10 +126,13 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 
         closeModalBtn?.addEventListener('click', () => authModal.classList.remove('active'));
+        
+        // Klik di luar modal untuk menutup
         authModal.addEventListener('click', (e) => {
             if (e.target === authModal) authModal.classList.remove('active');
         });
 
+        // Switch antar Login/Register di dalam modal
         showRegisterLink?.addEventListener('click', (e) => {
             e.preventDefault();
             loginView.style.display = 'none';
@@ -117,6 +150,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
 
+        // --- HANDLER LOGIN ---
         loginForm?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formError = document.getElementById('login-error');
@@ -156,16 +190,28 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
+        // --- HANDLER REGISTER ---
         registerForm?.addEventListener('submit', async (e) => {
             e.preventDefault();
             const formError = document.getElementById('register-error');
             const submitButton = registerForm.querySelector('button');
+            
+            const password = document.getElementById('register-password').value;
+            const confirmPassword = document.getElementById('register-confirm-password').value;
+
+            // VALIDASI: Cek kesamaan password
+            if (password !== confirmPassword) {
+                formError.textContent = "Konfirmasi password tidak sesuai!";
+                return;
+            }
+
             const userData = {
                 username: document.getElementById('register-username').value,
                 email: document.getElementById('register-email').value,
-                password: document.getElementById('register-password').value,
+                password: password,
                 whatsapp_number: document.getElementById('register-whatsapp').value,
-                instagram_username: document.getElementById('register-instagram').value,
+                // Mengirim nilai kosong/null jika user tidak mengisi (karena opsional)
+                instagram_username: document.getElementById('register-instagram').value || null,
             };
 
             submitButton.disabled = true;

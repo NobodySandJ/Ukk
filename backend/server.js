@@ -1,5 +1,5 @@
 // File: backend/server.js
-// Versi final dengan penambahan fitur reset password oleh admin.
+// Versi final dengan penambahan fitur reset password admin & register instagram opsional.
 
 const express = require("express");
 const midtransClient = require("midtrans-client");
@@ -73,15 +73,24 @@ app.get("/api/midtrans-client-key", (req, res) => {
 app.post("/api/register", async (req, res) => {
     try {
         const { username, email, password, whatsapp_number, instagram_username } = req.body;
-        if (!username || !email || !password) return res.status(400).json({ message: "Data wajib diisi." });
+        
+        // MODIFIKASI: Menghapus instagram_username dari pengecekan wajib
+        if (!username || !email || !password || !whatsapp_number) {
+            return res.status(400).json({ message: "Data wajib diisi (Username, Email, Password, WA)." });
+        }
+        
         if (password.length < 6) return res.status(400).json({ message: "Password minimal 6 karakter." });
 
         const salt = await bcrypt.genSalt(10);
         const password_hash = await bcrypt.hash(password, salt);
 
         const { data, error } = await supabase.from("pengguna").insert([{
-            nama_pengguna: username, email, kata_sandi: password_hash,
-            nomor_whatsapp: whatsapp_number, instagram: instagram_username, peran: "user",
+            nama_pengguna: username, 
+            email, 
+            kata_sandi: password_hash,
+            nomor_whatsapp: whatsapp_number, 
+            instagram: instagram_username, // Akan null jika tidak diisi user
+            peran: "user",
         }]).select().single();
 
         if (error) {
@@ -200,7 +209,6 @@ app.put("/api/user/profile", authenticateToken, async (req, res) => {
             return res.status(400).json({ message: "Username dan email tidak boleh kosong." });
         }
 
-        // Check if username or email is already taken by another user
         const { data: existingUser, error: checkError } = await supabase
             .from("pengguna")
             .select("id")
@@ -212,7 +220,6 @@ app.put("/api/user/profile", authenticateToken, async (req, res) => {
             return res.status(409).json({ message: "Username atau email sudah digunakan oleh pengguna lain." });
         }
 
-        // Prepare update data
         const updateData = {
             nama_pengguna,
             email,
@@ -220,7 +227,6 @@ app.put("/api/user/profile", authenticateToken, async (req, res) => {
             instagram: instagram || null
         };
 
-        // If password is provided, hash it
         if (password && password.trim() !== "") {
             if (password.length < 6) {
                 return res.status(400).json({ message: "Password minimal 6 karakter." });
@@ -229,7 +235,6 @@ app.put("/api/user/profile", authenticateToken, async (req, res) => {
             updateData.kata_sandi = await bcrypt.hash(password, salt);
         }
 
-        // Update user data
         const { data: updatedUser, error: updateError } = await supabase
             .from("pengguna")
             .update(updateData)
@@ -239,7 +244,6 @@ app.put("/api/user/profile", authenticateToken, async (req, res) => {
 
         if (updateError) throw updateError;
 
-        // Generate new token with updated data
         const payload = { 
             userId: updatedUser.id, 
             username: updatedUser.nama_pengguna, 
@@ -363,7 +367,6 @@ app.post("/api/admin/reset-user-password", authenticateToken, authorizeAdmin, as
         res.status(500).json({ message: "Gagal mereset password.", error: e.message });
     }
 });
-
 
 // --- Server Listener ---
 const PORT = process.env.PORT || 3000;
