@@ -73,11 +73,11 @@ app.get("/api/midtrans-client-key", (req, res) => {
 app.post("/api/register", async (req, res) => {
     try {
         const { username, email, password, whatsapp_number, instagram_username, oshi } = req.body;
-        
+
         if (!username || !email || !password || !whatsapp_number) {
             return res.status(400).json({ message: "Data wajib diisi (Username, Email, Password, WA)." });
         }
-        
+
         if (password.length < 6) return res.status(400).json({ message: "Password minimal 6 karakter." });
 
         const salt = await bcrypt.genSalt(10);
@@ -85,11 +85,11 @@ app.post("/api/register", async (req, res) => {
 
         // UPDATE: Menyimpan 'oshi' ke database
         const { data, error } = await supabase.from("pengguna").insert([{
-            nama_pengguna: username, 
-            email, 
+            nama_pengguna: username,
+            email,
             kata_sandi: password_hash,
-            nomor_whatsapp: whatsapp_number, 
-            instagram: instagram_username || null, 
+            nomor_whatsapp: whatsapp_number,
+            instagram: instagram_username || null,
             oshi: oshi || 'All Member', // Default value
             peran: "user",
         }]).select().single();
@@ -121,12 +121,12 @@ app.post("/api/login", async (req, res) => {
         if (!isMatch) return res.status(401).json({ message: "Password salah." });
 
         // UPDATE: Menyertakan 'oshi' dalam token payload dan response
-        const payload = { 
-            userId: user.id, 
-            username: user.nama_pengguna, 
-            email: user.email, 
+        const payload = {
+            userId: user.id,
+            username: user.nama_pengguna,
+            email: user.email,
             role: user.peran,
-            oshi: user.oshi 
+            oshi: user.oshi
         };
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1d" });
 
@@ -139,12 +139,12 @@ app.post("/api/login", async (req, res) => {
 
 // --- LEADERBOARD API (BARU) ---
 
-// 1. Global Leaderboard (Total Pengeluaran)
+// 1. Global Leaderboard (Total Cheki Dibeli)
 app.get("/api/leaderboard", async (req, res) => {
     try {
         const { data: orders, error } = await supabase
             .from('pesanan')
-            .select('total_harga, id_pengguna, pengguna(nama_pengguna, oshi)')
+            .select('detail_item, id_pengguna, pengguna(nama_pengguna, oshi)')
             .in('status_tiket', ['berlaku', 'sudah_dipakai']);
 
         if (error) throw error;
@@ -155,16 +155,21 @@ app.get("/api/leaderboard", async (req, res) => {
             if (!userTotals[uid]) {
                 userTotals[uid] = {
                     username: order.pengguna?.nama_pengguna || 'Unknown',
-                    oshi: order.pengguna?.oshi || 'All Member',
-                    totalSpent: 0
+                    oshi: order.pengguna?.oshi || '-',
+                    totalCheki: 0
                 };
             }
-            userTotals[uid].totalSpent += order.total_harga;
+
+            // Hitung total cheki dari detail_item
+            const items = order.detail_item || [];
+            items.forEach(item => {
+                userTotals[uid].totalCheki += item.quantity;
+            });
         });
 
-        // Urutkan dari terbesar
+        // Urutkan dari terbanyak cheki
         const leaderboard = Object.values(userTotals)
-            .sort((a, b) => b.totalSpent - a.totalSpent)
+            .sort((a, b) => b.totalCheki - a.totalCheki)
             .slice(0, 10); // Ambil Top 10
 
         res.json(leaderboard);
@@ -259,7 +264,7 @@ app.post("/update-order-status", async (req, res) => {
                 .eq("id_pesanan", order_id).select().single();
 
             if (error || !updatedOrder) throw new Error("Gagal update status pesanan.");
-            
+
             // Kurangi Stok
             const totalItems = (updatedOrder.detail_item || []).reduce((sum, item) => sum + item.quantity, 0);
             if (totalItems > 0) {
@@ -280,7 +285,7 @@ app.get("/api/user/profile", authenticateToken, async (req, res) => {
             .select("id, nama_pengguna, email, nomor_whatsapp, instagram, peran, oshi")
             .eq("id", req.user.userId)
             .single();
-        
+
         if (error || !user) return res.status(404).json({ message: "Profil tidak ditemukan." });
         res.json(user);
     } catch (e) {
@@ -291,7 +296,7 @@ app.get("/api/user/profile", authenticateToken, async (req, res) => {
 app.put("/api/user/profile", authenticateToken, async (req, res) => {
     try {
         const { nama_pengguna, email, nomor_whatsapp, instagram, password } = req.body;
-        
+
         if (!nama_pengguna || !email) {
             return res.status(400).json({ message: "Username dan email tidak boleh kosong." });
         }
@@ -331,19 +336,19 @@ app.put("/api/user/profile", authenticateToken, async (req, res) => {
 
         if (updateError) throw updateError;
 
-        const payload = { 
-            userId: updatedUser.id, 
-            username: updatedUser.nama_pengguna, 
-            email: updatedUser.email, 
+        const payload = {
+            userId: updatedUser.id,
+            username: updatedUser.nama_pengguna,
+            email: updatedUser.email,
             role: updatedUser.peran,
             oshi: updatedUser.oshi
         };
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1d" });
 
-        res.json({ 
-            message: "Profil berhasil diperbarui!", 
-            token, 
-            user: updatedUser 
+        res.json({
+            message: "Profil berhasil diperbarui!",
+            token,
+            user: updatedUser
         });
     } catch (e) {
         res.status(500).json({ message: "Gagal memperbarui profil.", error: e.message });
@@ -426,10 +431,10 @@ app.get("/api/admin/all-users", authenticateToken, authorizeAdmin, async (req, r
         const { data, error } = await supabase
             .from('pengguna')
             .select('id, nama_pengguna, email')
-            .neq('peran', 'admin'); 
+            .neq('peran', 'admin');
         if (error) throw error;
         res.json(data);
-    } catch(e) {
+    } catch (e) {
         res.status(500).json({ message: "Gagal mengambil data pengguna.", error: e.message });
     }
 });
@@ -439,7 +444,7 @@ app.post("/api/admin/reset-user-password", authenticateToken, authorizeAdmin, as
         const { userId } = req.body;
         if (!userId) return res.status(400).json({ message: "User ID tidak ditemukan." });
 
-        const newPassword = "password123"; 
+        const newPassword = "password123";
         const salt = await bcrypt.genSalt(10);
         const password_hash = await bcrypt.hash(newPassword, salt);
 
@@ -450,7 +455,7 @@ app.post("/api/admin/reset-user-password", authenticateToken, authorizeAdmin, as
 
         if (error) throw error;
         res.json({ message: `Password berhasil direset. Password baru adalah: ${newPassword}` });
-    } catch(e) {
+    } catch (e) {
         res.status(500).json({ message: "Gagal mereset password.", error: e.message });
     }
 });

@@ -21,7 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadLeaderboard(type) {
         listContainer.innerHTML = '<p style="text-align:center; padding: 2rem;">Mengambil data...</p>';
-        
+
         try {
             let url = '/api/leaderboard'; // Default Global
             if (type !== 'global') {
@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderList(data, type) {
         listContainer.innerHTML = '';
-        
+
         if (data.length === 0) {
             listContainer.innerHTML = '<div style="text-align:center; padding:2rem;">Belum ada data untuk kategori ini.</div>';
             return;
@@ -49,13 +49,13 @@ document.addEventListener('DOMContentLoaded', () => {
         data.forEach((user, index) => {
             const rankClass = index < 3 ? `rank-${index + 1}` : '';
             const rankIcon = index === 0 ? '👑' : `#${index + 1}`;
-            
-            // Teks skor berbeda antara Global (Uang) dan Member (Jumlah Tiket)
+
+            // Teks skor berbeda antara Global (Total Cheki) dan Member (Jumlah Tiket)
             let scoreText = '';
             let subText = '';
-            
+
             if (type === 'global') {
-                scoreText = `Rp ${user.totalSpent.toLocaleString('id-ID')}`;
+                scoreText = `${user.totalCheki} Cheki`;
                 subText = `Team ${user.oshi || '-'}`;
             } else {
                 scoreText = `${user.totalQuantity} Tiket`;
