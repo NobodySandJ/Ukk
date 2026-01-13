@@ -1,4 +1,5 @@
 // File: js/auth.js
+// VERSI FINAL: Dengan Input Oshi
 
 document.addEventListener('DOMContentLoaded', function () {
     const navLinksContainer = document.getElementById('nav-links');
@@ -45,6 +46,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         <input type="text" id="register-whatsapp" placeholder="No. WhatsApp" required>
                         
+                        <div class="form-group" style="margin-bottom: 1rem;">
+                            <select id="register-oshi" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; background: #fff;">
+                                <option value="" disabled selected>Pilih Oshi Kamu</option>
+                                <option value="Aca">Aca</option>
+                                <option value="Cally">Cally</option>
+                                <option value="Sinta">Sinta</option>
+                                <option value="Piya">Piya</option>
+                                <option value="Yanyee">Yanyee</option>
+                                <option value="Channie">Channie</option>
+                                <option value="Cissi">Cissi</option>
+                                <option value="All Member">All Member (DD)</option>
+                            </select>
+                        </div>
+
                         <input type="text" id="register-instagram" placeholder="Username Instagram (Opsional)">
                         
                         <div class="sk-agreement">
@@ -210,9 +225,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 email: document.getElementById('register-email').value,
                 password: password,
                 whatsapp_number: document.getElementById('register-whatsapp').value,
-                // Mengirim nilai kosong/null jika user tidak mengisi (karena opsional)
+                // UPDATE: Mengambil nilai Oshi
+                oshi: document.getElementById('register-oshi').value,
                 instagram_username: document.getElementById('register-instagram').value || null,
             };
+
+            // Validasi Oshi wajib dipilih
+            if (!userData.oshi) {
+                formError.textContent = "Silakan pilih Oshi kamu!";
+                return;
+            }
 
             submitButton.disabled = true;
             submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mendaftar...';

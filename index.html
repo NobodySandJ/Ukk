@@ -20,62 +20,113 @@
     <link rel="icon" type="image/png" sizes="32x32" href="img/logo/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="img/logo/favicon-16x16.png">
     <link rel="manifest" href="img/logo/site.webmanifest">
+
+    <style>
+        .oshi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+
+        .oshi-btn {
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            background: #fff;
+            cursor: pointer;
+            padding: 8px 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .oshi-btn:hover {
+            border-color: #ff9999;
+            transform: translateY(-2px);
+        }
+
+        .oshi-btn img {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 5px;
+            border: 1px solid #eee;
+        }
+
+        .oshi-btn span {
+            font-size: 11px;
+            font-weight: 600;
+            color: #555;
+            text-align: center;
+        }
+
+        /* State ketika tombol dipilih */
+        .oshi-btn.active {
+            border-color: #ff6b6b;
+            background-color: #ffe5e5;
+            box-shadow: 0 4px 10px rgba(255, 107, 107, 0.2);
+        }
+        
+        /* Pesan error */
+        #oshi-error {
+            font-size: 12px;
+            margin-top: -10px;
+            margin-bottom: 15px;
+            display: block;
+        }
+    </style>
 </head>
 
 <body>
-
     <header>
         <div class="container">
             <nav>
                 <a href="index.html" class="logo">
-                    <img src="img/logo/apple-touch-icon.png" alt="Logo">
-                    <div class="logo-text">
-                        <strong>Refresh Breeze</strong>
-                        <span>Official Website</span>
-                    </div>
+                    <img src="img/member/logo.webp" alt="Refresh Breeze Logo">
+                    <span>REFRESH BREEZE</span>
                 </a>
-                <div class="nav-menu" id="nav-menu">
-                    <ul class="nav-links" id="nav-links">
-                    </ul>
-                    <div class="nav-auth-buttons">
-                        <button class="nav-button" id="login-btn">Login</button>
-                        <button class="nav-button cta" id="register-btn">Register</button>
-                    </div>
+                <ul class="nav-links">
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#members">Member</a></li>
+                    <li><a href="#news">News</a></li>
+                    <li><a href="#faq">FAQ</a></li>
+                </ul>
+                <div class="auth-buttons">
+                    <button id="loginBtn" class="btn-login">Login</button>
+                    <button id="registerBtn" class="btn-register">Register</button>
                 </div>
-                <button class="hamburger" id="hamburger-menu" aria-label="Buka menu">
+                <div class="menu-toggle">
                     <i class="fas fa-bars"></i>
-                </button>
+                </div>
             </nav>
         </div>
     </header>
 
     <main>
-        <section id="hero">
-            <div class="slider-container">
-                <div class="slider" id="image-slider"></div>
-                <div class="slider-nav">
-                    <button class="prev-btn">&lt;</button>
-                    <button class="next-btn">&gt;</button>
+        <section id="home" class="hero">
+            <div class="hero-slider">
+                <div class="slide active" style="background-image: url('img/member/group.webp');">
+                    <div class="container">
+                        <div class="hero-content">
+                            <h1>Welcome to <br><span>Refresh Breeze</span></h1>
+                            <p>Official Fanbase Website. Dukung oshi kamu dan jadilah top sultan!</p>
+                            <a href="#members" class="cta-button">Lihat Member</a>
+                        </div>
+                    </div>
                 </div>
-                <div class="slider-dots" id="slider-dots"></div>
-            </div>
-            <div class="container hero-text">
-                <h2 id="group-name"></h2>
-                <h3 id="group-tagline"></h3>
-                <p id="about-content"></p>
-                <a href="cheki.html" class="cta-button hero-cta">Beli Tiket Cheki Sekarang!</a>
-            </div>
-        </section>
-
-        <section id="how-to-order" class="bg-gray">
-            <div class="container">
-                <h2>CARA PESAN</h2>
-                <div class="how-to-order-container" id="how-to-order-container">
+                 <div class="slide" style="background-image: url('img/member/group2.webp');">
+                    <div class="container">
+                        <div class="hero-content">
+                            <h1>Semangat <br><span>Baru</span></h1>
+                            <p>Dukung terus idol grup kebanggaan kita.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
-
-
 
         <section id="members">
             <div class="container">
@@ -84,7 +135,7 @@
                     <a href="gallery.html" class="cta-button secondary">Lihat Galeri Kami</a>
                 </div>
                 <div id="member-grid" class="member-grid-detailed">
-                </div>
+                    </div>
             </div>
         </section>
 
@@ -92,6 +143,26 @@
             <div class="container">
                 <h2>NEWS</h2>
                 <div id="news-container" class="news-container">
+                    <div class="news-card">
+                        <div class="news-img">
+                             <img src="img/member/group.webp" alt="News 1">
+                        </div>
+                        <div class="news-content">
+                            <h3>Next Event: Handshake</h3>
+                            <p>Jangan lewatkan event handshake bulan depan...</p>
+                            <a href="#">Baca Selengkapnya</a>
+                        </div>
+                    </div>
+                     <div class="news-card">
+                        <div class="news-img">
+                             <img src="img/member/group2.webp" alt="News 2">
+                        </div>
+                        <div class="news-content">
+                            <h3>New Single Release</h3>
+                            <p>Single terbaru kami akan segera rilis di platform...</p>
+                            <a href="#">Baca Selengkapnya</a>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -100,6 +171,24 @@
             <div class="container">
                 <h2>FAQ</h2>
                 <div class="faq-container" id="faq-container">
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <h3>Bagaimana cara bergabung?</h3>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Klik tombol Register di pojok kanan atas dan isi data diri kamu.</p>
+                        </div>
+                    </div>
+                    <div class="faq-item">
+                        <div class="faq-question">
+                            <h3>Apa keuntungan menjadi top sultan?</h3>
+                            <i class="fas fa-chevron-down"></i>
+                        </div>
+                        <div class="faq-answer">
+                            <p>Kamu akan mendapatkan badge khusus dan apresiasi dari member.</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -112,14 +201,67 @@
                 <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
                 <a href="#" aria-label="TikTok"><i class="fab fa-tiktok"></i></a>
             </div>
-            <p id="footer-text"></p>
+            <p id="footer-text">&copy; 2024 Refresh Breeze. All Rights Reserved.</p>
         </div>
     </footer>
 
-    <div class="modal-overlay" id="auth-modal"></div>
-    <script src="js/auth.js"></script>
+    <div class="modal-overlay" id="auth-modal">
+        <div class="modal-container">
+            <button class="close-modal" id="closeModal">&times;</button>
+            
+            <div id="loginFormContainer" class="auth-form-container active">
+                <h2>Login</h2>
+                <form id="loginForm">
+                    <div class="input-group">
+                        <label for="loginEmail">Email</label>
+                        <input type="email" id="loginEmail" required placeholder="Masukkan email kamu">
+                    </div>
+                    <div class="input-group">
+                        <label for="loginPassword">Password</label>
+                        <input type="password" id="loginPassword" required placeholder="Masukkan password">
+                    </div>
+                    <div class="form-actions">
+                        <a href="forgot-password.html" class="forgot-password">Lupa Password?</a>
+                    </div>
+                    <button type="submit" class="btn-submit">Masuk</button>
+                    <p class="switch-auth">Belum punya akun? <a href="#" id="showRegister">Daftar disini</a></p>
+                </form>
+            </div>
+
+            <div id="registerFormContainer" class="auth-form-container">
+                <h2>Daftar Member</h2>
+                <form id="registerForm">
+                    <div class="input-group">
+                        <label for="regUsername">Username</label>
+                        <input type="text" id="regUsername" required placeholder="Buat username unik">
+                    </div>
+                    <div class="input-group">
+                        <label for="regEmail">Email</label>
+                        <input type="email" id="regEmail" required placeholder="Email aktif kamu">
+                    </div>
+                    <div class="input-group">
+                        <label for="regPassword">Password</label>
+                        <input type="password" id="regPassword" required placeholder="Buat password">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label class="label">Pilih Oshi Kamu</label>
+                        <div id="oshi-options" class="oshi-grid"></div>
+                        
+                        <input type="hidden" id="selectedOshi" name="oshi">
+                        
+                        <small id="oshi-error" style="color: red; display: none;">Silakan pilih oshi terlebih dahulu!</small>
+                    </div>
+
+                    <button type="submit" class="btn-submit">Daftar Sekarang</button>
+                    <p class="switch-auth">Sudah punya akun? <a href="#" id="showLogin">Login disini</a></p>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <script src="js/script.js"></script>
-
+    <script src="js/slider.js"></script>
+    <script src="js/auth.js"></script> 
 </body>
-
 </html>
