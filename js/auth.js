@@ -20,21 +20,23 @@ document.addEventListener('DOMContentLoaded', function () {
             `;
         }
 
-        // Update Tombol Auth (Login/Register vs User Icon)
+        // Update Tombol Auth (Login/Register vs Dashboard Button)
         const navAuthButtons = document.querySelector('.nav-auth-buttons');
         if (navAuthButtons) {
             if (token && userData) {
-                // Jika sudah login, tampilkan ikon user
+                // Jika sudah login, tampilkan tombol "My Dashboard"
                 const destination = userData.peran === 'admin' ? 'admin.html' : 'dashboard.html';
+                const buttonText = userData.peran === 'admin' ? 'Admin Panel' : 'My Dashboard';
                 navAuthButtons.innerHTML = `
-                    <a href="${destination}" title="Halo, ${userData.nama_pengguna}" class="nav-user-icon">
-                        <i class="fas fa-user-circle" style="font-size: 1.8rem; color: #333;"></i>
+                    <a href="${destination}" class="nav-user-button">
+                        <i class="fas fa-th-large"></i>
+                        ${buttonText}
                     </a>`;
             } else {
-                // Jika belum login, tampilkan tombol default (pastikan ID ada untuk event listener)
+                // Jika belum login, tampilkan tombol login/register
                 navAuthButtons.innerHTML = `
-                    <a href="#" id="login-btn" class="btn-login">Login</a>
-                    <a href="#" id="register-btn" class="btn-register">Join Us</a>
+                    <a href="#" id="login-btn" class="nav-button">Login</a>
+                    <a href="#" id="register-btn" class="nav-button cta">Join Us</a>
                 `;
             }
         }

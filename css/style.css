@@ -1,19 +1,54 @@
 /* Import Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
-/* Variabel Global */
+/* Variabel Global - Natural & Modern Color Palette */
 :root {
-    --primary-color: #0a9605;
-    --accent-color: #10c516;
+    /* Primary Colors - Natural Green Inspired */
+    --primary-color: #16a34a;
+    /* Fresh green, not too bright */
+    --primary-dark: #15803d;
+    --primary-light: #4ade80;
+    --accent-color: #22c55e;
+
+    /* Neutral Colors */
     --bg-color: #ffffff;
     --card-bg: #ffffff;
-    --text-color: #343a40;
-    --secondary-text-color: #6c757d;
+    --text-color: #1f2937;
+    /* Darker for better readability */
+    --secondary-text-color: #6b7280;
+    /* Modern gray */
     --light-text-color: #ffffff;
+    --border-color: #e5e7eb;
+
+    /* Background Variations */
+    --gray-bg: #f9fafb;
+    --gray-light: #f3f4f6;
+
+    /* Semantic Colors */
+    --success-color: #10b981;
+    --error-color: #ef4444;
+    --warning-color: #f59e0b;
+    --info-color: #3b82f6;
+
+    /* Design System */
     --border-radius: 12px;
-    --shadow-light: 0 4px 20px rgba(0, 0, 0, 0.07);
-    --gray-bg: #f0f3f5;
-    --success-color: #28a745;
+    --border-radius-sm: 8px;
+    --border-radius-lg: 16px;
+
+    /* Enhanced Shadows for Depth */
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.12);
+
+    /* Old variable for compatibility */
+    --shadow-light: var(--shadow-md);
+
+    /* Transitions */
+    --transition-fast: 150ms ease;
+    --transition-base: 250ms ease;
+    --transition-slow: 350ms ease;
 }
 
 /* Reset dan Aturan Dasar */
@@ -32,6 +67,26 @@ body {
     color: var(--text-color);
     background-color: var(--bg-color);
     line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--gray-light);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--secondary-text-color);
+    border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
 }
 
 .container {
@@ -40,19 +95,58 @@ body {
     padding: 0 1.5rem;
 }
 
+/* Alternating Section Backgrounds */
 .bg-gray {
-    background-color: var(--gray-bg);
+    background: linear-gradient(135deg,
+            #f0fdf4 0%,
+            #dcfce7 100%);
+    /* Green tint yang lebih kelihatan tapi tetap soft */
 }
+
+/* Better Section Spacing */
+section {
+    padding: 5rem 0;
+    margin: 0;
+}
+
+section.bg-gray {
+    position: relative;
+    margin: 2rem 0;
+}
+
+/* Add subtle top/bottom separator for bg sections */
+section.bg-gray::before,
+section.bg-gray::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--primary-light), transparent);
+    opacity: 0.3;
+}
+
+section.bg-gray::before {
+    top: 0;
+}
+
+section.bg-gray::after {
+    bottom: 0;
+}
+
 
 /* Header dan Navigasi */
 header {
-    background: var(--card-bg);
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-    padding: 0.75rem 0;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     position: sticky;
     top: 0;
     z-index: 1000;
+    transition: all var(--transition-base);
+    padding: 0.75rem 0;
 }
+
 
 nav {
     display: flex;
@@ -125,43 +219,80 @@ ul.nav-links a:hover {
     /* Pastikan hamburger di atas segalanya */
 }
 
-/* Tombol Header Login/Register & Cheki/Galeri */
+/* Modern Auth Buttons - Login/Register */
 .nav-auth-buttons {
     display: flex;
     align-items: center;
-    gap: 0.8rem;
+    gap: 0.75rem;
 }
 
 .nav-button {
     font-family: 'Poppins', sans-serif;
     cursor: pointer;
     text-decoration: none;
-    font-weight: 500;
-    font-size: 0.9rem;
-    padding: 0.5rem 1.2rem;
-    border-radius: 50px;
-    transition: all 0.3s ease;
-    border: 1px solid var(--primary-color);
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.625rem 1.5rem;
+    border-radius: 8px;
+    transition: all var(--transition-base);
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
 }
 
-.nav-button.cta {
-    background-color: var(--primary-color);
-    color: var(--light-text-color);
-}
-
-.nav-button.cta:hover {
-    background-color: var(--accent-color);
-    border-color: var(--accent-color);
-}
-
+/* Login Button - Outline Style */
 .nav-button:not(.cta) {
     color: var(--primary-color);
     background-color: transparent;
+    border: 2px solid var(--primary-color);
 }
 
 .nav-button:not(.cta):hover {
     background-color: var(--primary-color);
     color: var(--light-text-color);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
+}
+
+/* Register Button - Solid Style */
+.nav-button.cta {
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: var(--light-text-color);
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.2);
+}
+
+.nav-button.cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(22, 163, 74, 0.3);
+}
+
+/* User Dashboard Button (After Login) */
+.nav-user-button {
+    font-family: 'Poppins', sans-serif;
+    cursor: pointer;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.875rem;
+    padding: 0.625rem 1.5rem;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
+    color: var(--light-text-color);
+    border: none;
+    transition: all var(--transition-base);
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.2);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-user-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(22, 163, 74, 0.3);
+}
+
+.nav-user-button i {
+    font-size: 1rem;
 }
 
 
@@ -282,17 +413,30 @@ ul.nav-links a:hover {
     font-size: 1.1rem;
 }
 
-/* Bagian Umum */
-section {
-    padding: 4rem 0;
-}
+/* Bagian Umum - Already defined above, remove duplicate */
 
-section h2 {
-    font-size: 2.2rem;
+section h2,
+.section-title {
+    font-size: 2rem;
     font-weight: 700;
     margin-bottom: 3rem;
     color: var(--text-color);
     text-align: center;
+    position: relative;
+    padding-bottom: 1rem;
+}
+
+section h2::after,
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+    border-radius: 2px;
 }
 
 /* Cara Pesan */
@@ -311,19 +455,29 @@ section h2 {
     background: var(--card-bg);
     padding: 1.5rem;
     border-radius: var(--border-radius);
-    box-shadow: var(--shadow-light);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-base);
+}
+
+.order-step:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-light);
+    transform: translateX(4px);
 }
 
 .order-step .step-number {
-    background-color: var(--primary-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--accent-color));
     color: var(--light-text-color);
     min-width: 50px;
     height: 50px;
-    border-radius: 50%;
+    border-radius: 12px;
+    /* More modern than circle */
     display: grid;
     place-items: center;
     font-size: 1.5rem;
     font-weight: 700;
+    box-shadow: 0 4px 12px rgba(22, 163, 74, 0.2);
 }
 
 .order-step h3 {
@@ -347,10 +501,18 @@ section h2 {
 .member-card-detailed {
     background: var(--card-bg);
     border-radius: var(--border-radius);
-    box-shadow: var(--shadow-light);
+    box-shadow: var(--shadow-sm);
     display: flex;
     overflow: hidden;
     gap: 2rem;
+    transition: all var(--transition-base);
+    border: 1px solid var(--border-color);
+}
+
+.member-card-detailed:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+    border-color: var(--primary-light);
 }
 
 .member-card-detailed.group-card {
@@ -425,25 +587,42 @@ section h2 {
 
 .news-item {
     background: var(--card-bg);
-    border-left: 5px solid var(--primary-color);
-    padding: 1.5rem;
-    border-radius: 8px;
-    box-shadow: var(--shadow-light);
+    border-left: 4px solid var(--primary-color);
+    padding: 1.75rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-color);
+    border-left-width: 4px;
+    border-left-color: var(--primary-color);
+    transition: all var(--transition-base);
+}
+
+.news-item:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateX(4px);
+    border-left-color: var(--accent-color);
 }
 
 .news-item h3 {
-    font-size: 1.3rem;
+    font-size: 1.25rem;
     margin-bottom: 0.5rem;
+    color: var(--text-color);
+    font-weight: 600;
 }
 
 .news-item .date {
-    font-size: 0.9rem;
+    font-size: 0.875rem;
     color: var(--secondary-text-color);
     margin-bottom: 1rem;
+    display: inline-block;
+    background: var(--gray-light);
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
 }
 
 .news-item p {
     color: var(--text-color);
+    line-height: 1.7;
 }
 
 /* FAQ (Accordion) */
@@ -523,24 +702,49 @@ footer p {
     opacity: 0.9;
 }
 
-/* General CTA Button */
+/* General CTA Button - Modern & Premium */
 .cta-button {
     display: inline-block;
-    background-color: var(--primary-color);
+    background: var(--primary-color);
     color: var(--light-text-color);
-    padding: 0.8rem 2rem;
-    border-radius: 50px;
+    padding: 0.875rem 2rem;
+    border-radius: 10px;
+    /* Less pill-like, more modern */
     text-decoration: none;
     font-weight: 600;
-    transition: all 0.3s ease;
+    font-size: 0.95rem;
+    transition: all var(--transition-base);
     border: none;
     cursor: pointer;
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.15);
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-button::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.cta-button:hover::before {
+    left: 100%;
 }
 
 .cta-button:hover {
-    background-color: var(--accent-color);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    background-color: var(--primary-dark);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(22, 163, 74, 0.25);
+}
+
+.cta-button:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.2);
 }
 
 /* Hero Section Specific CTA */
@@ -775,13 +979,16 @@ footer p {
     font-style: italic;
 }
 
-/* Responsivitas */
+/* ================================ */
+/* RESPONSIVE DESIGN - MOBILE FIRST */
+/* ================================ */
+
+/* Tablet & Below (992px) */
 @media (max-width: 992px) {
     .nav-menu {
         position: fixed;
         top: 0;
         right: -100%;
-        /* Mulai dari luar layar */
         width: 300px;
         height: 100vh;
         background-color: var(--card-bg);
@@ -789,15 +996,14 @@ footer p {
         align-items: flex-start;
         justify-content: flex-start;
         padding: 5rem 2rem 2rem 2rem;
-        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
-        transition: right 0.4s ease-in-out;
+        box-shadow: -5px 0 25px rgba(0, 0, 0, 0.15);
+        transition: right 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         z-index: 1001;
         gap: 2rem;
     }
 
     .nav-menu.active {
         right: 0;
-        /* Pindahkan ke dalam layar */
     }
 
     ul.nav-links {
@@ -814,7 +1020,13 @@ footer p {
         gap: 1rem;
         margin-top: 1rem;
         padding-top: 1.5rem;
-        border-top: 1px solid var(--gray-bg);
+        border-top: 1px solid var(--border-color);
+    }
+
+    .nav-button {
+        width: 100%;
+        justify-content: center;
+        padding: 0.75rem 1.5rem;
     }
 
     .hamburger {
@@ -824,15 +1036,27 @@ footer p {
     .cheki-main-layout {
         grid-template-columns: 1fr;
     }
+
+    /* Better spacing on tablet */
+    section {
+        padding: 4rem 0;
+    }
 }
 
+/* Mobile (768px) */
 @media (max-width: 768px) {
     section {
         padding: 3rem 0;
     }
 
-    section h2 {
-        font-size: 1.8rem;
+    section.bg-gray {
+        margin: 1.5rem 0;
+    }
+
+    section h2,
+    .section-title {
+        font-size: 1.75rem;
+        margin-bottom: 2.5rem;
     }
 
     .member-card-detailed {
@@ -846,19 +1070,221 @@ footer p {
 
     .member-card-detailed.group-card img {
         height: auto;
-        /* Membuat tinggi gambar grup otomatis di mobile */
     }
 
     .member-details {
         padding: 1.5rem;
     }
-}
 
-@media (max-width: 576px) {
-    .cheki-member-grid {
-        grid-template-columns: repeat(2, 1fr);
+    .hero-text h2 {
+        font-size: 2rem;
+    }
+
+    .hero-text h3 {
+        font-size: 1.25rem;
     }
 }
+
+/* Small Mobile - 360px Focus (576px and below) */
+@media (max-width: 576px) {
+
+    /* Container adjustments */
+    .container {
+        padding: 0 1rem;
+    }
+
+    /* Sections - more compact */
+    section {
+        padding: 2.5rem 0;
+    }
+
+    section.bg-gray {
+        margin: 1rem 0;
+    }
+
+    /* Typography */
+    section h2,
+    .section-title {
+        font-size: 1.5rem;
+        margin-bottom: 2rem;
+        padding-bottom: 0.75rem;
+    }
+
+    section h2::after,
+    .section-title::after {
+        width: 40px;
+        height: 2px;
+    }
+
+    /* Header */
+    header {
+        padding: 0.5rem 0;
+    }
+
+    .logo img {
+        width: 35px;
+        height: 35px;
+    }
+
+    .logo-text strong {
+        font-size: 0.95rem;
+    }
+
+    .logo-text span {
+        font-size: 0.7rem;
+    }
+
+    /* Hero */
+    .hero-text {
+        padding: 2rem 1rem;
+    }
+
+    .hero-text h2 {
+        font-size: 1.75rem;
+    }
+
+    .hero-text h3 {
+        font-size: 1.1rem;
+    }
+
+    .hero-text p {
+        font-size: 0.95rem;
+    }
+
+    /* Slider */
+    .slider-container {
+        max-height: 350px;
+    }
+
+    .slider {
+        height: 350px;
+    }
+
+    .slider-nav button {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+
+    .dot {
+        width: 8px;
+        height: 8px;
+    }
+
+    /* Cards */
+    .order-step {
+        flex-direction: column;
+        text-align: center;
+        gap: 1rem;
+    }
+
+    .order-step .step-number {
+        min-width: 45px;
+        height: 45px;
+        font-size: 1.25rem;
+    }
+
+    .order-step h3 {
+        font-size: 1.1rem;
+    }
+
+    .order-step p {
+        font-size: 0.9rem;
+    }
+
+    /* Member cards */
+    .member-card-detailed {
+        gap: 1rem;
+    }
+
+    .member-details h3 {
+        font-size: 1.4rem;
+    }
+
+    .member-details .jiko {
+        font-size: 0.9rem;
+    }
+
+    .member-details ul li {
+        font-size: 0.9rem;
+    }
+
+    /* News */
+    .news-item {
+        padding: 1.25rem;
+    }
+
+    .news-item h3 {
+        font-size: 1.1rem;
+    }
+
+    .news-item p {
+        font-size: 0.9rem;
+    }
+
+    /* FAQ */
+    .faq-question {
+        padding: 1.25rem;
+        font-size: 0.95rem;
+    }
+
+    .faq-answer p {
+        padding: 0 1.25rem 1.25rem;
+        font-size: 0.9rem;
+    }
+
+    /* Buttons */
+    .cta-button {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+    }
+
+    /* Cheki grid */
+    .cheki-member-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+    }
+
+    .cheki-member-card h3 {
+        font-size: 1rem;
+    }
+
+    /* Footer */
+    footer {
+        padding: 2.5rem 0;
+    }
+
+    .social-media a {
+        font-size: 1.5rem;
+    }
+
+    footer p {
+        font-size: 0.85rem;
+    }
+}
+
+/* Extra Small - 360px exact */
+@media (max-width: 360px) {
+    .container {
+        padding: 0 0.75rem;
+    }
+
+    section h2,
+    .section-title {
+        font-size: 1.35rem;
+    }
+
+    .cheki-member-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .nav-menu {
+        width: 100%;
+        right: -100%;
+    }
+}
+
+
 
 /* Style untuk container link galeri di atas member */
 .gallery-link-container {
