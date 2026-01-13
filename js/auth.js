@@ -1,15 +1,48 @@
 // File: js/auth.js
-// VERSI FINAL: Dengan Input Oshi
+// VERSI FINAL: Perbaikan Layout Index & Input Oshi
 
 document.addEventListener('DOMContentLoaded', function () {
     const navLinksContainer = document.getElementById('nav-links');
     const authModal = document.getElementById('auth-modal');
 
-    // Cek jika elemen modal ada
-    if (!authModal) return;
+    // --- 1. INISIALISASI APLIKASI & NAVBAR ---
+    function initializeApp() {
+        // Cek Login State dari LocalStorage
+        const token = localStorage.getItem('userToken');
+        const userData = localStorage.getItem('userData') ? JSON.parse(localStorage.getItem('userData')) : null;
 
-    // --- STRUKTUR HTML MODAL DIPERBARUI ---
-    authModal.innerHTML = `
+        // Render Menu Navbar (Pastikan tidak merusak jika sudah ada isinya)
+        if (navLinksContainer) {
+            navLinksContainer.innerHTML = `
+                <li><a href="index.html#hero">Tentang Kami</a></li>
+                <li><a href="index.html#members">Member</a></li>
+                <li><a href="index.html#news">News</a></li>
+            `;
+        }
+
+        // Update Tombol Auth (Login/Register vs User Icon)
+        const navAuthButtons = document.querySelector('.nav-auth-buttons');
+        if (navAuthButtons) {
+            if (token && userData) {
+                // Jika sudah login, tampilkan ikon user
+                const destination = userData.peran === 'admin' ? 'admin.html' : 'dashboard.html';
+                navAuthButtons.innerHTML = `
+                    <a href="${destination}" title="Halo, ${userData.nama_pengguna}" class="nav-user-icon">
+                        <i class="fas fa-user-circle" style="font-size: 1.8rem; color: #333;"></i>
+                    </a>`;
+            } else {
+                // Jika belum login, tampilkan tombol default (pastikan ID ada untuk event listener)
+                navAuthButtons.innerHTML = `
+                    <a href="#" id="login-btn" class="btn-login">Login</a>
+                    <a href="#" id="register-btn" class="btn-register">Join Us</a>
+                `;
+            }
+        }
+    }
+
+    // --- 2. RENDER MODAL HTML ---
+    if (authModal) {
+        authModal.innerHTML = `
         <div class="modal-container">
             <button class="modal-close-btn" id="modal-close-btn">&times;</button>
             
@@ -20,16 +53,16 @@ document.addEventListener('DOMContentLoaded', function () {
                         <input type="email" id="login-email" placeholder="Email" required>
                         
                         <div style="position: relative; width: 100%;">
-                            <input type="password" id="login-password" placeholder="Password" required style="padding-right: 40px; width: 100%;">
+                            <input type="password" id="login-password" placeholder="Password" required style="width: 100%; padding-right: 40px;">
                             <i id="toggle-login-pass" class="fas fa-eye" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888;"></i>
                         </div>
 
-                        <a href="forgot-password.html" style="text-align: right; font-size: 0.9em; margin-top: 0.5rem;">Lupa Sandi?</a>
-                        <button type="submit" class="cta-button">Login</button>
-                        <p id="login-error" class="error-message" style="text-align: center;"></p>
+                        <a href="forgot-password.html" style="display:block; text-align: right; font-size: 0.9em; margin-top: 0.5rem; color: #666;">Lupa Sandi?</a>
+                        <button type="submit" class="cta-button" style="margin-top: 1rem;">Login</button>
+                        <p id="login-error" class="error-message" style="text-align: center; color: red; margin-top: 0.5rem;"></p>
                     </form>
                     <p class="modal-switch-link">
-                        Belum punya akun? <a id="show-register-link">Daftar di sini</a>
+                        Belum punya akun? <a href="#" id="show-register-link">Daftar di sini</a>
                     </p>
                 </div>
             </div>
@@ -41,10 +74,10 @@ document.addEventListener('DOMContentLoaded', function () {
                         <input type="text" id="register-username" placeholder="Username" required>
                         <input type="email" id="register-email" placeholder="Email Aktif" required>
                         
-                        <input type="password" id="register-password" placeholder="Password" required>
+                        <input type="password" id="register-password" placeholder="Password (Min. 6 Karakter)" required>
                         <input type="password" id="register-confirm-password" placeholder="Konfirmasi Password" required>
 
-                        <input type="text" id="register-whatsapp" placeholder="No. WhatsApp" required>
+                        <input type="text" id="register-whatsapp" placeholder="No. WhatsApp (08xxx)" required>
                         
                         <div class="form-group" style="margin-bottom: 1rem;">
                             <select id="register-oshi" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; background: #fff;">
@@ -62,210 +95,200 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         <input type="text" id="register-instagram" placeholder="Username Instagram (Opsional)">
                         
-                        <div class="sk-agreement">
+                        <div class="sk-agreement" style="display: flex; align-items: center; gap: 8px; margin-bottom: 1rem;">
                             <input type="checkbox" id="sk-checkbox" required>
-                            <label for="sk-checkbox">Saya setuju dengan <a href="sk.html" target="_blank">Syarat & Ketentuan</a>.</label>
+                            <label for="sk-checkbox" style="font-size: 0.85rem;">Saya setuju dengan <a href="sk.html" target="_blank">Syarat & Ketentuan</a>.</label>
                         </div>
                         <button type="submit" class="cta-button">Daftar</button>
-                        <p id="register-error" class="error-message" style="text-align: center;"></p>
+                        <p id="register-error" class="error-message" style="text-align: center; color: red; margin-top: 0.5rem;"></p>
                     </form>
                     <p class="modal-switch-link">
-                        Sudah punya akun? <a id="show-login-link">Login di sini</a>
+                        Sudah punya akun? <a href="#" id="show-login-link">Login di sini</a>
                     </p>
                 </div>
             </div>
         </div>`;
-
-    const token = localStorage.getItem('userToken');
-    const userData = JSON.parse(localStorage.getItem('userData'));
-    const loginView = document.getElementById('login-view');
-    const registerView = document.getElementById('register-view');
-
-    function initializeApp() {
-        if (!navLinksContainer) return;
-        
-        // Setup navbar menu
-        let navHTML = `
-            <li><a href="index.html#hero">Tentang Kami</a></li>
-            <li><a href="index.html#members">Member</a></li>
-            <li><a href="index.html#news">News</a></li>
-        `;
-        navLinksContainer.innerHTML = navHTML;
-    
-        // Update ikon user jika sudah login
-        const navAuthButtons = document.querySelector('.nav-auth-buttons');
-        if (token && userData && navAuthButtons) {
-            const destination = userData.peran === 'admin' ? 'admin.html' : 'dashboard.html';
-            navAuthButtons.innerHTML = `<a href="${destination}" title="Akun Saya" class="nav-user-icon"><i class="fas fa-user-circle"></i></a>`;
-            const style = document.createElement('style');
-            style.innerHTML = `.nav-user-icon { color: var(--text-color); font-size: 2rem; }`;
-            document.head.appendChild(style);
-        }
     }
 
-    function setupModalListeners() {
+    // --- 3. EVENT LISTENERS ---
+    function setupEventListeners() {
         const loginBtn = document.getElementById('login-btn');
         const registerBtn = document.getElementById('register-btn');
         const closeModalBtn = document.getElementById('modal-close-btn');
         const showRegisterLink = document.getElementById('show-register-link');
         const showLoginLink = document.getElementById('show-login-link');
+        const loginView = document.getElementById('login-view');
+        const registerView = document.getElementById('register-view');
 
-        // --- FITUR SHOW/HIDE PASSWORD LOGIN ---
-        const toggleLoginPassBtn = document.getElementById('toggle-login-pass');
-        const loginPassInput = document.getElementById('login-password');
-
-        if (toggleLoginPassBtn && loginPassInput) {
-            toggleLoginPassBtn.addEventListener('click', () => {
-                const type = loginPassInput.getAttribute('type') === 'password' ? 'text' : 'password';
-                loginPassInput.setAttribute('type', type);
-                
-                // Toggle icon class
-                toggleLoginPassBtn.classList.toggle('fa-eye');
-                toggleLoginPassBtn.classList.toggle('fa-eye-slash');
+        // Toggle Modal
+        if (loginBtn) {
+            loginBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (authModal) {
+                    authModal.classList.add('active');
+                    loginView.style.display = 'block';
+                    registerView.style.display = 'none';
+                }
             });
         }
 
-        // Event Listeners Modal Navigasi
-        loginBtn?.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginView.style.display = 'block';
-            registerView.style.display = 'none';
-            authModal.classList.add('active');
-        });
+        if (registerBtn) {
+            registerBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                if (authModal) {
+                    authModal.classList.add('active');
+                    loginView.style.display = 'none';
+                    registerView.style.display = 'block';
+                }
+            });
+        }
 
-        registerBtn?.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginView.style.display = 'none';
-            registerView.style.display = 'block';
-            authModal.classList.add('active');
-        });
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', () => authModal.classList.remove('active'));
+        }
 
-        closeModalBtn?.addEventListener('click', () => authModal.classList.remove('active'));
-        
-        // Klik di luar modal untuk menutup
-        authModal.addEventListener('click', (e) => {
-            if (e.target === authModal) authModal.classList.remove('active');
-        });
+        if (authModal) {
+            authModal.addEventListener('click', (e) => {
+                if (e.target === authModal) authModal.classList.remove('active');
+            });
+        }
 
-        // Switch antar Login/Register di dalam modal
-        showRegisterLink?.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginView.style.display = 'none';
-            registerView.style.display = 'block';
-        });
+        // Switch Forms
+        if (showRegisterLink) {
+            showRegisterLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                loginView.style.display = 'none';
+                registerView.style.display = 'block';
+            });
+        }
 
-        showLoginLink?.addEventListener('click', (e) => {
-            e.preventDefault();
-            registerView.style.display = 'none';
-            loginView.style.display = 'block';
-        });
+        if (showLoginLink) {
+            showLoginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                registerView.style.display = 'none';
+                loginView.style.display = 'block';
+            });
+        }
+
+        // Show/Hide Password
+        const togglePassBtn = document.getElementById('toggle-login-pass');
+        const passInput = document.getElementById('login-password');
+        if (togglePassBtn && passInput) {
+            togglePassBtn.addEventListener('click', () => {
+                const type = passInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                passInput.setAttribute('type', type);
+                togglePassBtn.classList.toggle('fa-eye');
+                togglePassBtn.classList.toggle('fa-eye-slash');
+            });
+        }
     }
 
+    // --- 4. FORM HANDLERS (LOGIKA SERVER) ---
     function setupFormHandlers() {
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
 
-        // --- HANDLER LOGIN ---
-        loginForm?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formError = document.getElementById('login-error');
-            const submitButton = loginForm.querySelector('button');
-            const loginData = {
-                email: document.getElementById('login-email').value,
-                password: document.getElementById('login-password').value
-            };
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Masuk...';
-            formError.textContent = '';
-
-            try {
-                const response = await fetch('/api/login', { 
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(loginData)
-                });
-                const result = await response.json();
-                if (!response.ok) throw new Error(result.message || 'Login gagal.');
-
-                localStorage.setItem('userToken', result.token);
-                localStorage.setItem('userData', JSON.stringify(result.user));
+        // Login
+        if (loginForm) {
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const errorMsg = document.getElementById('login-error');
+                const btn = loginForm.querySelector('button');
                 
-                if (typeof showToast === 'function') {
-                    showToast(`Login berhasil! Selamat datang, ${result.user.nama_pengguna}!`);
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+
+                btn.disabled = true;
+                btn.innerHTML = 'Loading...';
+                errorMsg.textContent = '';
+
+                try {
+                    const res = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                    const data = await res.json();
+                    
+                    if (!res.ok) throw new Error(data.message || 'Login Gagal');
+
+                    // Simpan Token & Data User
+                    localStorage.setItem('userToken', data.token);
+                    localStorage.setItem('userData', JSON.stringify(data.user));
+
+                    alert(`Selamat datang, ${data.user.nama_pengguna}!`);
+                    window.location.href = data.user.peran === 'admin' ? 'admin.html' : 'dashboard.html';
+
+                } catch (err) {
+                    errorMsg.textContent = err.message;
+                    btn.disabled = false;
+                    btn.innerHTML = 'Login';
+                }
+            });
+        }
+
+        // Register
+        if (registerForm) {
+            registerForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const errorMsg = document.getElementById('register-error');
+                const btn = registerForm.querySelector('button');
+
+                const pass = document.getElementById('register-password').value;
+                const confirmPass = document.getElementById('register-confirm-password').value;
+                const oshiInput = document.getElementById('register-oshi');
+
+                if (pass !== confirmPass) {
+                    errorMsg.textContent = 'Password konfirmasi tidak cocok!';
+                    return;
+                }
+                
+                if (!oshiInput || !oshiInput.value) {
+                    errorMsg.textContent = 'Wajib memilih Oshi!';
+                    return;
                 }
 
-                setTimeout(() => {
-                    window.location.href = result.user?.peran === 'admin' ? 'admin.html' : 'dashboard.html';
-                }, 1500);
+                const payload = {
+                    username: document.getElementById('register-username').value,
+                    email: document.getElementById('register-email').value,
+                    password: pass,
+                    whatsapp_number: document.getElementById('register-whatsapp').value,
+                    oshi: oshiInput.value,
+                    instagram_username: document.getElementById('register-instagram').value || ''
+                };
 
-            } catch (error) {
-                formError.textContent = error.message;
-                submitButton.disabled = false;
-                submitButton.innerHTML = 'Login';
-            }
-        });
+                btn.disabled = true;
+                btn.innerHTML = 'Mendaftar...';
+                errorMsg.textContent = '';
 
-        // --- HANDLER REGISTER ---
-        registerForm?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formError = document.getElementById('register-error');
-            const submitButton = registerForm.querySelector('button');
-            
-            const password = document.getElementById('register-password').value;
-            const confirmPassword = document.getElementById('register-confirm-password').value;
+                try {
+                    const res = await fetch('/api/register', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await res.json();
 
-            // VALIDASI: Cek kesamaan password
-            if (password !== confirmPassword) {
-                formError.textContent = "Konfirmasi password tidak sesuai!";
-                return;
-            }
+                    if (!res.ok) throw new Error(data.message || 'Gagal Mendaftar');
 
-            const userData = {
-                username: document.getElementById('register-username').value,
-                email: document.getElementById('register-email').value,
-                password: password,
-                whatsapp_number: document.getElementById('register-whatsapp').value,
-                // UPDATE: Mengambil nilai Oshi
-                oshi: document.getElementById('register-oshi').value,
-                instagram_username: document.getElementById('register-instagram').value || null,
-            };
+                    alert('Registrasi Berhasil! Silakan Login.');
+                    registerForm.reset();
+                    // Pindah ke tampilan login
+                    document.getElementById('register-view').style.display = 'none';
+                    document.getElementById('login-view').style.display = 'block';
 
-            // Validasi Oshi wajib dipilih
-            if (!userData.oshi) {
-                formError.textContent = "Silakan pilih Oshi kamu!";
-                return;
-            }
-
-            submitButton.disabled = true;
-            submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mendaftar...';
-            formError.textContent = '';
-
-            try {
-                const response = await fetch('/api/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(userData)
-                });
-                const result = await response.json();
-                if (!response.ok) throw new Error(result.message || 'Gagal mendaftar.');
-
-                if (typeof showToast === 'function') {
-                    showToast('Pendaftaran berhasil! Silakan login.');
+                } catch (err) {
+                    errorMsg.textContent = err.message;
+                } finally {
+                    btn.disabled = false;
+                    btn.innerHTML = 'Daftar';
                 }
-                registerForm.reset();
-                loginView.style.display = 'block';
-                registerView.style.display = 'none';
-
-            } catch (error) {
-                formError.textContent = error.message;
-            } finally {
-                submitButton.disabled = false;
-                submitButton.innerHTML = 'Daftar';
-            }
-        });
+            });
+        }
     }
 
+    // Jalankan Semua Fungsi
     initializeApp();
-    setupModalListeners();
+    setupEventListeners(); // Panggil ini SETELAH initializeApp agar tombol login/register (jika ada) terdeteksi
     setupFormHandlers();
 });
