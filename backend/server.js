@@ -1,5 +1,5 @@
 // File: backend/server.js
-// Versi final dengan penambahan fitur reset password admin & register instagram opsional.
+// Versi Final: Integrasi Oshi, Leaderboard, dan Payment Gateway
 
 const express = require("express");
 const midtransClient = require("midtrans-client");
@@ -14,7 +14,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- Validasi Environment Variables ---
+// --- 1. Validasi Environment Variables ---
 const requiredEnv = ['MIDTRANS_SERVER_KEY', 'MIDTRANS_CLIENT_KEY', 'SUPABASE_URL', 'SUPABASE_ANON_KEY', 'JWT_SECRET'];
 const missingEnv = requiredEnv.filter(key => !process.env[key]);
 if (missingEnv.length > 0) {
@@ -22,7 +22,7 @@ if (missingEnv.length > 0) {
     process.exit(1);
 }
 
-// --- Inisialisasi Klien ---
+// --- 2. Inisialisasi Klien ---
 const snap = new midtransClient.Snap({
     isProduction: false,
     serverKey: process.env.MIDTRANS_SERVER_KEY,
@@ -30,7 +30,7 @@ const snap = new midtransClient.Snap({
 });
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 
-// --- Middleware Otentikasi & Otorisasi ---
+// --- 3. Middleware Otentikasi & Otorisasi ---
 const authenticateToken = (req, res, next) => {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
@@ -50,7 +50,7 @@ const authorizeAdmin = (req, res, next) => {
     next();
 };
 
-// --- Fungsi Helper ---
+// --- 4. Fungsi Helper ---
 const getChekiStock = async () => {
     const { data, error } = await supabase.from('pengaturan').select('nilai').eq('nama', 'stok_cheki').single();
     if (error || !data) {
@@ -64,17 +64,16 @@ const getChekiStock = async () => {
 // --- ENDPOINTS ---
 // ===================================
 
-// --- Endpoint Konfigurasi Midtrans ---
+// --- Konfigurasi Midtrans ---
 app.get("/api/midtrans-client-key", (req, res) => {
     res.json({ clientKey: process.env.MIDTRANS_CLIENT_KEY });
 });
 
-// --- Endpoint Otentikasi ---
+// --- Otentikasi (Updated: Oshi Support) ---
 app.post("/api/register", async (req, res) => {
     try {
-        const { username, email, password, whatsapp_number, instagram_username } = req.body;
+        const { username, email, password, whatsapp_number, instagram_username, oshi } = req.body;
         
-        // MODIFIKASI: Menghapus instagram_username dari pengecekan wajib
         if (!username || !email || !password || !whatsapp_number) {
             return res.status(400).json({ message: "Data wajib diisi (Username, Email, Password, WA)." });
         }
@@ -84,12 +83,14 @@ app.post("/api/register", async (req, res) => {
         const salt = await bcrypt.genSalt(10);
         const password_hash = await bcrypt.hash(password, salt);
 
+        // UPDATE: Menyimpan 'oshi' ke database
         const { data, error } = await supabase.from("pengguna").insert([{
             nama_pengguna: username, 
             email, 
             kata_sandi: password_hash,
             nomor_whatsapp: whatsapp_number, 
-            instagram: instagram_username, // Akan null jika tidak diisi user
+            instagram: instagram_username || null, 
+            oshi: oshi || 'All Member', // Default value
             peran: "user",
         }]).select().single();
 
@@ -119,7 +120,14 @@ app.post("/api/login", async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.kata_sandi);
         if (!isMatch) return res.status(401).json({ message: "Password salah." });
 
-        const payload = { userId: user.id, username: user.nama_pengguna, email: user.email, role: user.peran };
+        // UPDATE: Menyertakan 'oshi' dalam token payload dan response
+        const payload = { 
+            userId: user.id, 
+            username: user.nama_pengguna, 
+            email: user.email, 
+            role: user.peran,
+            oshi: user.oshi 
+        };
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1d" });
 
         delete user.kata_sandi;
@@ -129,7 +137,84 @@ app.post("/api/login", async (req, res) => {
     }
 });
 
-// --- Endpoint Produk & Pembayaran ---
+// --- LEADERBOARD API (BARU) ---
+
+// 1. Global Leaderboard (Total Pengeluaran)
+app.get("/api/leaderboard", async (req, res) => {
+    try {
+        const { data: orders, error } = await supabase
+            .from('pesanan')
+            .select('total_harga, id_pengguna, pengguna(nama_pengguna, oshi)')
+            .in('status_tiket', ['berlaku', 'sudah_dipakai']);
+
+        if (error) throw error;
+
+        const userTotals = {};
+        orders.forEach(order => {
+            const uid = order.id_pengguna;
+            if (!userTotals[uid]) {
+                userTotals[uid] = {
+                    username: order.pengguna?.nama_pengguna || 'Unknown',
+                    oshi: order.pengguna?.oshi || 'All Member',
+                    totalSpent: 0
+                };
+            }
+            userTotals[uid].totalSpent += order.total_harga;
+        });
+
+        // Urutkan dari terbesar
+        const leaderboard = Object.values(userTotals)
+            .sort((a, b) => b.totalSpent - a.totalSpent)
+            .slice(0, 10); // Ambil Top 10
+
+        res.json(leaderboard);
+    } catch (e) {
+        res.status(500).json({ message: "Gagal memuat leaderboard.", error: e.message });
+    }
+});
+
+// 2. Leaderboard Per Member (Total Tiket Member X)
+app.get("/api/leaderboard-per-member", async (req, res) => {
+    try {
+        const { memberName } = req.query; // contoh: ?memberName=Aca
+        if (!memberName) return res.status(400).json({ message: "Nama member diperlukan." });
+
+        const { data: orders, error } = await supabase
+            .from('pesanan')
+            .select('detail_item, id_pengguna, pengguna(nama_pengguna)')
+            .in('status_tiket', ['berlaku', 'sudah_dipakai']);
+
+        if (error) throw error;
+
+        const fanTotals = {};
+        orders.forEach(order => {
+            const items = order.detail_item || [];
+            items.forEach(item => {
+                // Filter item berdasarkan nama member (case insensitive)
+                if (item.name.toLowerCase().includes(memberName.toLowerCase())) {
+                    const uid = order.id_pengguna;
+                    if (!fanTotals[uid]) {
+                        fanTotals[uid] = {
+                            username: order.pengguna?.nama_pengguna || 'Unknown',
+                            totalQuantity: 0
+                        };
+                    }
+                    fanTotals[uid].totalQuantity += item.quantity;
+                }
+            });
+        });
+
+        const leaderboard = Object.values(fanTotals)
+            .sort((a, b) => b.totalQuantity - a.totalQuantity)
+            .slice(0, 10);
+
+        res.json(leaderboard);
+    } catch (e) {
+        res.status(500).json({ message: "Gagal memuat leaderboard member.", error: e.message });
+    }
+});
+
+// --- Produk & Pembayaran ---
 app.get("/api/products-and-stock", async (req, res) => {
     try {
         const responseData = JSON.parse(JSON.stringify(productData));
@@ -174,6 +259,8 @@ app.post("/update-order-status", async (req, res) => {
                 .eq("id_pesanan", order_id).select().single();
 
             if (error || !updatedOrder) throw new Error("Gagal update status pesanan.");
+            
+            // Kurangi Stok
             const totalItems = (updatedOrder.detail_item || []).reduce((sum, item) => sum + item.quantity, 0);
             if (totalItems > 0) {
                 await supabase.rpc('update_cheki_stock', { change_value: -totalItems });
@@ -190,7 +277,7 @@ app.get("/api/user/profile", authenticateToken, async (req, res) => {
     try {
         const { data: user, error } = await supabase
             .from("pengguna")
-            .select("id, nama_pengguna, email, nomor_whatsapp, instagram, peran")
+            .select("id, nama_pengguna, email, nomor_whatsapp, instagram, peran, oshi")
             .eq("id", req.user.userId)
             .single();
         
@@ -239,7 +326,7 @@ app.put("/api/user/profile", authenticateToken, async (req, res) => {
             .from("pengguna")
             .update(updateData)
             .eq("id", req.user.userId)
-            .select("id, nama_pengguna, email, nomor_whatsapp, instagram, peran")
+            .select("id, nama_pengguna, email, nomor_whatsapp, instagram, peran, oshi")
             .single();
 
         if (updateError) throw updateError;
@@ -248,7 +335,8 @@ app.put("/api/user/profile", authenticateToken, async (req, res) => {
             userId: updatedUser.id, 
             username: updatedUser.nama_pengguna, 
             email: updatedUser.email, 
-            role: updatedUser.peran 
+            role: updatedUser.peran,
+            oshi: updatedUser.oshi
         };
         const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1d" });
 
@@ -333,13 +421,12 @@ app.post('/api/admin/update-cheki-stock', authenticateToken, authorizeAdmin, asy
     }
 });
 
-// --- Endpoint Admin Manajemen Pengguna (BARU) ---
 app.get("/api/admin/all-users", authenticateToken, authorizeAdmin, async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('pengguna')
             .select('id, nama_pengguna, email')
-            .neq('peran', 'admin'); // Jangan tampilkan admin
+            .neq('peran', 'admin'); 
         if (error) throw error;
         res.json(data);
     } catch(e) {
@@ -352,7 +439,7 @@ app.post("/api/admin/reset-user-password", authenticateToken, authorizeAdmin, as
         const { userId } = req.body;
         if (!userId) return res.status(400).json({ message: "User ID tidak ditemukan." });
 
-        const newPassword = "password123"; // Password default baru
+        const newPassword = "password123"; 
         const salt = await bcrypt.genSalt(10);
         const password_hash = await bcrypt.hash(newPassword, salt);
 

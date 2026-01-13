@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard - Refresh Breeze</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .leaderboard-wrapper {
+            max-width: 800px;
+            margin: 4rem auto;
+            padding: 2rem;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            margin-bottom: 2rem;
+        }
+        .filter-btn {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: #f9f9f9;
+            border-radius: 20px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+        .filter-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+        .rank-card {
+            display: flex;
+            align-items: center;
+            padding: 1rem;
+            border-bottom: 1px solid #eee;
+        }
+        .rank-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            width: 50px;
+            text-align: center;
+            color: #555;
+        }
+        .rank-1 { color: #f1c40f; }
+        .rank-2 { color: #95a5a6; }
+        .rank-3 { color: #cd7f32; }
+        
+        .rank-user {
+            flex-grow: 1;
+            padding-left: 1rem;
+        }
+        .rank-user h4 { margin: 0; font-size: 1.1rem; }
+        .rank-user p { margin: 0; color: #888; font-size: 0.9rem; }
+        
+        .rank-score {
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <a href="index.html" class="logo">
+                <div class="logo-text"><strong>Refresh Breeze</strong></div>
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="dashboard.html">Dashboard</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <div class="leaderboard-wrapper">
+            <h1 style="text-align: center; margin-bottom: 2rem;">👑 Papan Peringkat Sultan</h1>
+            
+            <div class="filter-buttons" id="leaderboard-filters">
+                <button class="filter-btn active" data-filter="global">Top Global</button>
+                <button class="filter-btn" data-filter="Aca">Aca</button>
+                <button class="filter-btn" data-filter="Cally">Cally</button>
+                <button class="filter-btn" data-filter="Channie">Channie</button>
+                <button class="filter-btn" data-filter="Cissi">Cissi</button>
+                <button class="filter-btn" data-filter="Piya">Piya</button>
+                <button class="filter-btn" data-filter="Sinta">Sinta</button>
+                <button class="filter-btn" data-filter="Yanyee">Yanyee</button>
+            </div>
+
+            <div id="leaderboard-list">
+                <p style="text-align: center;">Memuat data...</p>
+            </div>
+        </div>
+    </main>
+
+    <script src="js/leaderboard.js"></script>
+</body>
+</html>

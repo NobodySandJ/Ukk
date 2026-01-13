@@ -1,9 +1,11 @@
 // File: js/dashboard.js
+// VERSI FINAL: Dengan fitur Oshi, Badge, Notifikasi Bayar, & Leaderboard Preview
 
 document.addEventListener('DOMContentLoaded', function() {
     const token = localStorage.getItem('userToken');
     const userData = JSON.parse(localStorage.getItem('userData'));
 
+    // 1. Cek Login
     if (!token || !userData) {
         window.location.href = 'index.html';
         return;
@@ -13,22 +15,97 @@ document.addEventListener('DOMContentLoaded', function() {
         return;
     }
 
-    // --- LOGIKA NOTIFIKASI PEMBAYARAN SUKSES (BARU) ---
+    // 2. Logika Notifikasi Pembayaran Sukses (Dari Redirect)
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('payment_success') === 'true') {
         alert('Pembayaran Berhasil! Tiket Anda sudah tersedia di bawah.');
         // Membersihkan URL agar notifikasi tidak muncul lagi saat refresh
         window.history.replaceState({}, document.title, window.location.pathname);
     }
-    // --------------------------------------------------
 
+    // --- SETUP TAMPILAN PROFIL (OSHI & BADGES) ---
     const usernameDisplay = document.getElementById('username-display');
-    const ticketContainer = document.getElementById('ticket-container');
-    const logoutBtn = document.getElementById('logout-btn');
+    const profileImg = document.getElementById('profile-oshi-img');
+    const userBadges = document.getElementById('user-badges');
 
     if (usernameDisplay) {
         usernameDisplay.textContent = userData.nama_pengguna.toUpperCase();
     }
+
+    // Fungsi mendapatkan gambar Oshi
+    function getOshiImage(oshiName) {
+        // Pastikan Anda memiliki gambar-gambar ini di folder img/member/
+        // Format nama file harus sesuai (misal: Aca.webp, Cally.webp, dll)
+        if (!oshiName || oshiName === 'All Member') return 'img/logo/apple-touch-icon.png';
+        return `img/member/${oshiName}.webp`; 
+    }
+
+    // Update Foto Profil & Badge
+    if (profileImg && userData.oshi) {
+        profileImg.src = getOshiImage(userData.oshi);
+        
+        // Tampilkan Badge jika user punya Oshi spesifik
+        if (userData.oshi !== 'All Member') {
+            if (userBadges) {
+                userBadges.innerHTML = ''; // Reset
+                const badge = document.createElement('span');
+                badge.className = 'badge';
+                // Styling inline untuk badge
+                badge.style.cssText = "background: #ffebee; color: #c62828; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.1);";
+                badge.innerHTML = `<i class="fas fa-heart"></i> Team ${userData.oshi}`;
+                userBadges.appendChild(badge);
+            }
+        }
+    }
+
+    // --- FETCH DASHBOARD LEADERBOARD (PREVIEW TOP 3) ---
+    async function fetchDashboardLeaderboard() {
+        const loadingDiv = document.getElementById('dashboard-leaderboard-loading');
+        const table = document.getElementById('dashboard-leaderboard-table');
+        
+        if (!table || !loadingDiv) return;
+
+        try {
+            const response = await fetch('/api/leaderboard');
+            const data = await response.json();
+            
+            if (!data || data.length === 0) {
+                loadingDiv.textContent = "Belum ada sultan saat ini.";
+                return;
+            }
+
+            loadingDiv.style.display = 'none';
+            table.style.display = 'table';
+            table.innerHTML = '';
+
+            // Ambil hanya Top 3 untuk preview di dashboard
+            data.slice(0, 3).forEach((user, index) => {
+                const row = table.insertRow();
+                let rankIcon = '';
+                if(index === 0) rankIcon = '🥇';
+                else if(index === 1) rankIcon = '🥈';
+                else if(index === 2) rankIcon = '🥉';
+
+                row.innerHTML = `
+                    <td style="padding: 8px 5px; width: 30px; font-size: 1.2rem;">${rankIcon}</td>
+                    <td style="padding: 8px 5px; font-weight: 600; color: #333;">${user.username}</td>
+                    <td style="padding: 8px 5px; text-align: right; color: #d4ac0d; font-weight: bold;">Rp ${user.totalSpent.toLocaleString('id-ID')}</td>
+                `;
+            });
+
+        } catch (error) {
+            console.error("Gagal memuat leaderboard:", error);
+            loadingDiv.textContent = "Gagal memuat data sultan.";
+        }
+    }
+    
+    // Panggil fungsi leaderboard
+    fetchDashboardLeaderboard();
+
+
+    // --- LOGIKA RIWAYAT TIKET (SAMA SEPERTI SEBELUMNYA) ---
+    const ticketContainer = document.getElementById('ticket-container');
+    const logoutBtn = document.getElementById('logout-btn');
 
     logoutBtn?.addEventListener('click', () => {
         localStorage.removeItem('userToken');
@@ -46,13 +123,11 @@ document.addEventListener('DOMContentLoaded', function() {
             const orders = await response.json();
             renderTickets(orders);
         } catch (error) {
-            ticketContainer.innerHTML = `<p>${error.message}</p>`;
+            ticketContainer.innerHTML = `<p class="error-msg">${error.message}</p>`;
         }
     }
 
     function renderTickets(orders) {
-        console.log('Orders received:', orders);
-        
         if (orders.length === 0) {
             ticketContainer.innerHTML = `
                 <div style="text-align: center; padding: 2rem 0;">
@@ -65,12 +140,11 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Sort: berlaku first, then others
+        // Sort: Tiket berlaku paling atas
         orders.sort((a, b) => (a.status_tiket === 'berlaku' && b.status_tiket !== 'berlaku') ? -1 : 1);
 
         ticketContainer.innerHTML = ''; 
         orders.forEach(order => {
-            // Skip pending orders
             if (order.status_tiket === 'pending') return;
 
             const card = document.createElement('div');
@@ -79,18 +153,13 @@ document.addEventListener('DOMContentLoaded', function() {
             
             const itemsList = order.detail_item?.map(item => `${item.quantity}x ${item.name}`).join('<br>') || 'Tidak ada detail item.';
 
-            // Determine status badge
             let statusBadge = '';
-            let statusText = '';
             if (order.status_tiket === 'berlaku') {
                 statusBadge = '<span style="background:#28a745;color:white;padding:4px 12px;border-radius:20px;font-size:0.85rem;font-weight:bold;">✓ BERLAKU</span>';
-                statusText = 'Masih Berlaku';
             } else if (order.status_tiket === 'hangus' || order.status_tiket === 'sudah_dipakai') {
                 statusBadge = '<span style="background:#6c757d;color:white;padding:4px 12px;border-radius:20px;font-size:0.85rem;font-weight:bold;">✗ SUDAH TERPAKAI</span>';
-                statusText = 'Sudah Terpakai';
             } else {
                 statusBadge = `<span style="background:#ffc107;color:#000;padding:4px 12px;border-radius:20px;font-size:0.85rem;font-weight:bold;">${order.status_tiket.toUpperCase()}</span>`;
-                statusText = order.status_tiket;
             }
 
             const qrSectionHTML = order.status_tiket === 'berlaku'
@@ -109,19 +178,17 @@ document.addEventListener('DOMContentLoaded', function() {
             
             ticketContainer.appendChild(card);
             
-            // Generate QR code for valid tickets
+            // Generate QR Code
             if (order.status_tiket === 'berlaku') {
                 const qrCanvas = document.getElementById(`qr-${order.id_pesanan}`);
-                if (qrCanvas) {
+                if (qrCanvas && typeof QRCode !== 'undefined') {
                     const qrItems = order.detail_item?.map(item => `${item.quantity}x ${item.name}`).join(', ') || 'N/A';
-                    const qrData = `ID Pesanan: ${order.id_pesanan}\nPelanggan: ${userData.nama_pengguna}\nItem: ${qrItems}`;
+                    // Data QR: ID Pesanan + Username untuk verifikasi admin
+                    const qrData = `ID:${order.id_pesanan}|U:${userData.nama_pengguna}`;
                     
-                    // Pastikan library QRCode sudah diload di dashboard.html
-                    if (typeof QRCode !== 'undefined') {
-                        QRCode.toCanvas(qrCanvas, qrData, { width: 120, margin: 1 }, (error) => {
-                            if (error) console.error('QR Code Error:', error);
-                        });
-                    }
+                    QRCode.toCanvas(qrCanvas, qrData, { width: 120, margin: 1 }, (error) => {
+                        if (error) console.error('QR Code Error:', error);
+                    });
                 }
             }
         });
