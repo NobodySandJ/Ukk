@@ -51,9 +51,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // Fungsi mendapatkan gambar Oshi
     function getOshiImage(oshiName) {
         // Pastikan Anda memiliki gambar-gambar ini di folder img/member/
-        // Format nama file harus sesuai (misal: Aca.webp, Cally.webp, dll)
+        // Format nama file harus lowercase (misal: aca.webp, cally.webp, sinta.webp, piya.webp, dll)
         if (!oshiName || oshiName === 'All Member') return 'img/logo/apple-touch-icon.png';
-        return `img/member/${oshiName}.webp`;
+        return `img/member/${oshiName.toLowerCase()}.webp`;
     }
 
     // Update Foto Profil & Badge
