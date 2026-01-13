@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // 2. Logika Notifikasi Pembayaran Sukses (Dari Redirect)
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('payment_success') === 'true') {
-        alert('Pembayaran Berhasil! Tiket Anda sudah tersedia di bawah.');
+        showToast('Pembayaran Berhasil! Tiket Anda sudah tersedia di bawah.', 'success');
         // Membersihkan URL agar notifikasi tidak muncul lagi saat refresh
         window.history.replaceState({}, document.title, window.location.pathname);
     }

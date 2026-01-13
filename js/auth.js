@@ -406,8 +406,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     localStorage.setItem('userToken', data.token);
                     localStorage.setItem('userData', JSON.stringify(data.user));
 
-                    alert(`Selamat datang, ${data.user.nama_pengguna}!`);
-                    window.location.href = data.user.peran === 'admin' ? 'admin.html' : 'dashboard.html';
+                    showToast(`Selamat datang, ${data.user.nama_pengguna}!`, 'success');
+                    setTimeout(() => {
+                        window.location.href = data.user.peran === 'admin' ? 'admin.html' : 'dashboard.html';
+                    }, 1000);
 
                 } catch (err) {
                     errorMsg.textContent = err.message;
@@ -461,32 +463,36 @@ document.addEventListener('DOMContentLoaded', function () {
 
                     if (!res.ok) throw new Error(data.message || 'Gagal Mendaftar');
 
-                    alert('Registrasi Berhasil! Silakan Login.');
-                    registerForm.reset();
-                    // Pindah ke tampilan login
-                    document.getElementById('register-view').style.display = 'none';
-                    document.getElementById('login-view').style.display = 'block';
+                    // Auto-login after successful registration
+                    showToast('Registrasi Berhasil! Anda akan segera login...', 'success');
 
-                    // Reset steps to beginning
-                    const formSteps = document.querySelectorAll('.form-step');
-                    formSteps.forEach((fs, index) => {
-                        fs.style.display = index === 0 ? 'block' : 'none';
-                    });
-                    const progressSteps = document.querySelectorAll('.progress-step');
-                    progressSteps.forEach((ps, index) => {
-                        const stepNum = index + 1;
-                        const circle = ps.querySelector('div:first-child');
-                        const text = ps.querySelector('div:last-child');
-                        if (stepNum === 1) {
-                            circle.style.background = 'var(--primary-color)';
-                            circle.style.color = 'white';
-                            text.style.color = 'var(--primary-color)';
-                        } else {
-                            circle.style.background = '#ddd';
-                            circle.style.color = '#888';
-                            text.style.color = '#888';
+                    // Close modal and auto-login
+                    const authModal = document.getElementById('auth-modal');
+                    if (authModal) authModal.classList.remove('active');
+
+                    // Auto-login the user
+                    setTimeout(async () => {
+                        try {
+                            const loginRes = await fetch('/api/login', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    email: payload.email,
+                                    password: payload.password
+                                })
+                            });
+                            const loginData = await loginRes.json();
+
+                            if (loginRes.ok) {
+                                localStorage.setItem('userToken', loginData.token);
+                                localStorage.setItem('userData', JSON.stringify(loginData.user));
+                                window.location.href = loginData.user.peran === 'admin' ? 'admin.html' : 'dashboard.html';
+                            }
+                        } catch (err) {
+                            console.error('Auto-login failed:', err);
+                            showToast('Silakan login manual', 'info');
                         }
-                    });
+                    }, 1500);
 
                 } catch (err) {
                     errorMsg.textContent = err.message;

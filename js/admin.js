@@ -1,13 +1,13 @@
 // File: js/admin.js
 // Versi final dengan perbaikan fetch data dan penambahan fitur reset password.
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // --- Cek Otentikasi & Otorisasi ---
     const token = localStorage.getItem('userToken');
     const userData = JSON.parse(localStorage.getItem('userData'));
 
     if (!token || !userData || userData.peran !== 'admin') {
-        alert('Akses ditolak. Silakan login sebagai admin.');
+        showToast('Akses ditolak. Silakan login sebagai admin.', 'error');
         localStorage.clear();
         window.location.href = 'index.html';
         return;
@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('orders-management')
     ];
     const resetPasswordView = document.getElementById('reset-password-view');
-    
+
     // Selektor Navigasi
     const navDashboard = document.getElementById('nav-dashboard');
     const navResetPassword = document.getElementById('nav-reset-password');
@@ -83,19 +83,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const stats = await statsRes.json();
             allOrders = await ordersRes.json();
-            
+
             renderStats(stats);
             renderOrders(allOrders);
 
             // Panggil API publik untuk stok secara terpisah
             const stockRes = await fetch('/api/products-and-stock');
             if (!stockRes.ok) throw new Error('Gagal memuat data stok.');
-            
+
             const stockData = await stockRes.json();
-            if(currentStockEl) currentStockEl.textContent = stockData.cheki_stock;
+            if (currentStockEl) currentStockEl.textContent = stockData.cheki_stock;
 
         } catch (error) {
-            alert(error.message);
+            showToast(error.message, 'error');
             // Jika ada error otorisasi, lebih baik logout paksa
             if (error.message.includes("403") || error.message.includes("admin")) {
                 localStorage.clear();
@@ -103,7 +103,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     };
-    
+
     // --- Fungsi Render Tampilan (Dashboard) ---
     function renderStats(stats) {
         if (!statsGrid) return;
@@ -115,7 +115,7 @@ document.addEventListener('DOMContentLoaded', function() {
             </ul></div>
         `;
     }
-    
+
     function renderOrders(orders) {
         if (!ordersTbody) return;
         ordersTbody.innerHTML = '';
@@ -176,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (!response.ok) throw new Error(result.message || 'Operasi gagal.');
             return result;
         } catch (error) {
-            alert('Terjadi kesalahan: ' + error.message);
+            showToast('Terjadi kesalahan: ' + error.message, 'error');
             throw error;
         }
     }
@@ -188,7 +188,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ order_id: orderId, new_status: 'sudah_dipakai' })
             });
-            alert('Tiket berhasil digunakan.');
+            showToast('Tiket berhasil digunakan.', 'success');
             fetchAdminData();
         } catch (error) { /* Error ditangani di apiRequest */ }
     }
@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ changeValue: change })
             });
-            alert(result.message);
+            showToast(result.message, 'success');
             currentStockEl.textContent = result.newStock;
             stockChangeInput.value = '';
         } catch (error) { /* Error ditangani di apiRequest */ }
@@ -216,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function() {
             renderUsers(allUsers);
         } catch (error) { /* Error ditangani di apiRequest */ }
     }
-    
+
     async function resetUserPassword(userId) {
         try {
             const result = await apiRequest('/api/admin/reset-user-password', {
@@ -224,7 +224,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ userId: userId })
             });
-            alert(result.message); // Tampilkan password baru dari server
+            showToast(result.message, 'success'); // Tampilkan password baru dari server
         } catch (error) { /* Error ditangani di apiRequest */ }
     }
 
@@ -233,7 +233,7 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.clear();
         window.location.href = 'index.html';
     });
-    
+
     // Navigasi
     navDashboard?.addEventListener('click', (e) => { e.preventDefault(); showDashboard(); });
     navResetPassword?.addEventListener('click', (e) => { e.preventDefault(); showResetPassword(); });
@@ -242,8 +242,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Dashboard
     searchInput?.addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
-        const filtered = allOrders.filter(o => 
-            o.nama_pelanggan.toLowerCase().includes(term) || 
+        const filtered = allOrders.filter(o =>
+            o.nama_pelanggan.toLowerCase().includes(term) ||
             o.id_pesanan.toLowerCase().includes(term)
         );
         renderOrders(filtered);
@@ -258,15 +258,15 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-    
+
     increaseBtn?.addEventListener('click', () => {
         const value = parseInt(stockChangeInput.value);
-        if (value > 0) updateChekiStock(value); else alert('Masukkan jumlah yang valid.');
+        if (value > 0) updateChekiStock(value); else showToast('Masukkan jumlah yang valid.', 'warning');
     });
 
     decreaseBtn?.addEventListener('click', () => {
         const value = parseInt(stockChangeInput.value);
-        if (value > 0) updateChekiStock(-value); else alert('Masukkan jumlah yang valid.');
+        if (value > 0) updateChekiStock(-value); else showToast('Masukkan jumlah yang valid.', 'warning');
     });
 
     // Reset Password
