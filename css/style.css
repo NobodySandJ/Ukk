@@ -1290,13 +1290,15 @@ footer p {
     }
 
     /* Logo much smaller */
+    /* Logo much smaller & safer */
     .logo {
         gap: 0.4rem;
+        max-width: 70%;
     }
 
     .logo img {
-        width: 30px;
-        height: 30px;
+        width: 28px;
+        height: 28px;
     }
 
     .logo-text strong {
@@ -1304,19 +1306,23 @@ footer p {
     }
 
     .logo-text span {
-        font-size: 0.6rem;
+        display: none;
+        /* Hide subtitle to save space */
     }
 
-    /* Hamburger easier to tap */
+    /* Hamburger easier to tap & centered */
     .hamburger {
-        font-size: 1.5rem;
-        padding: 0.4rem;
+        font-size: 1.4rem;
+        padding: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 
     /* Section titles smaller */
     section h2,
     .section-title {
-        font-size: 1.35rem;
+        font-size: 1.25rem;
     }
 
     /* Cheki grid single column */
