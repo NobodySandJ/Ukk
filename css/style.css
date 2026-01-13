@@ -164,6 +164,8 @@ nav {
 
 .logo img {
     height: 50px;
+    width: 50px;
+    object-fit: contain;
 }
 
 .logo-text {
@@ -175,11 +177,13 @@ nav {
 .logo-text strong {
     font-size: 1.2rem;
     font-weight: 700;
+    white-space: nowrap;
 }
 
 .logo-text span {
     font-size: 0.8rem;
     color: var(--secondary-text-color);
+    white-space: nowrap;
 }
 
 /* Container untuk item navigasi di desktop */
@@ -195,6 +199,7 @@ ul.nav-links {
     align-items: center;
     gap: 2.5rem;
     margin: 0;
+    padding: 0;
 }
 
 ul.nav-links a {
@@ -209,15 +214,23 @@ ul.nav-links a:hover {
     color: var(--primary-color);
 }
 
+/* Hamburger Button - Hidden on desktop */
 .hamburger {
     display: none;
     background: none;
     border: none;
-    font-size: 1.8rem;
+    font-size: 1.75rem;
+    color: var(--text-color);
     cursor: pointer;
     z-index: 1002;
-    /* Pastikan hamburger di atas segalanya */
+    padding: 0.5rem;
+    transition: all var(--transition-fast);
 }
+
+.hamburger:hover {
+    color: var(--primary-color);
+}
+
 
 /* Modern Auth Buttons - Login/Register */
 .nav-auth-buttons {
@@ -1265,22 +1278,55 @@ footer p {
 
 /* Extra Small - 360px exact */
 @media (max-width: 360px) {
+
+    /* Container tighter */
     .container {
         padding: 0 0.75rem;
     }
 
+    /* Header more compact */
+    header {
+        padding: 0.4rem 0;
+    }
+
+    /* Logo much smaller */
+    .logo {
+        gap: 0.4rem;
+    }
+
+    .logo img {
+        width: 30px;
+        height: 30px;
+    }
+
+    .logo-text strong {
+        font-size: 0.8rem;
+    }
+
+    .logo-text span {
+        font-size: 0.6rem;
+    }
+
+    /* Hamburger easier to tap */
+    .hamburger {
+        font-size: 1.5rem;
+        padding: 0.4rem;
+    }
+
+    /* Section titles smaller */
     section h2,
     .section-title {
         font-size: 1.35rem;
     }
 
+    /* Cheki grid single column */
     .cheki-member-grid {
         grid-template-columns: 1fr;
     }
 
+    /* Mobile menu full width on tiny screens */
     .nav-menu {
         width: 100%;
-        right: -100%;
     }
 }
 
