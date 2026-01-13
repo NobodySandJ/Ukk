@@ -7,6 +7,7 @@
     
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/modal.css">
+    
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
     <link rel="apple-touch-icon" sizes="180x180" href="img/logo/apple-touch-icon.png">
@@ -25,28 +26,28 @@
                 </div>
             </a>
 
-            <ul class="nav-links" id="nav-links"></ul>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="#hero">Beranda</a></li>
+                <li><a href="#about">Tentang</a></li>
+                <li><a href="#members">Member</a></li>
+                <li><a href="#news">Berita</a></li>
+                <li><a href="cheki.html">Cheki</a></li>
+            </ul>
 
             <div class="nav-auth-buttons">
-                <a href="#" id="login-btn" class="btn-login">Login</a>
-                <a href="#" id="register-btn" class="btn-register">Join Us</a>
+                <a href="#" id="login-btn" class="nav-button">Login</a>
+                <a href="#" id="register-btn" class="nav-button cta">Join Us</a>
             </div>
 
             <button class="hamburger" id="hamburger-menu">
                 <i class="fas fa-bars"></i>
             </button>
         </nav>
+        
+        <div class="nav-menu" id="nav-menu"></div>
     </header>
 
     <section id="hero" class="hero">
-        <div class="hero-content">
-            <h1>REFRESH BREEZE</h1>
-            <p>Idol Group Asal Indonesia</p>
-            <a href="#members" class="cta-button">Lihat Member</a>
-        </div>
-    </section>
-
-    <section id="gallery-slider" class="container" style="margin-top: 2rem;">
         <div class="slider-container">
             <div id="image-slider" class="slider">
                 </div>
@@ -58,39 +59,41 @@
             
             <div id="slider-dots" class="slider-dots"></div>
         </div>
+
+        <div class="hero-text">
+            <h2 id="group-name">Loading...</h2>
+            <h3 id="group-tagline">...</h3>
+            <p id="about-content" style="margin-top: 1rem;"></p> 
+            <a href="#members" class="cta-button hero-cta">Lihat Member</a>
+        </div>
     </section>
 
-    <section id="members" class="container" style="padding: 4rem 1rem;">
-        <h2 class="section-title">MEMBER KAMI</h2>
-        <div class="member-grid">
-            <div class="member-card">
-                <img src="img/member/aca.webp" alt="Aca" onerror="this.src='img/logo/apple-touch-icon.png'">
-                <h3>ACA</h3>
+    <section id="how-to-order" class="container">
+        <h2 class="section-title">CARA MEMESAN</h2>
+        <div id="how-to-order-container" class="how-to-order-container">
             </div>
-            <div class="member-card">
-                <img src="img/member/cally.webp" alt="Cally" onerror="this.src='img/logo/apple-touch-icon.png'">
-                <h3>CALLY</h3>
+    </section>
+
+    <section id="members" class="bg-gray">
+        <div class="container">
+            <h2 class="section-title">MEMBER KAMI</h2>
+            <div id="member-grid" class="member-grid-detailed">
+                <p style="text-align:center; width:100%;">Memuat data member...</p>
             </div>
-            <div class="member-card">
-                <img src="img/member/sinta.webp" alt="Sinta" onerror="this.src='img/logo/apple-touch-icon.png'">
-                <h3>SINTA</h3>
+        </div>
+    </section>
+
+    <section id="news" class="container">
+        <h2 class="section-title">BERITA TERBARU</h2>
+        <div id="news-container" class="news-container">
             </div>
-            <div class="member-card">
-                <img src="img/member/piya.webp" alt="Piya" onerror="this.src='img/logo/apple-touch-icon.png'">
-                <h3>PIYA</h3>
-            </div>
-            <div class="member-card">
-                <img src="img/member/yanyee.webp" alt="Yanyee" onerror="this.src='img/logo/apple-touch-icon.png'">
-                <h3>YANYEE</h3>
-            </div>
-            <div class="member-card">
-                <img src="img/member/channie2.webp" alt="Channie" onerror="this.src='img/logo/apple-touch-icon.png'">
-                <h3>CHANNIE</h3>
-            </div>
-             <div class="member-card">
-                <img src="img/member/cissi.webp" alt="Cissi" onerror="this.src='img/logo/apple-touch-icon.png'">
-                <h3>CISSI</h3>
-            </div>
+    </section>
+
+    <section id="faq" class="bg-gray">
+        <div class="container">
+            <h2 class="section-title">FAQ</h2>
+            <div id="faq-container" class="faq-container">
+                </div>
         </div>
     </section>
 
@@ -98,31 +101,17 @@
 
     <footer>
         <div class="container">
-            <p>&copy; 2025 Refresh Breeze. All Rights Reserved.</p>
-            <div class="social-links">
+            <div class="social-media">
                 <a href="#"><i class="fab fa-instagram"></i></a>
                 <a href="#"><i class="fab fa-youtube"></i></a>
+                <a href="#"><i class="fab fa-twitter"></i></a>
             </div>
+            <p id="footer-text">&copy; 2025 Refresh Breeze. All Rights Reserved.</p>
         </div>
     </footer>
 
     <script src="js/script.js"></script>
     <script src="js/auth.js"></script>
-    
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // Data gambar slider
-            const sliderImages = [
-                'img/member/group.webp',
-                'img/member/group2.webp',
-                'img/member/logo.webp'
-            ];
-            
-            // Cek apakah fungsi startSlider ada di script.js
-            if (typeof startSlider === 'function') {
-                startSlider(sliderImages);
-            }
-        });
-    </script>
+
 </body>
 </html>

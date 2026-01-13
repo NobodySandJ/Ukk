@@ -1,7 +1,7 @@
 /* css/modal.css */
 
 /* Latar belakang gelap (overlay) */
-.modal-overlay {
+.modal {
     position: fixed;
     top: 0;
     left: 0;
@@ -11,14 +11,15 @@
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
     z-index: 2000;
-    display: none; /* Sembunyi secara default */
+    display: none;
+    /* Sembunyi secara default */
     justify-content: center;
     align-items: center;
     opacity: 0;
     transition: opacity 0.3s ease;
 }
 
-.modal-overlay.active {
+.modal.active {
     display: flex;
     opacity: 1;
 }
@@ -36,7 +37,7 @@
     transition: transform 0.3s ease;
 }
 
-.modal-overlay.active .modal-container {
+.modal.active .modal-container {
     transform: scale(1);
 }
 
@@ -109,6 +110,7 @@
 .sk-agreement input[type="checkbox"] {
     width: auto;
 }
+
 .modal-logo {
     text-align: center;
     margin-bottom: 1.5rem;
@@ -123,13 +125,17 @@
 .modal-form .cta-button {
     margin-top: 1rem;
     width: 100%;
-    padding: 0.9rem; /* Padding disesuaikan agar lebih proporsional */
-    font-size: 1.05rem; /* Ukuran font sedikit lebih besar */
+    padding: 0.9rem;
+    /* Padding disesuaikan agar lebih proporsional */
+    font-size: 1.05rem;
+    /* Ukuran font sedikit lebih besar */
     letter-spacing: 0.5px;
-    display: flex; /* Memungkinkan ikon dan teks sejajar */
+    display: flex;
+    /* Memungkinkan ikon dan teks sejajar */
     justify-content: center;
     align-items: center;
-    gap: 0.5rem; /* Jarak antara ikon spinner dan teks */
+    gap: 0.5rem;
+    /* Jarak antara ikon spinner dan teks */
 }
 
 /* Style saat tombol di-disable (proses loading) */

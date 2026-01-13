@@ -70,36 +70,71 @@ document.addEventListener('DOMContentLoaded', function () {
             <div id="register-view" style="display: none;">
                 <div class="modal-form-container">
                     <h2>Buat Akun Baru</h2>
+                    
+                    <!-- Progress Indicator -->
+                    <div class="registration-progress" style="display: flex; justify-content: space-between; margin-bottom: 2rem; position: relative;">
+                        <div class="progress-step active" data-step="1" style="flex: 1; text-align: center; position: relative;">
+                            <div style="width: 30px; height: 30px; border-radius: 50%; background: var(--primary-color); color: white; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 0.5rem;">1</div>
+                            <div style="font-size: 0.75rem; color: var(--primary-color);">Info Dasar</div>
+                        </div>
+                        <div class="progress-step" data-step="2" style="flex: 1; text-align: center; position: relative;">
+                            <div style="width: 30px; height: 30px; border-radius: 50%; background: #ddd; color: #888; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 0.5rem;">2</div>
+                            <div style="font-size: 0.75rem; color: #888;">Kontak</div>
+                        </div>
+                        <div class="progress-step" data-step="3" style="flex: 1; text-align: center; position: relative;">
+                            <div style="width: 30px; height: 30px; border-radius: 50%; background: #ddd; color: #888; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 0.5rem;">3</div>
+                            <div style="font-size: 0.75rem; color: #888;">Keamanan</div>
+                        </div>
+                    </div>
+
                     <form id="register-form" class="modal-form">
-                        <input type="text" id="register-username" placeholder="Username" required>
-                        <input type="email" id="register-email" placeholder="Email Aktif" required>
-                        
-                        <input type="password" id="register-password" placeholder="Password (Min. 6 Karakter)" required>
-                        <input type="password" id="register-confirm-password" placeholder="Konfirmasi Password" required>
-
-                        <input type="text" id="register-whatsapp" placeholder="No. WhatsApp (08xxx)" required>
-                        
-                        <div class="form-group" style="margin-bottom: 1rem;">
-                            <select id="register-oshi" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; background: #fff;">
-                                <option value="" disabled selected>Pilih Oshi Kamu</option>
-                                <option value="Aca">Aca</option>
-                                <option value="Cally">Cally</option>
-                                <option value="Sinta">Sinta</option>
-                                <option value="Piya">Piya</option>
-                                <option value="Yanyee">Yanyee</option>
-                                <option value="Channie">Channie</option>
-                                <option value="Cissi">Cissi</option>
-                                <option value="All Member">All Member (DD)</option>
-                            </select>
+                        <!-- Step 1: Username & Instagram -->
+                        <div class="form-step active" data-step="1">
+                            <input type="text" id="register-username" placeholder="Username" required>
+                            <input type="text" id="register-instagram" placeholder="Username Instagram (Opsional)">
+                            <button type="button" class="cta-button btn-next">Selanjutnya</button>
                         </div>
 
-                        <input type="text" id="register-instagram" placeholder="Username Instagram (Opsional)">
-                        
-                        <div class="sk-agreement" style="display: flex; align-items: center; gap: 8px; margin-bottom: 1rem;">
-                            <input type="checkbox" id="sk-checkbox" required>
-                            <label for="sk-checkbox" style="font-size: 0.85rem;">Saya setuju dengan <a href="sk.html" target="_blank">Syarat & Ketentuan</a>.</label>
+                        <!-- Step 2: Email & WhatsApp -->
+                        <div class="form-step" data-step="2" style="display: none;">
+                            <input type="email" id="register-email" placeholder="Email Aktif" required>
+                            <input type="text" id="register-whatsapp" placeholder="No. WhatsApp (08xxx)" required>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button type="button" class="btn-prev" style="flex: 1; padding: 0.8rem; border: 1px solid var(--primary-color); background: white; color: var(--primary-color); border-radius: 8px; cursor: pointer; font-weight: 500;">Kembali</button>
+                                <button type="button" class="cta-button btn-next" style="flex: 2;">Selanjutnya</button>
+                            </div>
                         </div>
-                        <button type="submit" class="cta-button">Daftar</button>
+
+                        <!-- Step 3: Password & Oshi -->
+                        <div class="form-step" data-step="3" style="display: none;">
+                            <input type="password" id="register-password" placeholder="Password (Min. 6 Karakter)" required>
+                            <input type="password" id="register-confirm-password" placeholder="Konfirmasi Password" required>
+                            
+                            <div class="form-group" style="margin-bottom: 1rem;">
+                                <select id="register-oshi" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; background: #fff;">
+                                    <option value="" disabled selected>Pilih Oshi Kamu</option>
+                                    <option value="Aca">Aca</option>
+                                    <option value="Cally">Cally</option>
+                                    <option value="Sinta">Sinta</option>
+                                    <option value="Piya">Piya</option>
+                                    <option value="Yanyee">Yanyee</option>
+                                    <option value="Channie">Channie</option>
+                                    <option value="Cissi">Cissi</option>
+                                    <option value="All Member">All Member (DD)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="sk-agreement" style="display: flex; align-items: center; gap: 8px; margin-bottom: 1rem;">
+                                <input type="checkbox" id="sk-checkbox" required>
+                                <label for="sk-checkbox" style="font-size: 0.85rem;">Saya setuju dengan <a href="sk.html" target="_blank">Syarat & Ketentuan</a>.</label>
+                            </div>
+
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button type="button" class="btn-prev" style="flex: 1; padding: 0.8rem; border: 1px solid var(--primary-color); background: white; color: var(--primary-color); border-radius: 8px; cursor: pointer; font-weight: 500;">Kembali</button>
+                                <button type="submit" class="cta-button" style="flex: 2;">Daftar</button>
+                            </div>
+                        </div>
+
                         <p id="register-error" class="error-message" style="text-align: center; color: red; margin-top: 0.5rem;"></p>
                     </form>
                     <p class="modal-switch-link">
@@ -144,12 +179,18 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         if (closeModalBtn) {
-            closeModalBtn.addEventListener('click', () => authModal.classList.remove('active'));
+            closeModalBtn.addEventListener('click', () => {
+                authModal.classList.remove('active');
+                resetRegistrationSteps();
+            });
         }
 
         if (authModal) {
             authModal.addEventListener('click', (e) => {
-                if (e.target === authModal) authModal.classList.remove('active');
+                if (e.target === authModal) {
+                    authModal.classList.remove('active');
+                    resetRegistrationSteps();
+                }
             });
         }
 
@@ -159,6 +200,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 e.preventDefault();
                 loginView.style.display = 'none';
                 registerView.style.display = 'block';
+                resetRegistrationSteps();
             });
         }
 
@@ -169,6 +211,42 @@ document.addEventListener('DOMContentLoaded', function () {
                 loginView.style.display = 'block';
             });
         }
+
+        // Function to reset registration steps
+        function resetRegistrationSteps() {
+            const formSteps = document.querySelectorAll('.form-step');
+            formSteps.forEach((fs, index) => {
+                fs.style.display = index === 0 ? 'block' : 'none';
+            });
+
+            const progressSteps = document.querySelectorAll('.progress-step');
+            progressSteps.forEach((ps, index) => {
+                const stepNum = index + 1;
+                const circle = ps.querySelector('div:first-child');
+                const text = ps.querySelector('div:last-child');
+
+                if (stepNum === 1) {
+                    circle.style.background = 'var(--primary-color)';
+                    circle.style.color = 'white';
+                    text.style.color = 'var(--primary-color)';
+                } else {
+                    circle.style.background = '#ddd';
+                    circle.style.color = '#888';
+                    text.style.color = '#888';
+                }
+            });
+
+            // Clear all form fields
+            const registerForm = document.getElementById('register-form');
+            if (registerForm) {
+                registerForm.reset();
+            }
+
+            // Reset error message
+            const errorMsg = document.getElementById('register-error');
+            if (errorMsg) errorMsg.textContent = '';
+        }
+
 
         // Show/Hide Password
         const togglePassBtn = document.getElementById('toggle-login-pass');
@@ -181,6 +259,118 @@ document.addEventListener('DOMContentLoaded', function () {
                 togglePassBtn.classList.toggle('fa-eye-slash');
             });
         }
+
+        // Multi-step Registration Navigation
+        const nextBtns = document.querySelectorAll('.btn-next');
+        const prevBtns = document.querySelectorAll('.btn-prev');
+        let currentStep = 1;
+
+        function updateProgress(step) {
+            const progressSteps = document.querySelectorAll('.progress-step');
+            progressSteps.forEach((ps, index) => {
+                const stepNum = index + 1;
+                const circle = ps.querySelector('div:first-child');
+                const text = ps.querySelector('div:last-child');
+
+                if (stepNum <= step) {
+                    // Active or completed
+                    circle.style.background = 'var(--primary-color)';
+                    circle.style.color = 'white';
+                    text.style.color = 'var(--primary-color)';
+                } else {
+                    // Inactive
+                    circle.style.background = '#ddd';
+                    circle.style.color = '#888';
+                    text.style.color = '#888';
+                }
+            });
+        }
+
+        function showStep(step) {
+            const formSteps = document.querySelectorAll('.form-step');
+            formSteps.forEach((fs) => {
+                fs.style.display = 'none';
+                // Remove required from all fields in hidden steps
+                const inputs = fs.querySelectorAll('input, select');
+                inputs.forEach(input => {
+                    if (input.hasAttribute('required')) {
+                        input.setAttribute('data-was-required', 'true');
+                        input.removeAttribute('required');
+                    }
+                });
+            });
+
+            const targetStep = document.querySelector(`.form-step[data-step="${step}"]`);
+            if (targetStep) {
+                targetStep.style.display = 'block';
+                // Re-add required to visible step fields
+                const inputs = targetStep.querySelectorAll('input, select');
+                inputs.forEach(input => {
+                    if (input.getAttribute('data-was-required') === 'true') {
+                        input.setAttribute('required', 'required');
+                    }
+                });
+            }
+            updateProgress(step);
+            currentStep = step;
+        }
+
+        function validateStep(step) {
+            const errorMsg = document.getElementById('register-error');
+            errorMsg.textContent = '';
+
+            if (step === 1) {
+                const username = document.getElementById('register-username').value.trim();
+                if (!username) {
+                    errorMsg.textContent = 'Username wajib diisi!';
+                    return false;
+                }
+                if (username.length < 3) {
+                    errorMsg.textContent = 'Username minimal 3 karakter!';
+                    return false;
+                }
+            } else if (step === 2) {
+                const email = document.getElementById('register-email').value.trim();
+                const whatsapp = document.getElementById('register-whatsapp').value.trim();
+
+                if (!email) {
+                    errorMsg.textContent = 'Email wajib diisi!';
+                    return false;
+                }
+                if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    errorMsg.textContent = 'Format email tidak valid!';
+                    return false;
+                }
+                if (!whatsapp) {
+                    errorMsg.textContent = 'No. WhatsApp wajib diisi!';
+                    return false;
+                }
+                if (!/^08\d{8,11}$/.test(whatsapp)) {
+                    errorMsg.textContent = 'No. WhatsApp harus diawali 08 dan 10-13 digit!';
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        nextBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (validateStep(currentStep)) {
+                    if (currentStep < 3) {
+                        showStep(currentStep + 1);
+                    }
+                }
+            });
+        });
+
+        prevBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                if (currentStep > 1) {
+                    showStep(currentStep - 1);
+                }
+            });
+        });
+
     }
 
     // --- 4. FORM HANDLERS (LOGIKA SERVER) ---
@@ -194,7 +384,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 e.preventDefault();
                 const errorMsg = document.getElementById('login-error');
                 const btn = loginForm.querySelector('button');
-                
+
                 const email = document.getElementById('login-email').value;
                 const password = document.getElementById('login-password').value;
 
@@ -209,7 +399,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         body: JSON.stringify({ email, password })
                     });
                     const data = await res.json();
-                    
+
                     if (!res.ok) throw new Error(data.message || 'Login Gagal');
 
                     // Simpan Token & Data User
@@ -242,7 +432,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     errorMsg.textContent = 'Password konfirmasi tidak cocok!';
                     return;
                 }
-                
+
                 if (!oshiInput || !oshiInput.value) {
                     errorMsg.textContent = 'Wajib memilih Oshi!';
                     return;
@@ -276,6 +466,27 @@ document.addEventListener('DOMContentLoaded', function () {
                     // Pindah ke tampilan login
                     document.getElementById('register-view').style.display = 'none';
                     document.getElementById('login-view').style.display = 'block';
+
+                    // Reset steps to beginning
+                    const formSteps = document.querySelectorAll('.form-step');
+                    formSteps.forEach((fs, index) => {
+                        fs.style.display = index === 0 ? 'block' : 'none';
+                    });
+                    const progressSteps = document.querySelectorAll('.progress-step');
+                    progressSteps.forEach((ps, index) => {
+                        const stepNum = index + 1;
+                        const circle = ps.querySelector('div:first-child');
+                        const text = ps.querySelector('div:last-child');
+                        if (stepNum === 1) {
+                            circle.style.background = 'var(--primary-color)';
+                            circle.style.color = 'white';
+                            text.style.color = 'var(--primary-color)';
+                        } else {
+                            circle.style.background = '#ddd';
+                            circle.style.color = '#888';
+                            text.style.color = '#888';
+                        }
+                    });
 
                 } catch (err) {
                     errorMsg.textContent = err.message;
