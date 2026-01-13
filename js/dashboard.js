@@ -1,7 +1,7 @@
 // File: js/dashboard.js
 // VERSI FINAL: Dengan fitur Oshi, Badge, Notifikasi Bayar, & Leaderboard Preview
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const token = localStorage.getItem('userToken');
     const userData = JSON.parse(localStorage.getItem('userData'));
 
@@ -25,11 +25,27 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // --- SETUP TAMPILAN PROFIL (OSHI & BADGES) ---
     const usernameDisplay = document.getElementById('username-display');
+    const oshiDisplay = document.getElementById('oshi-display');
     const profileImg = document.getElementById('profile-oshi-img');
     const userBadges = document.getElementById('user-badges');
+    const leaderboardTitle = document.getElementById('leaderboard-title');
 
     if (usernameDisplay) {
         usernameDisplay.textContent = userData.nama_pengguna.toUpperCase();
+    }
+
+    // Display Oshi Name
+    if (oshiDisplay && userData.oshi) {
+        const oshiText = userData.oshi === 'All Member' ? '❤️ All Member (DD)' : `❤️ Oshi: ${userData.oshi}`;
+        oshiDisplay.innerHTML = oshiText;
+    }
+
+    // Update Leaderboard Title
+    if (leaderboardTitle && userData.oshi) {
+        const titleText = userData.oshi === 'All Member'
+            ? '<i class="fas fa-trophy"></i> TOP SPENDER SEMUA MEMBER'
+            : `<i class="fas fa-trophy"></i> TOP SPENDER ${userData.oshi.toUpperCase()}`;
+        leaderboardTitle.innerHTML = titleText;
     }
 
     // Fungsi mendapatkan gambar Oshi
@@ -37,13 +53,13 @@ document.addEventListener('DOMContentLoaded', function() {
         // Pastikan Anda memiliki gambar-gambar ini di folder img/member/
         // Format nama file harus sesuai (misal: Aca.webp, Cally.webp, dll)
         if (!oshiName || oshiName === 'All Member') return 'img/logo/apple-touch-icon.png';
-        return `img/member/${oshiName}.webp`; 
+        return `img/member/${oshiName}.webp`;
     }
 
     // Update Foto Profil & Badge
     if (profileImg && userData.oshi) {
         profileImg.src = getOshiImage(userData.oshi);
-        
+
         // Tampilkan Badge jika user punya Oshi spesifik
         if (userData.oshi !== 'All Member') {
             if (userBadges) {
@@ -62,13 +78,13 @@ document.addEventListener('DOMContentLoaded', function() {
     async function fetchDashboardLeaderboard() {
         const loadingDiv = document.getElementById('dashboard-leaderboard-loading');
         const table = document.getElementById('dashboard-leaderboard-table');
-        
+
         if (!table || !loadingDiv) return;
 
         try {
             const response = await fetch('/api/leaderboard');
             const data = await response.json();
-            
+
             if (!data || data.length === 0) {
                 loadingDiv.textContent = "Belum ada sultan saat ini.";
                 return;
@@ -82,9 +98,9 @@ document.addEventListener('DOMContentLoaded', function() {
             data.slice(0, 3).forEach((user, index) => {
                 const row = table.insertRow();
                 let rankIcon = '';
-                if(index === 0) rankIcon = '🥇';
-                else if(index === 1) rankIcon = '🥈';
-                else if(index === 2) rankIcon = '🥉';
+                if (index === 0) rankIcon = '🥇';
+                else if (index === 1) rankIcon = '🥈';
+                else if (index === 2) rankIcon = '🥉';
 
                 row.innerHTML = `
                     <td style="padding: 8px 5px; width: 30px; font-size: 1.2rem;">${rankIcon}</td>
@@ -98,7 +114,7 @@ document.addEventListener('DOMContentLoaded', function() {
             loadingDiv.textContent = "Gagal memuat data sultan.";
         }
     }
-    
+
     // Panggil fungsi leaderboard
     fetchDashboardLeaderboard();
 
@@ -143,14 +159,14 @@ document.addEventListener('DOMContentLoaded', function() {
         // Sort: Tiket berlaku paling atas
         orders.sort((a, b) => (a.status_tiket === 'berlaku' && b.status_tiket !== 'berlaku') ? -1 : 1);
 
-        ticketContainer.innerHTML = ''; 
+        ticketContainer.innerHTML = '';
         orders.forEach(order => {
             if (order.status_tiket === 'pending') return;
 
             const card = document.createElement('div');
             const isUsed = order.status_tiket !== 'berlaku';
             card.className = `ticket-card ${isUsed ? 'ticket-used' : ''}`;
-            
+
             const itemsList = order.detail_item?.map(item => `${item.quantity}x ${item.name}`).join('<br>') || 'Tidak ada detail item.';
 
             let statusBadge = '';
@@ -175,9 +191,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
                 ${qrSectionHTML}
             `;
-            
+
             ticketContainer.appendChild(card);
-            
+
             // Generate QR Code
             if (order.status_tiket === 'berlaku') {
                 const qrCanvas = document.getElementById(`qr-${order.id_pesanan}`);
@@ -185,7 +201,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const qrItems = order.detail_item?.map(item => `${item.quantity}x ${item.name}`).join(', ') || 'N/A';
                     // Data QR: ID Pesanan + Username untuk verifikasi admin
                     const qrData = `ID:${order.id_pesanan}|U:${userData.nama_pengguna}`;
-                    
+
                     QRCode.toCanvas(qrCanvas, qrData, { width: 120, margin: 1 }, (error) => {
                         if (error) console.error('QR Code Error:', error);
                     });

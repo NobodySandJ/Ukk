@@ -211,6 +211,7 @@
                 <div class="welcome-header">
                     <h2>SELAMAT DATANG</h2>
                     <h1 id="username-display">...</h1>
+                    <p id="oshi-display" style="font-size: 1.1rem; color: #d4ac0d; font-weight: 600; margin-top: 0.5rem;"></p>
                     <div id="user-badges" style="display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 8px;"></div>
                 </div>
             </div>
@@ -228,9 +229,7 @@
                     <i class="fas fa-user-edit"></i> Edit Profile
                 </a>
 
-                <a href="leaderboard.html" class="action-btn leaderboard">
-                    <i class="fas fa-crown"></i> Leaderboard
-                </a>
+
 
                 <button id="logout-btn" class="action-btn logout">
                     <i class="fas fa-sign-out-alt"></i> Logout
@@ -238,7 +237,7 @@
             </div>
 
             <div class="leaderboard-preview">
-                <h3 style="color: #d4ac0d; margin-bottom: 1rem;"><i class="fas fa-trophy"></i> TOP SULTAN BULAN INI</h3>
+                <h3 id="leaderboard-title" style="color: #d4ac0d; margin-bottom: 1rem;"><i class="fas fa-trophy"></i> TOP SPENDER</h3>
                 
                 <div id="dashboard-leaderboard-loading" style="color: #888; font-style: italic; margin-bottom: 1rem;">
                     Memuat data sultan...
