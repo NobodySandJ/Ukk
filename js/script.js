@@ -1,4 +1,53 @@
+// ============================ 
+// TOAST NOTIFICATION (MERGED)
+// ============================
+function showToast(message, type = 'info', duration = 3000) {
+    // Create toast container if it doesn't exist
+    let container = document.getElementById('toast-container');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toast-container';
+        document.body.appendChild(container);
+    }
+
+    // Create toast element
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+
+    // Icon based on type
+    const icons = {
+        success: '<i class="fas fa-check-circle"></i>',
+        error: '<i class="fas fa-exclamation-circle"></i>',
+        warning: '<i class="fas fa-exclamation-triangle"></i>',
+        info: '<i class="fas fa-info-circle"></i>'
+    };
+
+    toast.innerHTML = `
+        <div class="toast-icon">${icons[type] || icons.info}</div>
+        <div class="toast-message">${message}</div>
+        <button class="toast-close" onclick="this.parentElement.remove()">
+            <i class="fas fa-times"></i>
+        </button>
+    `;
+
+    // Add to container
+    container.appendChild(toast);
+
+    // Trigger animation
+    setTimeout(() => toast.classList.add('show'), 10);
+
+    // Auto remove after duration
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, duration);
+}
+
+// ============================ 
+// MAIN SCRIPT
+// ============================
 document.addEventListener('DOMContentLoaded', function () {
+
 
     // --- FUNGSI SLIDER GAMBAR ---
     // Logika ini dipindahkan ke sini untuk memperbaiki error 'startSlider is not defined'
@@ -236,52 +285,3 @@ document.addEventListener('DOMContentLoaded', function () {
         loadWebsiteData();
     }
 });
-
-// Fungsi notifikasi global yang bisa diakses file lain
-function showToast(message, isSuccess = true, duration = 4000) {
-    const oldToast = document.querySelector('.toast-notification');
-    if (oldToast) oldToast.remove();
-
-    const toast = document.createElement('div');
-    toast.className = 'toast-notification';
-    toast.innerHTML = message;
-
-    // Pastikan variabel CSS ada atau berikan fallback
-    toast.style.backgroundColor = isSuccess ? 'var(--success-color, #28a745)' : '#D33333';
-    document.body.appendChild(toast);
-
-    // Tambahkan style untuk toast jika belum ada
-    if (!document.getElementById('toast-style')) {
-        const style = document.createElement('style');
-        style.id = 'toast-style';
-        style.innerHTML = `
-            .toast-notification {
-                position: fixed;
-                bottom: 20px;
-                left: 50%;
-                transform: translateX(-50%) translateY(100px);
-                background-color: #333;
-                color: white;
-                padding: 1rem 2rem;
-                border-radius: 50px;
-                z-index: 9999;
-                opacity: 0;
-                transition: transform 0.5s ease, opacity 0.5s ease;
-            }
-            .toast-notification.show {
-                transform: translateX(-50%) translateY(0);
-                opacity: 1;
-            }
-        `;
-        document.head.appendChild(style);
-    }
-
-    setTimeout(() => {
-        toast.classList.add('show');
-    }, 100);
-
-    setTimeout(() => {
-        toast.classList.remove('show');
-        toast.addEventListener('transitionend', () => toast.remove());
-    }, duration);
-}
