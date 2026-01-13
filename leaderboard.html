@@ -70,10 +70,14 @@
     <header>
         <nav class="container">
             <a href="index.html" class="logo">
-                <div class="logo-text"><strong>Refresh Breeze</strong></div>
+                <img src="img/logo/apple-touch-icon.png" alt="Logo">
+                <div class="logo-text">
+                    <strong>Refresh Breeze</strong>
+                    <span>Official Website</span>
+                </div>
             </a>
-            <ul class="nav-links">
-                <li><a href="index.html">Home</a></li>
+            <ul class="nav-links" id="nav-links">
+                <li><a href="index.html">Beranda</a></li>
                 <li><a href="dashboard.html">Dashboard</a></li>
             </ul>
         </nav>
@@ -81,10 +85,10 @@
 
     <main>
         <div class="leaderboard-wrapper">
-            <h1 style="text-align: center; margin-bottom: 2rem;">👑 Papan Peringkat Sultan</h1>
+            <h1 style="text-align: center; margin-bottom: 2rem;">🏆 Top Spender Leaderboard</h1>
             
             <div class="filter-buttons" id="leaderboard-filters">
-                <button class="filter-btn active" data-filter="global">Top Global</button>
+                <button class="filter-btn active" data-filter="global">Top Spender</button>
                 <button class="filter-btn" data-filter="Aca">Aca</button>
                 <button class="filter-btn" data-filter="Cally">Cally</button>
                 <button class="filter-btn" data-filter="Channie">Channie</button>
@@ -100,6 +104,8 @@
         </div>
     </main>
 
+    <script src="js/script.js"></script>
+    <script src="js/auth.js"></script>
     <script src="js/leaderboard.js"></script>
 </body>
 </html>

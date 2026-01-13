@@ -122,7 +122,6 @@ document.addEventListener('DOMContentLoaded', function () {
                                     <option value="Yanyee">Yanyee</option>
                                     <option value="Channie">Channie</option>
                                     <option value="Cissi">Cissi</option>
-                                    <option value="All Member">All Member (DD)</option>
                                 </select>
                             </div>
                             

@@ -36,16 +36,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Display Oshi Name
     if (oshiDisplay && userData.oshi) {
-        const oshiText = userData.oshi === 'All Member' ? '❤️ All Member (DD)' : `❤️ Oshi: ${userData.oshi}`;
-        oshiDisplay.innerHTML = oshiText;
+        oshiDisplay.innerHTML = `❤️ Oshi: ${userData.oshi}`;
     }
 
     // Update Leaderboard Title
     if (leaderboardTitle && userData.oshi) {
-        const titleText = userData.oshi === 'All Member'
-            ? '<i class="fas fa-trophy"></i> TOP SPENDER SEMUA MEMBER'
-            : `<i class="fas fa-trophy"></i> TOP SPENDER ${userData.oshi.toUpperCase()}`;
-        leaderboardTitle.innerHTML = titleText;
+        leaderboardTitle.innerHTML = `<i class="fas fa-trophy"></i> TOP SPENDER ${userData.oshi.toUpperCase()}`;
     }
 
     // Fungsi mendapatkan gambar Oshi
