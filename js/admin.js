@@ -186,54 +186,98 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
-    // --- Modern Confirmation Dialog ---
+    // --- Modern Centered Modal Confirmation ---
     function showConfirm(message, onConfirm, onCancel) {
         console.log('showConfirm called with message:', message);
 
-        const confirmToast = document.createElement('div');
-        confirmToast.className = 'toast toast-confirm';
-        confirmToast.style.cssText = `
-            background: white;
-            color: #1f2937;
-            border-left: 4px solid #f59e0b;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
-            padding: 1.5rem;
-            min-width: 380px;
-            max-width: 480px;
-            z-index: 99999;
-            position: relative;
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            animation: slideIn 0.3s ease-out;
+        // Create backdrop overlay
+        const backdrop = document.createElement('div');
+        backdrop.id = 'confirm-backdrop';
+        backdrop.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 99998;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.2s ease-out;
         `;
 
-        confirmToast.innerHTML = `
-            <div style="margin-bottom: 1.25rem; font-weight: 500; font-size: 1rem; line-height: 1.5;">${message}</div>
-            <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
-                <button class="confirm-cancel" style="padding: 0.625rem 1.25rem; border: 2px solid #d1d5db; background: white; color: #6b7280; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; font-size: 0.9rem;">Batal</button>
-                <button class="confirm-yes" style="padding: 0.625rem 1.25rem; border: none; background: #ef4444; color: white; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3); font-size: 0.9rem;">Ya, Lanjutkan</button>
+        // Create modal
+        const modal = document.createElement('div');
+        modal.className = 'confirm-modal';
+        modal.style.cssText = `
+            background: white;
+            color: #1f2937;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+            padding: 2rem;
+            min-width: 400px;
+            max-width: 500px;
+            z-index: 99999;
+            border-radius: 16px;
+            animation: scaleIn 0.2s ease-out;
+            text-align: center;
+        `;
+
+        modal.innerHTML = `
+            <div style="margin-bottom: 1.5rem;">
+                <i class="fas fa-question-circle" style="font-size: 3rem; color: #f59e0b; margin-bottom: 1rem;"></i>
+                <h3 style="margin: 0 0 0.5rem 0; font-size: 1.25rem; font-weight: 600;">Konfirmasi</h3>
+                <p style="margin: 0; color: #6b7280; font-size: 1rem; line-height: 1.6;">${message}</p>
+            </div>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <button class="confirm-cancel" style="padding: 0.75rem 2rem; border: 2px solid #d1d5db; background: white; color: #6b7280; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.2s; font-size: 1rem;">Batal</button>
+                <button class="confirm-yes" style="padding: 0.75rem 2rem; border: none; background: linear-gradient(135deg, #16a34a, #15803d); color: white; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.2s; box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3); font-size: 1rem;">Ya, Gunakan</button>
             </div>
         `;
 
-        const toastContainer = document.getElementById('toast-container') || createToastContainer();
-        toastContainer.appendChild(confirmToast);
+        backdrop.appendChild(modal);
+        document.body.appendChild(backdrop);
 
-        console.log('Confirm dialog added to DOM');
-        console.log('Toast container:', toastContainer);
-        console.log('Confirm toast element:', confirmToast);
+        // Add CSS animations if not exists
+        if (!document.getElementById('confirm-modal-styles')) {
+            const style = document.createElement('style');
+            style.id = 'confirm-modal-styles';
+            style.textContent = `
+                @keyframes fadeIn {
+                    from { opacity: 0; }
+                    to { opacity: 1; }
+                }
+                @keyframes fadeOut {
+                    from { opacity: 1; }
+                    to { opacity: 0; }
+                }
+                @keyframes scaleIn {
+                    from { opacity: 0; transform: scale(0.9); }
+                    to { opacity: 1; transform: scale(1); }
+                }
+                @keyframes scaleOut {
+                    from { opacity: 1; transform: scale(1); }
+                    to { opacity: 0; transform: scale(0.9); }
+                }
+            `;
+            document.head.appendChild(style);
+        }
 
-        const yesBtn = confirmToast.querySelector('.confirm-yes');
-        const cancelBtn = confirmToast.querySelector('.confirm-cancel');
+        console.log('Confirm modal added to DOM');
+
+        const yesBtn = modal.querySelector('.confirm-yes');
+        const cancelBtn = modal.querySelector('.confirm-cancel');
 
         // Add hover effects
-        yesBtn.onmouseenter = () => yesBtn.style.transform = 'translateY(-1px)';
-        yesBtn.onmouseleave = () => yesBtn.style.transform = 'translateY(0)';
-        cancelBtn.onmouseenter = () => cancelBtn.style.background = '#f3f4f6';
-        cancelBtn.onmouseleave = () => cancelBtn.style.background = 'white';
+        yesBtn.onmouseenter = () => { yesBtn.style.transform = 'translateY(-2px)'; yesBtn.style.boxShadow = '0 6px 16px rgba(22, 163, 74, 0.4)'; };
+        yesBtn.onmouseleave = () => { yesBtn.style.transform = 'translateY(0)'; yesBtn.style.boxShadow = '0 4px 12px rgba(22, 163, 74, 0.3)'; };
+        cancelBtn.onmouseenter = () => { cancelBtn.style.background = '#f3f4f6'; cancelBtn.style.borderColor = '#9ca3af'; };
+        cancelBtn.onmouseleave = () => { cancelBtn.style.background = 'white'; cancelBtn.style.borderColor = '#d1d5db'; };
 
         const cleanup = () => {
-            confirmToast.style.animation = 'slideOut 0.3s ease-in';
-            setTimeout(() => confirmToast.remove(), 300);
+            backdrop.style.animation = 'fadeOut 0.2s ease-in';
+            modal.style.animation = 'scaleOut 0.2s ease-in';
+            setTimeout(() => backdrop.remove(), 200);
         };
 
         yesBtn.onclick = () => {
@@ -247,6 +291,15 @@ document.addEventListener('DOMContentLoaded', function () {
             cleanup();
             if (onCancel) onCancel();
         };
+
+        // Close on backdrop click
+        backdrop.onclick = (e) => {
+            if (e.target === backdrop) {
+                console.log('Backdrop clicked - cancelling');
+                cleanup();
+                if (onCancel) onCancel();
+            }
+        };
     }
 
     function createToastContainer() {
@@ -257,43 +310,18 @@ document.addEventListener('DOMContentLoaded', function () {
             position: fixed; 
             top: 20px; 
             right: 20px; 
-            z-index: 99998;
+            z-index: 99990;
             display: flex;
             flex-direction: column;
             gap: 0.75rem;
             pointer-events: none;
         `;
 
-        // Make children interactive
-        container.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-
         // Allow pointer events on children
         const style = document.createElement('style');
         style.textContent = `
             #toast-container > * {
                 pointer-events: auto;
-            }
-            @keyframes slideIn {
-                from {
-                    opacity: 0;
-                    transform: translateX(100px);
-                }
-                to {
-                    opacity: 1;
-                    transform: translateX(0);
-                }
-            }
-            @keyframes slideOut {
-                from {
-                    opacity: 1;
-                    transform: translateX(0);
-                }
-                to {
-                    opacity: 0;
-                    transform: translateX(100px);
-                }
             }
         `;
         document.head.appendChild(style);
