@@ -70,19 +70,31 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- FETCH DASHBOARD LEADERBOARD (PREVIEW TOP 3) ---
+    // --- FETCH DASHBOARD LEADERBOARD (PREVIEW TOP 3 per OSHI) ---
     async function fetchDashboardLeaderboard() {
         const loadingDiv = document.getElementById('dashboard-leaderboard-loading');
         const container = document.getElementById('top-spenders-container');
 
         if (!container || !loadingDiv) return;
 
+        // Jika user tidak punya oshi spesifik, tampilkan global leaderboard
+        const userOshi = userData.oshi;
+        const isGlobal = !userOshi || userOshi === 'All Member';
+
         try {
-            const response = await fetch('/api/leaderboard');
+            let response;
+            if (isGlobal) {
+                response = await fetch('/api/leaderboard');
+            } else {
+                response = await fetch(`/api/leaderboard-per-member?memberName=${encodeURIComponent(userOshi)}`);
+            }
+
             const data = await response.json();
 
             if (!data || data.length === 0) {
-                loadingDiv.textContent = "Belum ada sultan saat ini.";
+                loadingDiv.textContent = isGlobal
+                    ? "Belum ada sultan saat ini."
+                    : `Belum ada sultan ${userOshi} saat ini.`;
                 return;
             }
 
@@ -98,8 +110,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <div class="top-spender-card rank-${index + 1}">
                     <div class="rank-badge">${rankEmojis[index]}</div>
                     <div class="spender-name">${user.username}</div>
-                    <div class="spender-oshi">❤️ ${user.oshi || '-'}</div>
-                    <div class="spender-count">${user.totalCheki} Cheki</div>
+                    <div class="spender-count">${user.totalQuantity || user.totalCheki || 0} Cheki</div>
                 </div>
             `).join('');
 
