@@ -188,6 +188,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- Modern Confirmation Dialog ---
     function showConfirm(message, onConfirm, onCancel) {
+        console.log('showConfirm called with message:', message);
+
         const confirmToast = document.createElement('div');
         confirmToast.className = 'toast toast-confirm';
         confirmToast.style.cssText = `
@@ -197,6 +199,7 @@ document.addEventListener('DOMContentLoaded', function () {
             box-shadow: 0 10px 25px rgba(0,0,0,0.15);
             padding: 1.2rem;
             min-width: 350px;
+            z-index: 10000;
         `;
 
         confirmToast.innerHTML = `
@@ -210,6 +213,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const toastContainer = document.getElementById('toast-container') || createToastContainer();
         toastContainer.appendChild(confirmToast);
 
+        console.log('Confirm dialog added to DOM');
+
         const yesBtn = confirmToast.querySelector('.confirm-yes');
         const cancelBtn = confirmToast.querySelector('.confirm-cancel');
 
@@ -219,11 +224,13 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         yesBtn.onclick = () => {
+            console.log('Yes button clicked');
             cleanup();
             if (onConfirm) onConfirm();
         };
 
         cancelBtn.onclick = () => {
+            console.log('Cancel button clicked');
             cleanup();
             if (onCancel) onCancel();
         };
@@ -457,17 +464,42 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Use event delegation for dynamically created buttons
     document.body.addEventListener('click', e => {
+        console.log('Click detected on:', e.target);
+
         // Handle ticket usage button
         const useButton = e.target.closest('.btn-use');
-        if (useButton && ordersTbody?.contains(useButton)) {
-            const orderId = useButton.dataset.orderid;
-            if (!orderId) return;
+        if (useButton) {
+            console.log('Use button clicked:', useButton);
+            console.log('Button disabled state:', useButton.disabled);
+            console.log('Order ID:', useButton.dataset.orderid);
 
-            showConfirm(
-                `Yakin ingin menggunakan tiket untuk pesanan <strong>${orderId}</strong>?`,
-                () => useTicket(orderId)
-            );
-            return;
+            // Check if button is in orders table
+            if (ordersTbody?.contains(useButton)) {
+                const orderId = useButton.dataset.orderid;
+                if (!orderId) {
+                    console.error('No order ID found');
+                    return;
+                }
+
+                if (useButton.disabled) {
+                    console.log('Button is disabled, ignoring click');
+                    showToast('Tiket ini sudah digunakan.', 'warning');
+                    return;
+                }
+
+                console.log('Showing confirmation for order:', orderId);
+                showConfirm(
+                    `Yakin ingin menggunakan tiket untuk pesanan <strong>${orderId}</strong>?`,
+                    () => {
+                        console.log('User confirmed, using ticket:', orderId);
+                        useTicket(orderId);
+                    },
+                    () => {
+                        console.log('User cancelled');
+                    }
+                );
+                return;
+            }
         }
 
         // Handle user reset button
