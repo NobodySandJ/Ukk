@@ -1,28 +1,38 @@
-/* Import Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+/* Import Google Fonts - Match Main Website */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
-/* Variabel Global untuk Admin */
+/* Variabel Global untuk Admin - Match Main Website */
 :root {
-    --admin-bg: #f8f9fa;
-    --sidebar-bg: #1e293b;
+    /* Inherit from main website */
+    --admin-bg: #f9fafb;
+    --sidebar-bg: linear-gradient(180deg, #16a34a 0%, #15803d 100%);
     --sidebar-text: #e2e8f0;
     --sidebar-text-hover: #ffffff;
-    --sidebar-active-bg: #334155;
+    --sidebar-active-bg: rgba(255, 255, 255, 0.15);
     --card-bg: #ffffff;
-    --card-border: #e2e8f0;
-    --text-primary: #1e293b;
-    --text-secondary: #64748b;
-    --primary-accent: #3b82f6;
-    --success-color: #16a34a;
-    --danger-color: #dc2626;
+    --card-border: #e5e7eb;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --primary-accent: #16a34a;
+    --primary-color: #16a34a;
+    --primary-dark: #15803d;
+    --primary-light: #4ade80;
+    --success-color: #10b981;
+    --danger-color: #ef4444;
+    --warning-color: #f59e0b;
+    --border-radius: 12px;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
 /* Reset dan Aturan Dasar */
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Poppins', sans-serif;
     background-color: var(--admin-bg);
     color: var(--text-primary);
     margin: 0;
+    line-height: 1.6;
 }
 
 /* Layout Utama Admin */
@@ -34,7 +44,7 @@ body {
 /* Sidebar Navigation */
 .sidebar {
     width: 260px;
-    background-color: var(--sidebar-bg);
+    background: var(--sidebar-bg);
     color: var(--sidebar-text);
     display: flex;
     flex-direction: column;
@@ -42,6 +52,7 @@ body {
     height: 100%;
     top: 0;
     left: 0;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
 }
 
 .sidebar-header {
@@ -104,7 +115,8 @@ body {
 
 .sidebar-footer {
     padding: 1.5rem;
-    border-top: 1px solid var(--sidebar-active-bg);
+    margin-top: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .logout-button {
@@ -163,23 +175,44 @@ body {
 }
 
 .stat-card {
-    background-color: var(--card-bg);
+    background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
     border: 1px solid var(--card-border);
-    border-radius: 12px;
+    border-radius: var(--border-radius);
     padding: 1.5rem;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(180deg, var(--primary-color), var(--primary-light));
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lg);
+    border-color: var(--primary-light);
 }
 
 .stat-card h3 {
-    font-size: 1rem;
-    font-weight: 500;
+    font-size: 0.875rem;
+    font-weight: 600;
     color: var(--text-secondary);
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.75rem 0;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .stat-card p {
     font-size: 2rem;
     font-weight: 700;
-    color: var(--text-primary);
+    color: var(--primary-color);
     margin: 0;
 }
 
@@ -189,6 +222,20 @@ body {
     margin: 0;
     font-size: 0.9rem;
     text-align: left;
+}
+
+.stat-card ul li {
+    padding: 0.4rem 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.stat-card ul li:last-child {
+    border-bottom: none;
+}
+
+.stat-card ul li strong {
+    color: var(--primary-color);
+    font-weight: 600;
 }
 
 /* Stock Management */
@@ -370,24 +417,30 @@ body {
 }
 
 .status-badge {
-    padding: 0.3rem 0.8rem;
-    border-radius: 20px;
+    padding: 0.4rem 1rem;
+    border-radius: 50px;
     font-weight: 600;
     font-size: 0.8rem;
     color: white;
+    display: inline-block;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .status-berlaku {
-    background-color: #16a34a;
+    background: linear-gradient(135deg, #10b981, #059669);
+    box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
 }
 
 .status-hangus {
-    background-color: #475569;
+    background: linear-gradient(135deg, #6b7280, #4b5563);
+    box-shadow: 0 2px 8px rgba(107, 114, 128, 0.3);
 }
 
 .status-pending {
-    background-color: #f59e0b;
-    color: #333;
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: white;
+    box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
 }
 
 /* Responsive Design */
