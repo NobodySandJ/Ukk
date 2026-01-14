@@ -432,10 +432,10 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Check if within 5 seconds
+        // Check if within 15 minutes (900000ms)
         const elapsedTime = Date.now() - lastUsedTicket.timestamp;
-        if (elapsedTime > 5000) {
-            showToast('Waktu undo telah habis.', 'error');
+        if (elapsedTime > 900000) {
+            showToast('Waktu undo telah habis (maks 15 menit).', 'error');
             return;
         }
 
@@ -452,24 +452,62 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function showToastWithUndo(message, undoCallback) {
+        // Add animation styles if not exists
+        if (!document.getElementById('toast-undo-styles')) {
+            const style = document.createElement('style');
+            style.id = 'toast-undo-styles';
+            style.textContent = `
+                @keyframes toastSlideIn {
+                    from { opacity: 0; transform: translateX(100%); }
+                    to { opacity: 1; transform: translateX(0); }
+                }
+                @keyframes toastSlideOut {
+                    from { opacity: 1; transform: translateX(0); }
+                    to { opacity: 0; transform: translateX(100%); }
+                }
+                @keyframes countdownBar {
+                    from { width: 100%; }
+                    to { width: 0%; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        const UNDO_DURATION = 15 * 60 * 1000; // 15 minutes in ms
+        const UNDO_SECONDS = 15 * 60; // 15 minutes in seconds
+
         const toast = document.createElement('div');
         toast.className = 'toast toast-success';
         toast.style.cssText = `
-            background: #10b981;
+            background: linear-gradient(135deg, #10b981, #059669);
             color: white;
-            padding: 1rem 1.2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 1.25rem 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.35);
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 1rem;
-            min-width: 350px;
+            gap: 1.5rem;
+            min-width: 400px;
+            position: relative;
+            overflow: hidden;
+            animation: toastSlideIn 0.3s ease-out;
         `;
 
+        // Format time display
+        const formatTime = (seconds) => {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+        };
+
         toast.innerHTML = `
-            <span>${message}</span>
-            <button class="undo-btn" style="padding: 0.4rem 0.8rem; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.875rem;">UNDO</button>
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <i class="fas fa-check-circle" style="font-size: 1.5rem;"></i>
+                <span style="font-weight: 500; font-size: 1rem;">${message}</span>
+            </div>
+            <button class="undo-btn" style="padding: 0.6rem 1.2rem; background: rgba(255,255,255,0.25); border: 2px solid rgba(255,255,255,0.4); color: white; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 0.9rem; transition: all 0.2s; text-transform: uppercase; letter-spacing: 0.5px;">UNDO (15m)</button>
+            <div style="position: absolute; bottom: 0; left: 0; height: 4px; background: rgba(255,255,255,0.5); animation: countdownBar ${UNDO_SECONDS}s linear forwards;"></div>
         `;
 
         const toastContainer = document.getElementById('toast-container') || createToastContainer();
@@ -477,20 +515,39 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const undoBtn = toast.querySelector('.undo-btn');
         let undoAvailable = true;
+        let countdown = UNDO_SECONDS;
+
+        // Update countdown every second
+        const countdownInterval = setInterval(() => {
+            countdown--;
+            if (countdown > 0) {
+                undoBtn.textContent = `UNDO (${formatTime(countdown)})`;
+            } else {
+                undoBtn.textContent = 'EXPIRED';
+                undoBtn.style.opacity = '0.5';
+                undoBtn.style.cursor = 'not-allowed';
+            }
+        }, 1000);
+
+        // Add hover effect
+        undoBtn.onmouseenter = () => { if (undoAvailable) { undoBtn.style.background = 'rgba(255,255,255,0.4)'; undoBtn.style.transform = 'scale(1.05)'; } };
+        undoBtn.onmouseleave = () => { undoBtn.style.background = 'rgba(255,255,255,0.25)'; undoBtn.style.transform = 'scale(1)'; };
 
         undoBtn.onclick = () => {
             if (undoAvailable) {
+                clearInterval(countdownInterval);
                 undoCallback();
                 toast.remove();
             }
         };
 
-        // Auto remove after 5 seconds
+        // Auto remove after 15 minutes
         setTimeout(() => {
             undoAvailable = false;
-            toast.style.animation = 'slideOut 0.3s ease forwards';
+            clearInterval(countdownInterval);
+            toast.style.animation = 'toastSlideOut 0.3s ease-in forwards';
             setTimeout(() => toast.remove(), 300);
-        }, 5000);
+        }, UNDO_DURATION);
     }
 
     async function updateChekiStock(change) {
