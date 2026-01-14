@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <li><a href="index.html#hero">Tentang Kami</a></li>
                 <li><a href="index.html#members">Member</a></li>
                 <li><a href="index.html#news">News</a></li>
+                <li><a href="cheki.html">Cheki</a></li>
             `;
         }
 
