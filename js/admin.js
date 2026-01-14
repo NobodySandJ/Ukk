@@ -338,6 +338,9 @@ document.addEventListener('DOMContentLoaded', function () {
             ordersTbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Tidak ada tiket yang perlu dikelola.</td></tr>`;
             return;
         }
+
+        const UNDO_DURATION = 15 * 60 * 1000; // 15 minutes in ms
+
         orders.forEach(order => {
             const row = document.createElement('tr');
             const items = order.detail_item?.map(item => `${item.quantity}x ${item.name.replace('Cheki ', '')}`).join(', ') || 'N/A';
@@ -357,6 +360,42 @@ document.addEventListener('DOMContentLoaded', function () {
             const statusClass = isUsed ? 'status-hangus' : 'status-berlaku';
             const statusText = isUsed ? 'Sudah Dipakai' : 'Berlaku';
 
+            // Check if undo is available for this order
+            const undoData = getUndoData(order.id_pesanan);
+            const canUndo = isUsed && undoData && (Date.now() - undoData.timestamp < UNDO_DURATION);
+            const remainingTime = canUndo ? Math.ceil((UNDO_DURATION - (Date.now() - undoData.timestamp)) / 1000) : 0;
+
+            // Format remaining time
+            const formatTime = (secs) => {
+                const mins = Math.floor(secs / 60);
+                const s = secs % 60;
+                return mins > 0 ? `${mins}m ${s}s` : `${s}s`;
+            };
+
+            let actionButton = '';
+            if (!isUsed) {
+                // Show Gunakan button
+                actionButton = `
+                    <button class="action-btn btn-use" data-orderid="${order.id_pesanan}">
+                        <i class="fas fa-check"></i> Gunakan
+                    </button>
+                `;
+            } else if (canUndo) {
+                // Show Undo button with remaining time
+                actionButton = `
+                    <button class="action-btn btn-undo" data-orderid="${order.id_pesanan}" data-remaining="${remainingTime}">
+                        <i class="fas fa-undo"></i> Undo (${formatTime(remainingTime)})
+                    </button>
+                `;
+            } else {
+                // Undo expired - show disabled button
+                actionButton = `
+                    <button class="action-btn btn-use" disabled style="opacity: 0.5; cursor: not-allowed;">
+                        <i class="fas fa-ban"></i> Tidak bisa diundo
+                    </button>
+                `;
+            }
+
             row.innerHTML = `
                 <td data-label="ID Pesanan"><small>${order.id_pesanan}</small></td>
                 <td data-label="Pelanggan">${order.nama_pelanggan}</td>
@@ -364,13 +403,68 @@ document.addEventListener('DOMContentLoaded', function () {
                 <td data-label="Dibuat Pada"><small>${createdAt}</small></td>
                 <td data-label="Status Tiket"><span class="status-badge ${statusClass}">${statusText}</span></td>
                 <td data-label="Aksi" style="white-space: nowrap;">
-                    <button class="action-btn btn-use" data-orderid="${order.id_pesanan}" ${isUsed ? 'disabled' : ''}>
-                        <i class="fas fa-check"></i> Gunakan
-                    </button>
+                    ${actionButton}
                 </td>
             `;
             ordersTbody.appendChild(row);
         });
+
+        // Start countdown timers for undo buttons
+        startUndoTimers();
+    }
+
+    // Store undo timestamps in localStorage
+    function saveUndoData(orderId) {
+        const undoTimestamps = JSON.parse(localStorage.getItem('undoTimestamps') || '{}');
+        undoTimestamps[orderId] = { timestamp: Date.now() };
+        localStorage.setItem('undoTimestamps', JSON.stringify(undoTimestamps));
+    }
+
+    function getUndoData(orderId) {
+        const undoTimestamps = JSON.parse(localStorage.getItem('undoTimestamps') || '{}');
+        return undoTimestamps[orderId];
+    }
+
+    function removeUndoData(orderId) {
+        const undoTimestamps = JSON.parse(localStorage.getItem('undoTimestamps') || '{}');
+        delete undoTimestamps[orderId];
+        localStorage.setItem('undoTimestamps', JSON.stringify(undoTimestamps));
+    }
+
+    // Update undo button timers every second
+    function startUndoTimers() {
+        const UNDO_DURATION = 15 * 60 * 1000;
+
+        const updateTimers = () => {
+            const undoButtons = document.querySelectorAll('.btn-undo');
+            undoButtons.forEach(btn => {
+                const orderId = btn.dataset.orderid;
+                const undoData = getUndoData(orderId);
+                if (!undoData) return;
+
+                const elapsed = Date.now() - undoData.timestamp;
+                const remaining = Math.ceil((UNDO_DURATION - elapsed) / 1000);
+
+                if (remaining <= 0) {
+                    // Undo expired
+                    btn.disabled = true;
+                    btn.style.opacity = '0.5';
+                    btn.style.cursor = 'not-allowed';
+                    btn.innerHTML = '<i class="fas fa-ban"></i> Expired';
+                    btn.classList.remove('btn-undo');
+                    removeUndoData(orderId);
+                } else {
+                    const mins = Math.floor(remaining / 60);
+                    const secs = remaining % 60;
+                    const timeStr = mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+                    btn.innerHTML = `<i class="fas fa-undo"></i> Undo (${timeStr})`;
+                }
+            });
+        };
+
+        // Update every second
+        if (window.undoTimerInterval) clearInterval(window.undoTimerInterval);
+        window.undoTimerInterval = setInterval(updateTimers, 1000);
     }
 
     // --- Fungsi Render Tampilan (Reset Password) ---
@@ -417,25 +511,27 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: JSON.stringify({ order_id: orderId, new_status: 'sudah_dipakai' })
             });
 
-            // Save for undo
-            lastUsedTicket = { orderId, timestamp: Date.now() };
+            // Save for undo in localStorage
+            saveUndoData(orderId);
 
-            // Show success with undo option
-            showToastWithUndo('Tiket berhasil digunakan.', () => undoUseTicket(orderId));
+            // Show simple success toast
+            showToast('Tiket berhasil digunakan. Anda bisa undo dalam 15 menit.', 'success');
             fetchAdminData();
         } catch (error) { /* Error ditangani di apiRequest */ }
     }
 
     async function undoUseTicket(orderId) {
-        if (!lastUsedTicket || lastUsedTicket.orderId !== orderId) {
+        const undoData = getUndoData(orderId);
+        if (!undoData) {
             showToast('Undo tidak tersedia untuk tiket ini.', 'error');
             return;
         }
 
         // Check if within 15 minutes (900000ms)
-        const elapsedTime = Date.now() - lastUsedTicket.timestamp;
+        const elapsedTime = Date.now() - undoData.timestamp;
         if (elapsedTime > 900000) {
             showToast('Waktu undo telah habis (maks 15 menit).', 'error');
+            removeUndoData(orderId);
             return;
         }
 
@@ -446,7 +542,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 body: JSON.stringify({ order_id: orderId, new_status: 'berlaku' })
             });
             showToast('Tiket berhasil di-undo dan kembali berlaku.', 'success');
-            lastUsedTicket = null;
+            removeUndoData(orderId);
             fetchAdminData();
         } catch (error) { /* Error ditangani di apiRequest */ }
     }
@@ -608,39 +704,31 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Use event delegation for dynamically created buttons
     document.body.addEventListener('click', e => {
-        console.log('Click detected on:', e.target);
-
-        // Handle ticket usage button
+        // Handle ticket usage button (Gunakan)
         const useButton = e.target.closest('.btn-use');
-        if (useButton) {
-            console.log('Use button clicked:', useButton);
-            console.log('Button disabled state:', useButton.disabled);
-            console.log('Order ID:', useButton.dataset.orderid);
-
-            // Check if button is in orders table
+        if (useButton && !useButton.disabled) {
             if (ordersTbody?.contains(useButton)) {
                 const orderId = useButton.dataset.orderid;
-                if (!orderId) {
-                    console.error('No order ID found');
-                    return;
-                }
+                if (!orderId) return;
 
-                if (useButton.disabled) {
-                    console.log('Button is disabled, ignoring click');
-                    showToast('Tiket ini sudah digunakan.', 'warning');
-                    return;
-                }
-
-                console.log('Showing confirmation for order:', orderId);
                 showConfirm(
                     `Yakin ingin menggunakan tiket untuk pesanan <strong>${orderId}</strong>?`,
-                    () => {
-                        console.log('User confirmed, using ticket:', orderId);
-                        useTicket(orderId);
-                    },
-                    () => {
-                        console.log('User cancelled');
-                    }
+                    () => useTicket(orderId)
+                );
+                return;
+            }
+        }
+
+        // Handle undo button
+        const undoButton = e.target.closest('.btn-undo');
+        if (undoButton && !undoButton.disabled) {
+            if (ordersTbody?.contains(undoButton)) {
+                const orderId = undoButton.dataset.orderid;
+                if (!orderId) return;
+
+                showConfirm(
+                    `Yakin ingin membatalkan penggunaan tiket <strong>${orderId}</strong>?`,
+                    () => undoUseTicket(orderId)
                 );
                 return;
             }
