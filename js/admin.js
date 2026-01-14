@@ -455,13 +455,31 @@ document.addEventListener('DOMContentLoaded', function () {
         renderOrders(filtered);
     });
 
-    ordersTbody?.addEventListener('click', e => {
+    // Use event delegation for dynamically created buttons
+    document.body.addEventListener('click', e => {
+        // Handle ticket usage button
         const useButton = e.target.closest('.btn-use');
-        if (useButton) {
+        if (useButton && ordersTbody?.contains(useButton)) {
             const orderId = useButton.dataset.orderid;
+            if (!orderId) return;
+
             showConfirm(
                 `Yakin ingin menggunakan tiket untuk pesanan <strong>${orderId}</strong>?`,
                 () => useTicket(orderId)
+            );
+            return;
+        }
+
+        // Handle user reset button
+        const resetButton = e.target.closest('.btn-reset');
+        if (resetButton && userListTbody?.contains(resetButton)) {
+            const userId = resetButton.dataset.userid;
+            const username = resetButton.dataset.username;
+            if (!userId || !username) return;
+
+            showConfirm(
+                `Anda yakin ingin mereset password untuk pengguna <strong>"${username}"</strong>?`,
+                () => resetUserPassword(userId)
             );
         }
     });
@@ -481,18 +499,6 @@ document.addEventListener('DOMContentLoaded', function () {
         const term = e.target.value.toLowerCase();
         const filtered = allUsers.filter(u => u.nama_pengguna.toLowerCase().includes(term));
         renderUsers(filtered);
-    });
-
-    userListTbody?.addEventListener('click', e => {
-        const resetButton = e.target.closest('.btn-reset');
-        if (resetButton) {
-            const userId = resetButton.dataset.userid;
-            const username = resetButton.dataset.username;
-            showConfirm(
-                `Anda yakin ingin mereset password untuk pengguna <strong>"${username}"</strong>?`,
-                () => resetUserPassword(userId)
-            );
-        }
     });
 
     // --- Inisialisasi Halaman ---
