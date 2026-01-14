@@ -37,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadMidtransScript = async () => {
         if (window.snap || isMidtransScriptLoaded) return;
         try {
-            const response = await fetch('/api/midtrans-client-key'); 
+            const response = await fetch('/api/midtrans-client-key');
             if (!response.ok) throw new Error('Gagal mendapatkan kunci API pembayaran.');
             const data = await response.json();
             const clientKey = data.clientKey;
@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             const response = await fetch('/api/products-and-stock');
             if (!response.ok) throw new Error('Data produk tidak dapat dimuat.');
-            
+
             const data = await response.json();
             products.members = data.members || [];
             products.group = data.group_cheki || {};
@@ -104,7 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderProducts = () => {
         if (!chekiListContainer) return;
         chekiListContainer.innerHTML = '';
-        
+
         if (products.group && products.group.id) {
             chekiListContainer.appendChild(createProductCard(products.group));
         }
@@ -174,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.quantity-input').forEach(input => { input.value = 0; });
         updateOrderSummary();
     };
-    
+
     // --- Logika Pembayaran ---
     const handlePayment = async () => {
         const token = localStorage.getItem('userToken');
@@ -230,20 +230,40 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!response.ok) throw new Error(result.message || 'Gagal memulai pembayaran.');
 
             window.snap.pay(result.token, {
-                onSuccess: (midtransResult) => {
-                    fetch('/update-order-status', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            order_id: midtransResult.order_id,
-                            transaction_status: midtransResult.transaction_status
-                        })
-                    });
-                    resetCart();
-                    
-                    // --- PERUBAHAN UTAMA DISINI ---
-                    // Mengarahkan langsung ke dashboard dengan parameter sukses
-                    window.location.href = `/dashboard.html?payment_success=true&order_id=${midtransResult.order_id}`;
+                onSuccess: async (midtransResult) => {
+                    try {
+                        // Tampilkan loading toast
+                        showToast('Memproses pembayaran Anda...', 'info', 2000);
+
+                        // PENTING: Await update status SEBELUM redirect
+                        const updateResponse = await fetch('/update-order-status', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                order_id: midtransResult.order_id,
+                                transaction_status: midtransResult.transaction_status
+                            })
+                        });
+
+                        if (!updateResponse.ok) {
+                            throw new Error('Gagal memperbarui status pesanan');
+                        }
+
+                        resetCart();
+
+                        // Redirect setelah status berhasil diupdate
+                        showToast('Pembayaran berhasil! Mengalihkan ke dashboard...', 'success', 1500);
+                        setTimeout(() => {
+                            window.location.href = `/dashboard.html?payment_success=true&order_id=${midtransResult.order_id}`;
+                        }, 1500);
+                    } catch (error) {
+                        console.error('Error updating order status:', error);
+                        showToast('Pembayaran berhasil, tapi ada kendala teknis. Silakan refresh halaman.', 'warning', 5000);
+                        // Tetap redirect meskipun ada error, user bisa refresh di dashboard
+                        setTimeout(() => {
+                            window.location.href = `/dashboard.html`;
+                        }, 5000);
+                    }
                 },
                 onPending: () => {
                     showToast("Menunggu pembayaran Anda...", true, 5000);
@@ -264,7 +284,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setPaymentButtonLoading(false);
         }
     };
-    
+
     // --- Fungsi Utilitas ---
     const disablePaymentButton = (text) => {
         if (!submitButton) return;
