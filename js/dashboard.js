@@ -152,8 +152,17 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Sort: Tiket berlaku paling atas
-        orders.sort((a, b) => (a.status_tiket === 'berlaku' && b.status_tiket !== 'berlaku') ? -1 : 1);
+        // Sort: Tiket berlaku paling atas, kemudian sort by tanggal terbaru
+        orders.sort((a, b) => {
+            // Prioritas 1: Tiket berlaku di atas
+            if (a.status_tiket === 'berlaku' && b.status_tiket !== 'berlaku') return -1;
+            if (a.status_tiket !== 'berlaku' && b.status_tiket === 'berlaku') return 1;
+
+            // Prioritas 2: Dalam kategori yang sama, tiket terbaru di atas
+            const dateA = new Date(a.dibuat_pada || 0);
+            const dateB = new Date(b.dibuat_pada || 0);
+            return dateB - dateA; // Descending order (terbaru dulu)
+        });
 
         ticketContainer.innerHTML = '';
         orders.forEach(order => {

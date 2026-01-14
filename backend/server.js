@@ -234,7 +234,28 @@ app.post("/get-snap-token", authenticateToken, async (req, res) => {
     try {
         const { transaction_details, item_details, customer_details } = req.body;
         const enhanced_customer_details = { ...customer_details, first_name: req.user.username, email: req.user.email };
-        const parameter = { transaction_details, item_details, customer_details: enhanced_customer_details };
+
+        // PENTING: Enable payment methods termasuk QRIS
+        const parameter = {
+            transaction_details,
+            item_details,
+            customer_details: enhanced_customer_details,
+            enabled_payments: [
+                'qris',           // QRIS payment
+                'gopay',          // GoPay
+                'shopeepay',      // ShopeePay
+                'other_qris',     // Other QRIS providers
+                'credit_card',    // Credit Card
+                'bca_va',         // BCA Virtual Account
+                'bni_va',         // BNI Virtual Account
+                'bri_va',         // BRI Virtual Account
+                'permata_va',     // Permata Virtual Account
+                'echannel',       // Mandiri Bill Payment
+                'alfamart',       // Alfamart
+                'indomaret'       // Indomaret
+            ]
+        };
+
         const token = await snap.createTransactionToken(parameter);
 
         const { error } = await supabase.from("pesanan").insert([{
