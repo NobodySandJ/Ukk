@@ -58,15 +58,18 @@ body {
     font-size: 1.2rem;
     font-weight: 600;
 }
+
 .sidebar-header .logo img {
     height: 35px;
 }
 
 .sidebar-nav {
-    padding: 1rem; /* Memberi jarak dari tepi sidebar */
+    padding: 1rem;
+    /* Memberi jarak dari tepi sidebar */
     display: flex;
     flex-direction: column;
-    gap: 0.5rem; /* Memberi jarak antar tombol menu */
+    gap: 0.5rem;
+    /* Memberi jarak antar tombol menu */
 }
 
 .nav-link {
@@ -84,13 +87,16 @@ body {
 }
 
 .nav-link:hover {
-    filter: brightness(1.2); /* Sedikit lebih terang saat kursor di atasnya */
+    filter: brightness(1.2);
+    /* Sedikit lebih terang saat kursor di atasnya */
 }
 
 .nav-link.active {
     color: var(--sidebar-text-hover);
-    filter: brightness(1.3); /* Dibuat sedikit lebih terang untuk menandakan aktif */
+    filter: brightness(1.3);
+    /* Dibuat sedikit lebih terang untuk menandakan aktif */
 }
+
 .nav-link i {
     width: 20px;
     text-align: center;
@@ -112,6 +118,7 @@ body {
     font-weight: 600;
     transition: all 0.2s ease;
 }
+
 .logout-button:hover {
     background-color: var(--danger-color);
     color: #fff;
@@ -119,7 +126,8 @@ body {
 
 /* Main Content Area */
 .main-content {
-    margin-left: 260px; /* Sesuaikan dengan lebar sidebar */
+    margin-left: 260px;
+    /* Sesuaikan dengan lebar sidebar */
     flex-grow: 1;
     padding: 2rem;
 }
@@ -127,6 +135,7 @@ body {
 .main-header {
     margin-bottom: 2rem;
 }
+
 .main-header h1 {
     font-size: 1.8rem;
     font-weight: 700;
@@ -139,6 +148,7 @@ body {
     padding: 2rem;
     margin-bottom: 2rem;
 }
+
 .section-title {
     font-size: 1.3rem;
     font-weight: 600;
@@ -151,24 +161,28 @@ body {
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 1.5rem;
 }
+
 .stat-card {
     background-color: var(--card-bg);
     border: 1px solid var(--card-border);
     border-radius: 12px;
     padding: 1.5rem;
 }
+
 .stat-card h3 {
     font-size: 1rem;
     font-weight: 500;
     color: var(--text-secondary);
     margin: 0 0 0.5rem 0;
 }
+
 .stat-card p {
     font-size: 2rem;
     font-weight: 700;
     color: var(--text-primary);
     margin: 0;
 }
+
 .stat-card ul {
     list-style: none;
     padding: 0;
@@ -185,19 +199,23 @@ body {
     justify-content: space-between;
     gap: 1.5rem;
 }
+
 .stock-info {
     font-size: 1.1rem;
     font-weight: 500;
 }
+
 .stock-info strong {
     font-size: 1.5rem;
     color: var(--primary-accent);
 }
+
 .stock-actions {
     display: flex;
     gap: 0.5rem;
     align-items: center;
 }
+
 .stock-actions input {
     padding: 0.6rem;
     border-radius: 8px;
@@ -214,53 +232,142 @@ body {
     gap: 1rem;
     margin-bottom: 1.5rem;
 }
+
+.search-bar {
+    position: relative;
+    display: inline-block;
+}
+
+.search-bar i {
+    position: absolute;
+    left: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-secondary);
+    font-size: 1rem;
+    pointer-events: none;
+    z-index: 1;
+}
+
 .search-bar input {
     width: 100%;
     max-width: 350px;
-    padding: 0.8rem 1rem 0.8rem 2.5rem;
+    padding: 0.8rem 1rem 0.8rem 2.75rem;
     border-radius: 50px;
     border: 1px solid var(--card-border);
     font-size: 1rem;
+    transition: all 0.2s ease;
+}
+
+.search-bar input:focus {
+    outline: none;
+    border-color: var(--primary-accent);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 /* Table Styles */
 .order-table-container {
     overflow-x: auto;
+    border-radius: 12px;
+    border: 1px solid var(--card-border);
 }
+
 .order-table {
     width: 100%;
     border-collapse: collapse;
+    background: white;
 }
-.order-table th, .order-table td {
-    padding: 1rem;
+
+.order-table th,
+.order-table td {
+    padding: 1.2rem 1rem;
     border-bottom: 1px solid var(--card-border);
     text-align: left;
     vertical-align: middle;
 }
+
 .order-table th {
-    background-color: #f8f9fa;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
     font-weight: 600;
     font-size: 0.9rem;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid var(--card-border);
 }
+
+.order-table tbody tr {
+    transition: all 0.2s ease;
+}
+
+.order-table tbody tr:hover {
+    background-color: #f8f9fa;
+    transform: scale(1.001);
+}
+
+.order-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
 .order-table small {
     color: var(--text-secondary);
+    font-size: 0.85rem;
 }
 
 /* Buttons and Badges */
 .action-btn {
-    padding: 0.5rem 1rem;
+    padding: 0.6rem 1.2rem;
     border-radius: 8px;
     border: none;
     color: #fff;
     cursor: pointer;
     font-weight: 500;
+    font-size: 0.875rem;
     transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
-.btn-success { background-color: var(--success-color); }
-.btn-danger { background-color: var(--danger-color); }
-.btn-use { background-color: var(--success-color); }
-.btn-delete { background-color: var(--danger-color); }
-.btn-reset { background-color: #6366f1; }
+
+.action-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+.action-btn:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.action-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-success {
+    background-color: var(--success-color);
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+}
+
+.btn-use {
+    background-color: var(--success-color);
+}
+
+.btn-undo {
+    background-color: #f59e0b;
+    margin-left: 0.5rem;
+}
+
+.btn-delete {
+    background-color: var(--danger-color);
+}
+
+.btn-reset {
+    background-color: #6366f1;
+}
 
 .status-badge {
     padding: 0.3rem 0.8rem;
@@ -269,9 +376,19 @@ body {
     font-size: 0.8rem;
     color: white;
 }
-.status-berlaku { background-color: #16a34a; }
-.status-hangus { background-color: #475569; }
-.status-pending { background-color: #f59e0b; color: #333; }
+
+.status-berlaku {
+    background-color: #16a34a;
+}
+
+.status-hangus {
+    background-color: #475569;
+}
+
+.status-pending {
+    background-color: #f59e0b;
+    color: #333;
+}
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -281,16 +398,20 @@ body {
         z-index: 10;
         /* Tambahkan logika JS untuk toggle */
     }
+
     .main-content {
         margin-left: 0;
         padding: 1rem;
     }
+
     .main-header h1 {
         font-size: 1.5rem;
     }
+
     .order-table thead {
         display: none;
     }
+
     .order-table tr {
         display: block;
         margin-bottom: 1.5rem;
@@ -298,6 +419,7 @@ body {
         border-radius: 8px;
         padding: 1rem;
     }
+
     .order-table td {
         display: flex;
         justify-content: space-between;
@@ -305,6 +427,7 @@ body {
         padding: 0.5rem 0;
         border: none;
     }
+
     .order-table td:before {
         content: attr(data-label);
         font-weight: 600;

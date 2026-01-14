@@ -46,6 +46,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let allOrders = [];
     let allUsers = [];
     let salesChart = null; // Chart.js instance
+    let lastUsedTicket = null; // Track last used ticket for undo
 
     // --- Inisialisasi ---
     if (adminWelcome && userData.nama_pengguna) {
@@ -185,6 +186,57 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     }
 
+    // --- Modern Confirmation Dialog ---
+    function showConfirm(message, onConfirm, onCancel) {
+        const confirmToast = document.createElement('div');
+        confirmToast.className = 'toast toast-confirm';
+        confirmToast.style.cssText = `
+            background: white;
+            color: #1f2937;
+            border-left: 4px solid #f59e0b;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            padding: 1.2rem;
+            min-width: 350px;
+        `;
+
+        confirmToast.innerHTML = `
+            <div style="margin-bottom: 1rem; font-weight: 500;">${message}</div>
+            <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button class="confirm-cancel" style="padding: 0.5rem 1rem; border: 1px solid #d1d5db; background: white; color: #6b7280; border-radius: 6px; cursor: pointer; font-weight: 500;">Batal</button>
+                <button class="confirm-yes" style="padding: 0.5rem 1rem; border: none; background: #ef4444; color: white; border-radius: 6px; cursor: pointer; font-weight: 500;">Ya, Lanjutkan</button>
+            </div>
+        `;
+
+        const toastContainer = document.getElementById('toast-container') || createToastContainer();
+        toastContainer.appendChild(confirmToast);
+
+        const yesBtn = confirmToast.querySelector('.confirm-yes');
+        const cancelBtn = confirmToast.querySelector('.confirm-cancel');
+
+        const cleanup = () => {
+            confirmToast.style.animation = 'slideOut 0.3s ease forwards';
+            setTimeout(() => confirmToast.remove(), 300);
+        };
+
+        yesBtn.onclick = () => {
+            cleanup();
+            if (onConfirm) onConfirm();
+        };
+
+        cancelBtn.onclick = () => {
+            cleanup();
+            if (onCancel) onCancel();
+        };
+    }
+
+    function createToastContainer() {
+        const container = document.createElement('div');
+        container.id = 'toast-container';
+        container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999;';
+        document.body.appendChild(container);
+        return container;
+    }
+
     function renderOrders(orders) {
         if (!ordersTbody) return;
         ordersTbody.innerHTML = '';
@@ -217,7 +269,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <td data-label="Detail Item">${items}</td>
                 <td data-label="Dibuat Pada"><small>${createdAt}</small></td>
                 <td data-label="Status Tiket"><span class="status-badge ${statusClass}">${statusText}</span></td>
-                <td data-label="Aksi">
+                <td data-label="Aksi" style="white-space: nowrap;">
                     <button class="action-btn btn-use" data-orderid="${order.id_pesanan}" ${isUsed ? 'disabled' : ''}>
                         <i class="fas fa-check"></i> Gunakan
                     </button>
@@ -270,9 +322,81 @@ document.addEventListener('DOMContentLoaded', function () {
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ order_id: orderId, new_status: 'sudah_dipakai' })
             });
-            showToast('Tiket berhasil digunakan.', 'success');
+
+            // Save for undo
+            lastUsedTicket = { orderId, timestamp: Date.now() };
+
+            // Show success with undo option
+            showToastWithUndo('Tiket berhasil digunakan.', () => undoUseTicket(orderId));
             fetchAdminData();
         } catch (error) { /* Error ditangani di apiRequest */ }
+    }
+
+    async function undoUseTicket(orderId) {
+        if (!lastUsedTicket || lastUsedTicket.orderId !== orderId) {
+            showToast('Undo tidak tersedia untuk tiket ini.', 'error');
+            return;
+        }
+
+        // Check if within 5 seconds
+        const elapsedTime = Date.now() - lastUsedTicket.timestamp;
+        if (elapsedTime > 5000) {
+            showToast('Waktu undo telah habis.', 'error');
+            return;
+        }
+
+        try {
+            await apiRequest('/api/admin/update-ticket-status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ order_id: orderId, new_status: 'berlaku' })
+            });
+            showToast('Tiket berhasil di-undo dan kembali berlaku.', 'success');
+            lastUsedTicket = null;
+            fetchAdminData();
+        } catch (error) { /* Error ditangani di apiRequest */ }
+    }
+
+    function showToastWithUndo(message, undoCallback) {
+        const toast = document.createElement('div');
+        toast.className = 'toast toast-success';
+        toast.style.cssText = `
+            background: #10b981;
+            color: white;
+            padding: 1rem 1.2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            min-width: 350px;
+        `;
+
+        toast.innerHTML = `
+            <span>${message}</span>
+            <button class="undo-btn" style="padding: 0.4rem 0.8rem; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 0.875rem;">UNDO</button>
+        `;
+
+        const toastContainer = document.getElementById('toast-container') || createToastContainer();
+        toastContainer.appendChild(toast);
+
+        const undoBtn = toast.querySelector('.undo-btn');
+        let undoAvailable = true;
+
+        undoBtn.onclick = () => {
+            if (undoAvailable) {
+                undoCallback();
+                toast.remove();
+            }
+        };
+
+        // Auto remove after 5 seconds
+        setTimeout(() => {
+            undoAvailable = false;
+            toast.style.animation = 'slideOut 0.3s ease forwards';
+            setTimeout(() => toast.remove(), 300);
+        }, 5000);
     }
 
     async function updateChekiStock(change) {
@@ -335,9 +459,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const useButton = e.target.closest('.btn-use');
         if (useButton) {
             const orderId = useButton.dataset.orderid;
-            if (confirm(`Yakin ingin menggunakan tiket untuk pesanan ${orderId}?`)) {
-                useTicket(orderId);
-            }
+            showConfirm(
+                `Yakin ingin menggunakan tiket untuk pesanan <strong>${orderId}</strong>?`,
+                () => useTicket(orderId)
+            );
         }
     });
 
@@ -363,9 +488,10 @@ document.addEventListener('DOMContentLoaded', function () {
         if (resetButton) {
             const userId = resetButton.dataset.userid;
             const username = resetButton.dataset.username;
-            if (confirm(`Anda yakin ingin mereset password untuk pengguna "${username}"?`)) {
-                resetUserPassword(userId);
-            }
+            showConfirm(
+                `Anda yakin ingin mereset password untuk pengguna <strong>"${username}"</strong>?`,
+                () => resetUserPassword(userId)
+            );
         }
     });
 
