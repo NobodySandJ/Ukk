@@ -196,17 +196,22 @@ document.addEventListener('DOMContentLoaded', function () {
             background: white;
             color: #1f2937;
             border-left: 4px solid #f59e0b;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
-            padding: 1.2rem;
-            min-width: 350px;
-            z-index: 10000;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.25);
+            padding: 1.5rem;
+            min-width: 380px;
+            max-width: 480px;
+            z-index: 99999;
+            position: relative;
+            border-radius: 12px;
+            margin-bottom: 1rem;
+            animation: slideIn 0.3s ease-out;
         `;
 
         confirmToast.innerHTML = `
-            <div style="margin-bottom: 1rem; font-weight: 500;">${message}</div>
-            <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
-                <button class="confirm-cancel" style="padding: 0.5rem 1rem; border: 1px solid #d1d5db; background: white; color: #6b7280; border-radius: 6px; cursor: pointer; font-weight: 500;">Batal</button>
-                <button class="confirm-yes" style="padding: 0.5rem 1rem; border: none; background: #ef4444; color: white; border-radius: 6px; cursor: pointer; font-weight: 500;">Ya, Lanjutkan</button>
+            <div style="margin-bottom: 1.25rem; font-weight: 500; font-size: 1rem; line-height: 1.5;">${message}</div>
+            <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                <button class="confirm-cancel" style="padding: 0.625rem 1.25rem; border: 2px solid #d1d5db; background: white; color: #6b7280; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; font-size: 0.9rem;">Batal</button>
+                <button class="confirm-yes" style="padding: 0.625rem 1.25rem; border: none; background: #ef4444; color: white; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3); font-size: 0.9rem;">Ya, Lanjutkan</button>
             </div>
         `;
 
@@ -214,12 +219,20 @@ document.addEventListener('DOMContentLoaded', function () {
         toastContainer.appendChild(confirmToast);
 
         console.log('Confirm dialog added to DOM');
+        console.log('Toast container:', toastContainer);
+        console.log('Confirm toast element:', confirmToast);
 
         const yesBtn = confirmToast.querySelector('.confirm-yes');
         const cancelBtn = confirmToast.querySelector('.confirm-cancel');
 
+        // Add hover effects
+        yesBtn.onmouseenter = () => yesBtn.style.transform = 'translateY(-1px)';
+        yesBtn.onmouseleave = () => yesBtn.style.transform = 'translateY(0)';
+        cancelBtn.onmouseenter = () => cancelBtn.style.background = '#f3f4f6';
+        cancelBtn.onmouseleave = () => cancelBtn.style.background = 'white';
+
         const cleanup = () => {
-            confirmToast.style.animation = 'slideOut 0.3s ease forwards';
+            confirmToast.style.animation = 'slideOut 0.3s ease-in';
             setTimeout(() => confirmToast.remove(), 300);
         };
 
@@ -237,10 +250,56 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function createToastContainer() {
+        console.log('Creating toast container');
         const container = document.createElement('div');
         container.id = 'toast-container';
-        container.style.cssText = 'position: fixed; top: 20px; right: 20px; z-index: 9999;';
+        container.style.cssText = `
+            position: fixed; 
+            top: 20px; 
+            right: 20px; 
+            z-index: 99998;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            pointer-events: none;
+        `;
+
+        // Make children interactive
+        container.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Allow pointer events on children
+        const style = document.createElement('style');
+        style.textContent = `
+            #toast-container > * {
+                pointer-events: auto;
+            }
+            @keyframes slideIn {
+                from {
+                    opacity: 0;
+                    transform: translateX(100px);
+                }
+                to {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+            }
+            @keyframes slideOut {
+                from {
+                    opacity: 1;
+                    transform: translateX(0);
+                }
+                to {
+                    opacity: 0;
+                    transform: translateX(100px);
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
         document.body.appendChild(container);
+        console.log('Toast container created and added to body');
         return container;
     }
 
