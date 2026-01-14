@@ -11,17 +11,69 @@ document.addEventListener('DOMContentLoaded', function () {
         const token = localStorage.getItem('userToken');
         const userData = localStorage.getItem('userData') ? JSON.parse(localStorage.getItem('userData')) : null;
 
-        // Render Menu Navbar (Pastikan tidak merusak jika sudah ada isinya)
-        if (navLinksContainer) {
-            navLinksContainer.innerHTML = `
-                <li><a href="index.html#hero">Tentang Kami</a></li>
-                <li><a href="index.html#members">Member</a></li>
-                <li><a href="index.html#news">News</a></li>
-                <li><a href="cheki.html">Cheki</a></li>
+        // Populate Mobile Menu
+        const navMenu = document.getElementById('nav-menu');
+        if (navMenu) {
+            // Build mobile menu content
+            let mobileMenuHTML = `
+                <ul class="mobile-nav-links">
+                    <li><a href="index.html#hero">Beranda</a></li>
+                    <li><a href="index.html#about">Tentang</a></li>
+                    <li><a href="index.html#members">Member</a></li>
+                    <li><a href="index.html#news">Berita</a></li>
+                    <li><a href="cheki.html">Cheki</a></li>
+                </ul>
+                <div class="mobile-auth-buttons">
             `;
+
+            if (token && userData) {
+                const destination = userData.peran === 'admin' ? 'admin.html' : 'dashboard.html';
+                const buttonText = userData.peran === 'admin' ? 'Admin Panel' : 'My Dashboard';
+                mobileMenuHTML += `
+                    <a href="${destination}" class="nav-button cta">
+                        <i class="fas fa-th-large"></i> ${buttonText}
+                    </a>
+                `;
+            } else {
+                mobileMenuHTML += `
+                    <a href="#" id="mobile-login-btn" class="nav-button">Login</a>
+                    <a href="#" id="mobile-register-btn" class="nav-button cta">Join Us</a>
+                `;
+            }
+
+            mobileMenuHTML += `</div>`;
+            navMenu.innerHTML = mobileMenuHTML;
+
+            // Add event listeners for mobile auth buttons
+            const mobileLoginBtn = document.getElementById('mobile-login-btn');
+            const mobileRegisterBtn = document.getElementById('mobile-register-btn');
+
+            if (mobileLoginBtn) {
+                mobileLoginBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    navMenu.classList.remove('active');
+                    if (authModal) {
+                        authModal.classList.add('active');
+                        document.getElementById('login-view').style.display = 'block';
+                        document.getElementById('register-view').style.display = 'none';
+                    }
+                });
+            }
+
+            if (mobileRegisterBtn) {
+                mobileRegisterBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    navMenu.classList.remove('active');
+                    if (authModal) {
+                        authModal.classList.add('active');
+                        document.getElementById('login-view').style.display = 'none';
+                        document.getElementById('register-view').style.display = 'block';
+                    }
+                });
+            }
         }
 
-        // Update Tombol Auth (Login/Register vs Dashboard Button)
+        // Update Tombol Auth (Login/Register vs Dashboard Button) - Desktop
         const navAuthButtons = document.querySelector('.nav-auth-buttons');
         if (navAuthButtons) {
             if (token && userData) {
@@ -42,6 +94,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
     }
+
 
     // --- 2. RENDER MODAL HTML ---
     if (authModal) {
