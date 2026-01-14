@@ -1,6 +1,7 @@
 # .gitignore
 
 # Abaikan file environment variables
+.env
 backend/.env
 
 # Abaikan folder node_modules

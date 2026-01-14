@@ -1,0 +1,23 @@
+{
+  "name": "refresh-breeze",
+  "version": "1.0.0",
+  "description": "Refresh Breeze Official Website - Local Development",
+  "main": "server-local.js",
+  "scripts": {
+    "start": "node server-local.js",
+    "dev": "node server-local.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.4",
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.2",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "midtrans-client": "^1.4.3",
+    "nodemailer": "^6.9.7"
+  }
+}
