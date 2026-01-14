@@ -71,6 +71,108 @@
             border-radius: 12px; 
             border: 1px solid #ffeeba;
         }
+
+        .leaderboard-preview h3 {
+            color: #d4ac0d;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+
+        .top-spenders-container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .top-spender-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+            min-width: 100px;
+        }
+
+        .top-spender-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .top-spender-card.rank-1 {
+            order: 2;
+            background: linear-gradient(135deg, #fff9c4 0%, #ffeb3b 100%);
+            padding: 1.5rem;
+            min-width: 120px;
+        }
+
+        .top-spender-card.rank-2 {
+            order: 1;
+            background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+        }
+
+        .top-spender-card.rank-3 {
+            order: 3;
+            background: linear-gradient(135deg, #ffe0b2 0%, #ffcc80 100%);
+        }
+
+        .rank-badge {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .rank-1 .rank-badge { font-size: 2.5rem; }
+
+        .spender-name {
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #333;
+            margin-bottom: 0.3rem;
+            text-align: center;
+            word-break: break-word;
+        }
+
+        .rank-1 .spender-name { font-size: 1.1rem; }
+
+        .spender-oshi {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 0.5rem;
+        }
+
+        .spender-count {
+            font-weight: 700;
+            color: #16a34a;
+            font-size: 0.9rem;
+        }
+
+        .rank-1 .spender-count { font-size: 1.1rem; }
+
+        .no-data-message {
+            text-align: center;
+            color: #888;
+            font-style: italic;
+            padding: 2rem;
+        }
+
+        @media (max-width: 480px) {
+            .top-spenders-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .top-spender-card {
+                order: unset !important;
+                width: 100%;
+                max-width: 200px;
+            }
+            .top-spender-card.rank-1 {
+                order: -1 !important;
+            }
+        }
         
         /* --- Style Lama: Tiket & Tombol --- */
         .ticket-list-header {
@@ -247,22 +349,20 @@
             </div>
 
             <div class="leaderboard-preview">
-                <h3 id="leaderboard-title" style="color: #d4ac0d; margin-bottom: 1rem;"><i class="fas fa-trophy"></i> TOP SPENDER</h3>
+                <h3 id="leaderboard-title"><i class="fas fa-trophy"></i> TOP SPENDER</h3>
                 
-                <div id="dashboard-leaderboard-loading" style="color: #888; font-style: italic; margin-bottom: 1rem;">
+                <div id="dashboard-leaderboard-loading" class="no-data-message">
                     Memuat data sultan...
                 </div>
                 
-                <table id="dashboard-leaderboard-table" style="width: 100%; text-align: left; display: none; margin-bottom: 1rem;">
-                    </table>
+                <div id="top-spenders-container" class="top-spenders-container" style="display: none;"></div>
                 
-                <div>
+                <div style="text-align: center;">
                     <a href="leaderboard.html" style="font-size: 0.9rem; color: #d4ac0d; font-weight: 600; text-decoration: none;">
-                        Lihat Selengkapnya &rarr;
+                        Lihat Semua Leaderboard →
                     </a>
                 </div>
             </div>
-
             <h3 class="ticket-list-header">RIWAYAT TIKET ANDA</h3>
 
             <div id="ticket-container">

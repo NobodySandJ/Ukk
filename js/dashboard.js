@@ -73,9 +73,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- FETCH DASHBOARD LEADERBOARD (PREVIEW TOP 3) ---
     async function fetchDashboardLeaderboard() {
         const loadingDiv = document.getElementById('dashboard-leaderboard-loading');
-        const table = document.getElementById('dashboard-leaderboard-table');
+        const container = document.getElementById('top-spenders-container');
 
-        if (!table || !loadingDiv) return;
+        if (!container || !loadingDiv) return;
 
         try {
             const response = await fetch('/api/leaderboard');
@@ -87,23 +87,21 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             loadingDiv.style.display = 'none';
-            table.style.display = 'table';
-            table.innerHTML = '';
+            container.style.display = 'flex';
 
             // Ambil hanya Top 3 untuk preview di dashboard
-            data.slice(0, 3).forEach((user, index) => {
-                const row = table.insertRow();
-                let rankIcon = '';
-                if (index === 0) rankIcon = '🥇';
-                else if (index === 1) rankIcon = '🥈';
-                else if (index === 2) rankIcon = '🥉';
+            const top3 = data.slice(0, 3);
 
-                row.innerHTML = `
-                    <td style="padding: 8px 5px; width: 30px; font-size: 1.2rem;">${rankIcon}</td>
-                    <td style="padding: 8px 5px; font-weight: 600; color: #333;">${user.username}</td>
-                    <td style="padding: 8px 5px; text-align: right; color: #d4ac0d; font-weight: bold;">Rp ${user.totalSpent.toLocaleString('id-ID')}</td>
-                `;
-            });
+            const rankEmojis = ['🥇', '🥈', '🥉'];
+
+            container.innerHTML = top3.map((user, index) => `
+                <div class="top-spender-card rank-${index + 1}">
+                    <div class="rank-badge">${rankEmojis[index]}</div>
+                    <div class="spender-name">${user.username}</div>
+                    <div class="spender-oshi">❤️ ${user.oshi || '-'}</div>
+                    <div class="spender-count">${user.totalCheki} Cheki</div>
+                </div>
+            `).join('');
 
         } catch (error) {
             console.error("Gagal memuat leaderboard:", error);
