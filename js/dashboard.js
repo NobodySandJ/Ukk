@@ -126,6 +126,9 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     async function fetchOrders() {
+        // Show skeleton loading while fetching
+        showSkeletonTickets();
+
         try {
             const response = await fetch('/api/my-orders', {
                 headers: { 'Authorization': `Bearer ${token}` }
@@ -137,6 +140,15 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (error) {
             ticketContainer.innerHTML = `<p class="error-msg">${error.message}</p>`;
         }
+    }
+
+    function showSkeletonTickets() {
+        if (!ticketContainer) return;
+        ticketContainer.innerHTML = `
+            <div class="skeleton skeleton-ticket"></div>
+            <div class="skeleton skeleton-ticket"></div>
+            <div class="skeleton skeleton-ticket"></div>
+        `;
     }
 
     function renderTickets(orders) {

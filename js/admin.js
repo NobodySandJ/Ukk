@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     let allOrders = [];
     let allUsers = [];
+    let salesChart = null; // Chart.js instance
 
     // --- Inisialisasi ---
     if (adminWelcome && userData.nama_pengguna) {
@@ -69,6 +70,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- **PERBAIKAN UTAMA ADA DI FUNGSI INI** ---
     const fetchAdminData = async () => {
+        // Show skeleton loading
+        showDashboardSkeleton();
+
         try {
             // Panggil API yang butuh otorisasi
             const authHeaders = { 'Authorization': `Bearer ${token}` };
@@ -85,6 +89,7 @@ document.addEventListener('DOMContentLoaded', function () {
             allOrders = await ordersRes.json();
 
             renderStats(stats);
+            renderCharts(stats); // Render visual charts
             renderOrders(allOrders);
 
             // Panggil API publik untuk stok secara terpisah
@@ -104,6 +109,24 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
+    // --- Fungsi Skeleton Loading ---
+    function showDashboardSkeleton() {
+        if (statsGrid) {
+            statsGrid.innerHTML = `
+                <div class="skeleton skeleton-stat-card"></div>
+                <div class="skeleton skeleton-stat-card"></div>
+                <div class="skeleton skeleton-stat-card"></div>
+            `;
+        }
+        if (ordersTbody) {
+            ordersTbody.innerHTML = `
+                <tr><td colspan="6"><div class="skeleton skeleton-table-row"></div></td></tr>
+                <tr><td colspan="6"><div class="skeleton skeleton-table-row"></div></td></tr>
+                <tr><td colspan="6"><div class="skeleton skeleton-table-row"></div></td></tr>
+            `;
+        }
+    }
+
     // --- Fungsi Render Tampilan (Dashboard) ---
     function renderStats(stats) {
         if (!statsGrid) return;
@@ -116,16 +139,74 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
     }
 
+    // --- Fungsi Render Charts (BARU) ---
+    function renderCharts(stats) {
+        const ctx = document.getElementById('salesChart');
+        if (!ctx) return;
+
+        // Destroy chart lama jika ada
+        if (salesChart) {
+            salesChart.destroy();
+        }
+
+        const memberNames = Object.keys(stats.chekiPerMember);
+        const memberCounts = Object.values(stats.chekiPerMember);
+
+        salesChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: memberNames,
+                datasets: [{
+                    label: 'Tiket Terjual',
+                    data: memberCounts,
+                    backgroundColor: [
+                        '#3b82f6', '#8b5cf6', '#ec4899',
+                        '#10b981', '#f59e0b', '#ef4444',
+                        '#06b6d4'
+                    ],
+                    borderRadius: 8,
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false },
+                    title: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { precision: 0 }
+                    }
+                }
+            }
+        });
+    }
+
     function renderOrders(orders) {
         if (!ordersTbody) return;
         ordersTbody.innerHTML = '';
         if (orders.length === 0) {
-            ordersTbody.innerHTML = `<tr><td colspan="5" style="text-align:center;">Tidak ada tiket yang perlu dikelola.</td></tr>`;
+            ordersTbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">Tidak ada tiket yang perlu dikelola.</td></tr>`;
             return;
         }
         orders.forEach(order => {
             const row = document.createElement('tr');
             const items = order.detail_item?.map(item => `${item.quantity}x ${item.name.replace('Cheki ', '')}`).join(', ') || 'N/A';
+
+            // Format timestamp
+            const createdAt = order.dibuat_pada
+                ? new Date(order.dibuat_pada).toLocaleDateString('id-ID', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })
+                : '-';
+
             const isUsed = order.status_tiket === 'sudah_dipakai';
             const statusClass = isUsed ? 'status-hangus' : 'status-berlaku';
             const statusText = isUsed ? 'Sudah Dipakai' : 'Berlaku';
@@ -134,6 +215,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 <td data-label="ID Pesanan"><small>${order.id_pesanan}</small></td>
                 <td data-label="Pelanggan">${order.nama_pelanggan}</td>
                 <td data-label="Detail Item">${items}</td>
+                <td data-label="Dibuat Pada"><small>${createdAt}</small></td>
                 <td data-label="Status Tiket"><span class="status-badge ${statusClass}">${statusText}</span></td>
                 <td data-label="Aksi">
                     <button class="action-btn btn-use" data-orderid="${order.id_pesanan}" ${isUsed ? 'disabled' : ''}>

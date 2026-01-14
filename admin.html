@@ -17,6 +17,9 @@
     <link rel="icon" type="image/png" sizes="32x32" href="img/logo/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="img/logo/favicon-16x16.png">
     <link rel="manifest" href="img/logo/site.webmanifest">
+    
+    <!-- Chart.js for Visual Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <div class="admin-layout">
@@ -29,7 +32,7 @@
             </div>
             <nav class="sidebar-nav">
                 <a href="#" class="nav-link active" id="nav-dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-                <a href="#" class="nav-link" id="nav-reset-password"><i class="fas fa-key"></i> Reset Password</a>
+                <a href="#" class="nav-link" id="nav-reset-password"><i class="fas fa-users"></i> Akun User</a>
                 <a href="index.html" class="nav-link"><i class="fas fa-home"></i> Kembali ke Situs</a>
             </nav>
             <div class="sidebar-footer">
@@ -47,6 +50,12 @@
             <section id="statistics">
                 <div class="stats-grid" id="stats-grid">
                     </div>
+                
+                <!-- Visual Charts -->
+                <div class="content-card" style="margin-top: 2rem;">
+                    <h3 class="section-title">Grafik Penjualan Per Member</h3>
+                    <canvas id="salesChart" style="max-height: 400px;"></canvas>
+                </div>
             </section>
 
             <section id="stock-management" class="content-card">
@@ -78,6 +87,7 @@
                                 <th>ID Pesanan</th>
                                 <th>Pelanggan</th>
                                 <th>Detail Item</th>
+                                <th>Dibuat Pada</th>
                                 <th>Status Tiket</th>
                                 <th>Aksi</th>
                             </tr>
@@ -90,7 +100,7 @@
             
             <section id="reset-password-view" class="content-card" style="display: none;">
                 <div class="management-header">
-                    <h2 class="section-title">Reset Password Pengguna</h2>
+                    <h2 class="section-title">Manajemen Akun User</h2>
                     <div class="search-bar">
                         <i class="fas fa-search"></i>
                         <input type="text" id="user-search-input" placeholder="Cari username...">

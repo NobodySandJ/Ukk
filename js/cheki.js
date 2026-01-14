@@ -24,6 +24,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Fungsi Inisialisasi ---
     const initializePage = async () => {
+        // Show skeleton loading immediately
+        renderProductSkeleton();
+
         loadMidtransScript();
         await fetchProductsAndStock();
         // Hanya render jika data produk berhasil didapatkan
@@ -32,6 +35,23 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         addEventListeners();
         checkUrlForSuccess();
+    };
+
+    // --- Fungsi Skeleton Loading ---
+    const renderProductSkeleton = () => {
+        if (!chekiListContainer) return;
+        chekiListContainer.innerHTML = '';
+        for (let i = 0; i < 8; i++) {
+            const skeleton = document.createElement('div');
+            skeleton.className = 'cheki-member-card';
+            skeleton.innerHTML = `
+                <div class="skeleton skeleton-product-image"></div>
+                <div class="skeleton skeleton-text" style="margin-top: 1rem;"></div>
+                <div class="skeleton skeleton-text-short"></div>
+                <div class="skeleton skeleton-button" style="margin-top: 1rem;"></div>
+            `;
+            chekiListContainer.appendChild(skeleton);
+        }
     };
 
     const loadMidtransScript = async () => {
