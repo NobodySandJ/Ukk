@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Refresh Breeze - Official Website</title>
     
+    <meta name="description" content="Refresh Breeze Official Website - Dapatkan tiket Cheki eksklusif bersama member favorit Anda. Beli tiket, lihat leaderboard, dan ikuti berita terbaru.">
     <link rel="stylesheet" href="css/style.css">
     
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -30,7 +31,6 @@
                 <li><a href="#about">Tentang</a></li>
                 <li><a href="#members">Member</a></li>
                 <li><a href="#news">Berita</a></li>
-                <li><a href="cheki.html">Cheki</a></li>
             </ul>
 
             <div class="nav-auth-buttons">
@@ -73,27 +73,47 @@
             </div>
     </section>
 
-    <section id="members" class="bg-gray">
+    <section id="leaderboard" class="bg-gray">
         <div class="container">
-            <h2 class="section-title">MEMBER KAMI</h2>
-            <div id="member-grid" class="member-grid-detailed">
-                <p style="text-align:center; width:100%;">Memuat data member...</p>
+            <h2 class="section-title">🏆 TOP SPENDER CHEKI</h2>
+            <div id="homepage-leaderboard" class="homepage-leaderboard">
+                <p style="text-align: center;">Memuat data leaderboard...</p>
+            </div>
+            <div style="text-align: center; margin-top: 2rem;">
+                <a href="cheki.html" class="cta-button">
+                    <i class="fas fa-shopping-cart"></i> Beli Cheki & Jadi Sultan!
+                </a>
+                <p style="margin-top: 1rem; color: var(--secondary-text-color); font-size: 0.9rem;">
+                    <a href="leaderboard.html" style="color: var(--primary-color); font-weight: 500;">Lihat Leaderboard Lengkap →</a>
+                </p>
             </div>
         </div>
     </section>
 
-    <section id="news" class="container">
-        <h2 class="section-title">BERITA TERBARU</h2>
-        <div id="news-container" class="news-container">
-            </div>
+    <section id="members" class="container">
+        <h2 class="section-title">MEMBER KAMI</h2>
+        <div id="member-grid" class="member-grid-detailed">
+            <p style="text-align:center; width:100%;">Memuat data member...</p>
+        </div>
+        <div style="text-align: center; margin-top: 2.5rem;">
+            <a href="cheki.html" class="cta-button">
+                <i class="fas fa-ticket-alt"></i> Beli Tiket Cheki Sekarang
+            </a>
+        </div>
     </section>
 
-    <section id="faq" class="bg-gray">
+    <section id="news" class="bg-gray">
         <div class="container">
-            <h2 class="section-title">FAQ</h2>
-            <div id="faq-container" class="faq-container">
-                </div>
+            <h2 class="section-title">BERITA TERBARU</h2>
+            <div id="news-container" class="news-container">
+            </div>
         </div>
+    </section>
+
+    <section id="faq" class="container">
+        <h2 class="section-title">FAQ</h2>
+        <div id="faq-container" class="faq-container">
+            </div>
     </section>
 
     <div id="auth-modal" class="modal"></div>
@@ -101,13 +121,19 @@
     <footer>
         <div class="container">
             <div class="social-media">
-                <a href="#"><i class="fab fa-instagram"></i></a>
-                <a href="#"><i class="fab fa-youtube"></i></a>
-                <a href="#"><i class="fab fa-twitter"></i></a>
+                <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="#" target="_blank" rel="noopener noreferrer" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                <a href="#" target="_blank" rel="noopener noreferrer" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
             </div>
             <p id="footer-text">&copy; 2025 Refresh Breeze. All Rights Reserved.</p>
         </div>
     </footer>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <p>Memproses...</p>
+    </div>
 
     <script src="js/script.js"></script>
     <script src="js/auth.js"></script>

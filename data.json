@@ -7,16 +7,16 @@
   },
   "how_to_order": [
     {
-      "title": "Login atau Daftar Akun",
-      "description": "Anda harus masuk ke akun Anda terlebih dahulu. Jika belum punya, silakan daftar secara gratis."
+      "title": "Login atau Daftar",
+      "description": "Masuk dulu ke akunmu, ya! Kalau belum punya, daftar aja gratis kok."
     },
     {
-      "title": "Pilih Member & Jumlah Tiket",
-      "description": "Masuk ke halaman 'Pesan Tiket Cheki', lalu pilih member dan tentukan jumlah tiket yang ingin dibeli."
+      "title": "Pilih Member & Jumlah",
+      "description": "Buka halaman 'Pesan Cheki', pilih member favoritmu, terus tentuin mau beli berapa tiket."
     },
     {
-      "title": "Lakukan Pembayaran",
-      "description": "Selesaikan pembayaran melalui metode yang tersedia. Tiket akan otomatis masuk ke dashboard akun Anda setelah berhasil."
+      "title": "Bayar & Selesai!",
+      "description": "Lanjut bayar pakai metode yang tersedia. Begitu sukses, tiketmu langsung muncul di dashboard!"
     }
   ],
   "group_cheki": {
@@ -165,23 +165,23 @@
   "faq": [
     {
       "question": "Apa itu Cheki?",
-      "answer": "Cheki adalah foto instan menggunakan kamera polaroid bersama member. Jadi hasilnya langsung berupa foto fisik yang bisa kamu bawa pulang saat itu juga."
+      "answer": "Cheki itu foto instan bareng member pakai kamera polaroid. Jadi langsung jadi foto fisik yang bisa kamu bawa pulang saat itu juga!"
     },
     {
-      "question": "Bagaimana cara mendapatkan Cheki?",
-      "answer": "Setelah membeli tiket Cheki, kamu bisa langsung datang ke booth official merchandise saat event berlangsung untuk berfoto bersama member. Hasil foto polaroid akan diberikan langsung di tempat."
+      "question": "Gimana cara dapetin Cheki?",
+      "answer": "Gampang! Setelah beli tiket Cheki, tinggal dateng ke booth merchandise pas event buat foto bareng member. Hasilnya langsung dikasih di tempat."
     },
     {
-      "question": "Apakah Cheki memiliki masa berlaku?",
-      "answer": "Ya, setiap tiket Cheki hanya berlaku pada event atau periode tertentu yang diinformasikan saat pembelian. Pastikan untuk menggunakannya sesuai jadwal."
+      "question": "Tiket Cheki ada masa berlakunya gak?",
+      "answer": "Ada dong! Tiket Cheki cuma berlaku di event atau periode tertentu sesuai info pas pembelian. Jadi pastikan pakai sesuai jadwal ya."
     },
     {
-      "question": "Apakah saya bisa request pose saat berfoto?",
-      "answer": "Tentu saja! Selama pose yang diminta wajar, sopan, dan tidak bersentuhan fisik, member kami akan dengan senang hati mengikuti arahan Anda."
+      "question": "Boleh request pose pas foto gak?",
+      "answer": "Boleh banget! Asal posenya sopan dan gak ada kontak fisik, member kita siap ikutin arahanmu kok."
     },
     {
-      "question": "Bagaimana jika saya lupa password akun saya?",
-      "answer": "Saat ini fitur reset password otomatis belum tersedia. Silakan hubungi kami melalui media sosial resmi kami dengan menyertakan email dan username Anda, kami akan bantu untuk meresetnya secara manual."
+      "question": "Lupa password, gimana ya?",
+      "answer": "Saat ini fitur reset password otomatis belum ada. Tapi tenang, hubungi aja DM sosmed resmi kita sambil kasih tau email dan username-mu, nanti kita bantu reset manual."
     }
   ]
 }

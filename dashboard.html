@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - Refresh Breeze</title>
     
+    <meta name="description" content="Dashboard Refresh Breeze - Lihat riwayat tiket Cheki Anda, status pembelian, dan informasi akun.">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     
@@ -370,6 +371,18 @@
             </div>
         </div>
     </main>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logout-modal" class="logout-modal">
+        <div class="logout-modal-content">
+            <h3><i class="fas fa-sign-out-alt" style="color: #ef4444;"></i> Konfirmasi Logout</h3>
+            <p>Apakah Anda yakin ingin keluar dari akun ini?</p>
+            <div class="logout-modal-buttons">
+                <button class="btn-cancel-logout" id="cancel-logout">Batal</button>
+                <button class="btn-confirm-logout" id="confirm-logout">Ya, Logout</button>
+            </div>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1/build/qrcode.min.js"></script>
     

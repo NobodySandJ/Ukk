@@ -271,6 +271,54 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // --- HOMEPAGE LEADERBOARD ---
+    async function fetchHomepageLeaderboard() {
+        const container = document.getElementById('homepage-leaderboard');
+        if (!container) return;
+
+        try {
+            const response = await fetch('/api/leaderboard');
+            if (!response.ok) throw new Error('Gagal memuat leaderboard');
+
+            const data = await response.json();
+
+            if (!data || data.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: var(--secondary-text-color);">
+                        <p style="font-size: 3rem; margin-bottom: 1rem;">🏆</p>
+                        <p>Belum ada Top Spender saat ini.</p>
+                        <p style="margin-top: 0.5rem;">Jadilah yang pertama!</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const top3 = data.slice(0, 3);
+            const rankEmojis = ['🥇', '🥈', '🥉'];
+
+            container.innerHTML = `
+                <div class="homepage-leaderboard-grid">
+                    ${top3.map((user, index) => `
+                        <div class="leaderboard-card rank-${index + 1}">
+                            <div class="leaderboard-rank">${rankEmojis[index]}</div>
+                            <div class="leaderboard-name">${user.username}</div>
+                            <div class="leaderboard-oshi">❤️ ${user.oshi || 'All Member'}</div>
+                            <div class="leaderboard-count">${user.totalQuantity || user.totalCheki || 0} Cheki</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+        } catch (error) {
+            console.error('Error fetching leaderboard:', error);
+            container.innerHTML = `
+                <div style="text-align: center; padding: 2rem; color: var(--secondary-text-color);">
+                    <p>Tidak dapat memuat leaderboard.</p>
+                </div>
+            `;
+        }
+    }
+
     // Hamburger Menu Toggle
     const hamburger = document.getElementById('hamburger-menu');
     const navMenu = document.getElementById('nav-menu');
@@ -283,5 +331,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // Panggil fungsi utama jika ini adalah halaman utama (index.html)
     if (document.querySelector('#hero')) {
         loadWebsiteData();
+        fetchHomepageLeaderboard();
     }
 });

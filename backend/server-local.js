@@ -8,14 +8,14 @@ const cors = require("cors");
 const { createClient } = require("@supabase/supabase-js");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-require("dotenv").config();
+require("dotenv").config({ path: require('path').join(__dirname, '..', '.env') });
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
 // --- Load Product Data ---
-const productData = require('./data.json');
+const productData = require('../data.json');
 
 // --- 1. Validasi Environment Variables ---
 const requiredEnv = ['MIDTRANS_SERVER_KEY', 'MIDTRANS_CLIENT_KEY', 'SUPABASE_URL', 'SUPABASE_ANON_KEY', 'JWT_SECRET'];
@@ -87,7 +87,7 @@ const getChekiStock = async () => {
 // ===================================
 // --- STATIC FILES (Serve Frontend) ---
 // ===================================
-app.use(express.static(path.join(__dirname)));
+app.use(express.static(path.join(__dirname, '..')));
 
 // ===================================
 // --- API ENDPOINTS ---
@@ -634,10 +634,10 @@ app.post("/api/reset-password", async (req, res) => {
 app.get('*', (req, res) => {
     // Only serve HTML files, not API requests
     if (!req.path.startsWith('/api')) {
-        const filePath = path.join(__dirname, req.path);
+        const filePath = path.join(__dirname, '..', req.path);
         res.sendFile(filePath, (err) => {
             if (err) {
-                res.sendFile(path.join(__dirname, 'index.html'));
+                res.sendFile(path.join(__dirname, '..', 'index.html'));
             }
         });
     }

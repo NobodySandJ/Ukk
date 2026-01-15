@@ -1,9 +1,11 @@
 {
-  "name": "backend",
+  "name": "refresh-breeze",
   "version": "1.0.0",
-  "description": "",
+  "description": "Refresh Breeze - Backend Server",
   "main": "server.js",
   "scripts": {
+    "start": "node server-local.js",
+    "dev": "node server-local.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

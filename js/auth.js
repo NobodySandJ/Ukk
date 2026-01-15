@@ -14,14 +14,16 @@ document.addEventListener('DOMContentLoaded', function () {
         // Populate Mobile Menu
         const navMenu = document.getElementById('nav-menu');
         if (navMenu) {
-            // Build mobile menu content
+            // Build mobile menu content with close button
             let mobileMenuHTML = `
+                <button class="mobile-menu-close" id="mobile-menu-close" aria-label="Tutup menu">
+                    <i class="fas fa-times"></i>
+                </button>
                 <ul class="mobile-nav-links">
-                    <li><a href="index.html#hero">Beranda</a></li>
-                    <li><a href="index.html#about">Tentang</a></li>
-                    <li><a href="index.html#members">Member</a></li>
-                    <li><a href="index.html#news">Berita</a></li>
-                    <li><a href="cheki.html">Cheki</a></li>
+                    <li><a href="index.html#hero" data-page="index">Beranda</a></li>
+                    <li><a href="index.html#about" data-page="index">Tentang</a></li>
+                    <li><a href="index.html#members" data-page="index">Member</a></li>
+                    <li><a href="index.html#news" data-page="index">Berita</a></li>
                 </ul>
                 <div class="mobile-auth-buttons">
             `;
@@ -71,7 +73,25 @@ document.addEventListener('DOMContentLoaded', function () {
                     }
                 });
             }
+
+            // Add close button event listener
+            const mobileCloseBtn = document.getElementById('mobile-menu-close');
+            if (mobileCloseBtn) {
+                mobileCloseBtn.addEventListener('click', () => {
+                    navMenu.classList.remove('active');
+                });
+            }
+
+            // Close menu when clicking on a link
+            navMenu.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    navMenu.classList.remove('active');
+                });
+            });
         }
+
+        // Set Active Page Indicator
+        setActiveNavLink();
 
         // Update Tombol Auth (Login/Register vs Dashboard Button) - Desktop
         const navAuthButtons = document.querySelector('.nav-auth-buttons');
@@ -95,6 +115,58 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // --- ACTIVE PAGE INDICATOR ---
+    function setActiveNavLink() {
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        const currentHash = window.location.hash;
+        const pageMap = {
+            'index.html': 'index',
+            '': 'index', // root path
+            'cheki.html': 'cheki',
+            'dashboard.html': 'dashboard',
+            'leaderboard.html': 'leaderboard',
+            'admin.html': 'admin',
+            'edit-profile.html': 'edit-profile'
+        };
+        const currentPageKey = pageMap[currentPage] || 'index';
+
+        // Desktop nav links - Only mark ONE link as active
+        const desktopLinks = document.querySelectorAll('ul.nav-links a');
+        desktopLinks.forEach(link => link.classList.remove('active'));
+
+        if (currentPageKey === 'index') {
+            // On index page, mark "Beranda" as active (first link)
+            const berandaLink = document.querySelector('ul.nav-links a[href="#hero"]');
+            if (berandaLink) {
+                berandaLink.classList.add('active');
+            }
+        } else if (currentPageKey === 'leaderboard') {
+            // No specific link for leaderboard in navbar, so no active state
+        } else if (currentPageKey === 'cheki') {
+            // Cheki removed from navbar, no active state
+        } else {
+            // For other pages, find matching link
+            desktopLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href && href.includes(currentPage)) {
+                    link.classList.add('active');
+                }
+            });
+        }
+
+        // Mobile nav links - Same logic
+        const mobileLinks = document.querySelectorAll('.mobile-nav-links a');
+        mobileLinks.forEach(link => link.classList.remove('active'));
+
+        if (currentPageKey === 'index') {
+            // On index page, mark first link as active
+            const firstLink = document.querySelector('.mobile-nav-links a');
+            if (firstLink) {
+                firstLink.classList.add('active');
+            }
+        }
+    }
+
 
     // --- 2. RENDER MODAL HTML ---
     if (authModal) {
@@ -104,7 +176,7 @@ document.addEventListener('DOMContentLoaded', function () {
             
             <div id="login-view">
                 <div class="modal-form-container">
-                    <h2>Login Akun</h2>
+                    <h2>Masuk</h2>
                     <form id="login-form" class="modal-form">
                         <input type="email" id="login-email" placeholder="Email" required>
                         
@@ -125,20 +197,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
             <div id="register-view" style="display: none;">
                 <div class="modal-form-container">
-                    <h2>Buat Akun Baru</h2>
+                    <h2>Daftar Akun</h2>
                     
-                    <!-- Progress Indicator -->
+                    <!-- Progress Indicator (Clickable) -->
                     <div class="registration-progress" style="display: flex; justify-content: space-between; margin-bottom: 2rem; position: relative;">
-                        <div class="progress-step active" data-step="1" style="flex: 1; text-align: center; position: relative;">
-                            <div style="width: 30px; height: 30px; border-radius: 50%; background: var(--primary-color); color: white; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 0.5rem;">1</div>
+                        <div class="progress-step active" data-step="1" style="flex: 1; text-align: center; position: relative; cursor: pointer;" title="Info Dasar">
+                            <div style="width: 30px; height: 30px; border-radius: 50%; background: var(--primary-color); color: white; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 0.5rem; transition: all 0.3s;">1</div>
                             <div style="font-size: 0.75rem; color: var(--primary-color);">Info Dasar</div>
                         </div>
-                        <div class="progress-step" data-step="2" style="flex: 1; text-align: center; position: relative;">
-                            <div style="width: 30px; height: 30px; border-radius: 50%; background: #ddd; color: #888; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 0.5rem;">2</div>
+                        <div class="progress-step" data-step="2" style="flex: 1; text-align: center; position: relative; cursor: pointer;" title="Kontak">
+                            <div style="width: 30px; height: 30px; border-radius: 50%; background: #ddd; color: #888; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 0.5rem; transition: all 0.3s;">2</div>
                             <div style="font-size: 0.75rem; color: #888;">Kontak</div>
                         </div>
-                        <div class="progress-step" data-step="3" style="flex: 1; text-align: center; position: relative;">
-                            <div style="width: 30px; height: 30px; border-radius: 50%; background: #ddd; color: #888; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 0.5rem;">3</div>
+                        <div class="progress-step" data-step="3" style="flex: 1; text-align: center; position: relative; cursor: pointer;" title="Keamanan">
+                            <div style="width: 30px; height: 30px; border-radius: 50%; background: #ddd; color: #888; display: inline-flex; align-items: center; justify-content: center; font-weight: bold; margin-bottom: 0.5rem; transition: all 0.3s;">3</div>
                             <div style="font-size: 0.75rem; color: #888;">Keamanan</div>
                         </div>
                     </div>
@@ -156,15 +228,21 @@ document.addEventListener('DOMContentLoaded', function () {
                             <input type="email" id="register-email" placeholder="Email Aktif" required>
                             <input type="text" id="register-whatsapp" placeholder="No. WhatsApp (08xxx)" required>
                             <div style="display: flex; gap: 0.5rem;">
-                                <button type="button" class="btn-prev" style="flex: 1; padding: 0.8rem; border: 1px solid var(--primary-color); background: white; color: var(--primary-color); border-radius: 8px; cursor: pointer; font-weight: 500;">Kembali</button>
-                                <button type="button" class="cta-button btn-next" style="flex: 2;">Selanjutnya</button>
+                                <button type="button" class="btn-prev cta-button" style="flex: 1; background: white; color: var(--primary-color); border: 1px solid var(--primary-color);">Kembali</button>
+                                <button type="button" class="cta-button btn-next" style="flex: 1;">Selanjutnya</button>
                             </div>
                         </div>
 
                         <!-- Step 3: Password & Oshi -->
                         <div class="form-step" data-step="3" style="display: none;">
-                            <input type="password" id="register-password" placeholder="Password (Min. 6 Karakter)" required>
-                            <input type="password" id="register-confirm-password" placeholder="Konfirmasi Password" required>
+                            <div style="position: relative; width: 100%; margin-bottom: 1rem;">
+                                <input type="password" id="register-password" placeholder="Password (Min. 6 Karakter)" required style="width: 100%; padding-right: 40px;">
+                                <i id="toggle-register-pass" class="fas fa-eye" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888;"></i>
+                            </div>
+                            <div style="position: relative; width: 100%; margin-bottom: 1rem;">
+                                <input type="password" id="register-confirm-password" placeholder="Konfirmasi Password" required style="width: 100%; padding-right: 40px;">
+                                <i id="toggle-register-confirm-pass" class="fas fa-eye" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888;"></i>
+                            </div>
                             
                             <div class="form-group" style="margin-bottom: 1rem;">
                                 <select id="register-oshi" required style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; background: #fff;">
@@ -185,8 +263,8 @@ document.addEventListener('DOMContentLoaded', function () {
                             </div>
 
                             <div style="display: flex; gap: 0.5rem;">
-                                <button type="button" class="btn-prev" style="flex: 1; padding: 0.8rem; border: 1px solid var(--primary-color); background: white; color: var(--primary-color); border-radius: 8px; cursor: pointer; font-weight: 500;">Kembali</button>
-                                <button type="submit" class="cta-button" style="flex: 2;">Daftar</button>
+                                <button type="button" class="btn-prev cta-button" style="flex: 1; background: white; color: var(--primary-color); border: 1px solid var(--primary-color);">Kembali</button>
+                                <button type="submit" class="cta-button" style="flex: 1;">Daftar</button>
                             </div>
                         </div>
 
@@ -303,7 +381,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
 
-        // Show/Hide Password
+        // Show/Hide Password - Login
         const togglePassBtn = document.getElementById('toggle-login-pass');
         const passInput = document.getElementById('login-password');
         if (togglePassBtn && passInput) {
@@ -312,6 +390,30 @@ document.addEventListener('DOMContentLoaded', function () {
                 passInput.setAttribute('type', type);
                 togglePassBtn.classList.toggle('fa-eye');
                 togglePassBtn.classList.toggle('fa-eye-slash');
+            });
+        }
+
+        // Show/Hide Password - Register (Password)
+        const toggleRegisterPassBtn = document.getElementById('toggle-register-pass');
+        const registerPassInput = document.getElementById('register-password');
+        if (toggleRegisterPassBtn && registerPassInput) {
+            toggleRegisterPassBtn.addEventListener('click', () => {
+                const type = registerPassInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                registerPassInput.setAttribute('type', type);
+                toggleRegisterPassBtn.classList.toggle('fa-eye');
+                toggleRegisterPassBtn.classList.toggle('fa-eye-slash');
+            });
+        }
+
+        // Show/Hide Password - Register (Confirm Password)
+        const toggleRegisterConfirmBtn = document.getElementById('toggle-register-confirm-pass');
+        const registerConfirmInput = document.getElementById('register-confirm-password');
+        if (toggleRegisterConfirmBtn && registerConfirmInput) {
+            toggleRegisterConfirmBtn.addEventListener('click', () => {
+                const type = registerConfirmInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                registerConfirmInput.setAttribute('type', type);
+                toggleRegisterConfirmBtn.classList.toggle('fa-eye');
+                toggleRegisterConfirmBtn.classList.toggle('fa-eye-slash');
             });
         }
 
@@ -422,6 +524,30 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.addEventListener('click', () => {
                 if (currentStep > 1) {
                     showStep(currentStep - 1);
+                }
+            });
+        });
+
+        // Clickable Progress Step Indicators
+        const progressSteps = document.querySelectorAll('.progress-step');
+        progressSteps.forEach(stepEl => {
+            stepEl.addEventListener('click', () => {
+                const targetStep = parseInt(stepEl.getAttribute('data-step'));
+                // Only allow going back to completed steps or forward with validation
+                if (targetStep < currentStep) {
+                    showStep(targetStep);
+                } else if (targetStep > currentStep) {
+                    // Validate all steps up to the target
+                    let canProceed = true;
+                    for (let i = currentStep; i < targetStep; i++) {
+                        if (!validateStep(i)) {
+                            canProceed = false;
+                            break;
+                        }
+                    }
+                    if (canProceed) {
+                        showStep(targetStep);
+                    }
                 }
             });
         });

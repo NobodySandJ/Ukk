@@ -127,11 +127,39 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- LOGIKA RIWAYAT TIKET (SAMA SEPERTI SEBELUMNYA) ---
     const ticketContainer = document.getElementById('ticket-container');
     const logoutBtn = document.getElementById('logout-btn');
+    const logoutModal = document.getElementById('logout-modal');
+    const cancelLogoutBtn = document.getElementById('cancel-logout');
+    const confirmLogoutBtn = document.getElementById('confirm-logout');
 
+    // Open logout modal instead of direct logout
     logoutBtn?.addEventListener('click', () => {
+        if (logoutModal) {
+            logoutModal.classList.add('active');
+        }
+    });
+
+    // Cancel logout
+    cancelLogoutBtn?.addEventListener('click', () => {
+        if (logoutModal) {
+            logoutModal.classList.remove('active');
+        }
+    });
+
+    // Close modal when clicking outside
+    logoutModal?.addEventListener('click', (e) => {
+        if (e.target === logoutModal) {
+            logoutModal.classList.remove('active');
+        }
+    });
+
+    // Confirm logout
+    confirmLogoutBtn?.addEventListener('click', () => {
         localStorage.removeItem('userToken');
         localStorage.removeItem('userData');
-        window.location.href = 'index.html';
+        showToast('Anda telah logout. Sampai jumpa!', 'success');
+        setTimeout(() => {
+            window.location.href = 'index.html';
+        }, 1000);
     });
 
     async function fetchOrders() {

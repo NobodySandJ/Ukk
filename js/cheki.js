@@ -312,14 +312,26 @@ document.addEventListener('DOMContentLoaded', () => {
         submitButton.innerHTML = `<i class="fas fa-times-circle"></i> ${text}`;
     };
 
-    const setPaymentButtonLoading = (isLoading) => {
+    const setPaymentButtonLoading = (isLoading, loadingText = 'Memproses pembayaran...') => {
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingTextEl = document.getElementById('loading-text');
+
         if (!submitButton) return;
         if (isLoading) {
             submitButton.disabled = true;
             submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
+            // Show loading overlay
+            if (loadingOverlay) {
+                loadingOverlay.classList.add('active');
+                if (loadingTextEl) loadingTextEl.textContent = loadingText;
+            }
         } else {
             submitButton.disabled = false;
             submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
+            // Hide loading overlay
+            if (loadingOverlay) {
+                loadingOverlay.classList.remove('active');
+            }
         }
     };
 
