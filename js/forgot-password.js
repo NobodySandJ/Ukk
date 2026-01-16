@@ -32,14 +32,20 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Validasi format nomor WA (harus diawali 62)
-        if (!whatsapp.startsWith('62')) {
-            showMessage('Nomor WhatsApp harus diawali dengan 62 (contoh: 6281234567890)', 'error');
+        // Normalize nomor WA: convert 08xxx ke 62xxx
+        let normalizedWA = whatsapp;
+        if (whatsapp.startsWith('08')) {
+            normalizedWA = '62' + whatsapp.substring(1);
+        }
+
+        // Validasi format nomor WA (harus diawali 62 atau 08)
+        if (!normalizedWA.startsWith('62')) {
+            showMessage('Format nomor tidak valid. Gunakan 08xxx atau 62xxx', 'error');
             return;
         }
 
-        if (whatsapp.length < 10) {
-            showMessage('Nomor WhatsApp tidak valid.', 'error');
+        if (normalizedWA.length < 10 || normalizedWA.length > 15) {
+            showMessage('Nomor WhatsApp tidak valid (10-15 digit).', 'error');
             return;
         }
 
@@ -51,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const response = await fetch('/api/verify-and-generate-otp', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ whatsapp, email })
+                body: JSON.stringify({ whatsapp: normalizedWA, email })
             });
 
             const result = await response.json();
