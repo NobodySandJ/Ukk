@@ -3,14 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- ============================================================
+    JUDUL HALAMAN - Edit di sini
+    ============================================================ -->
     <title>Edit Profil - Refresh Breeze</title>
     <meta name="description" content="Edit Profil - Perbarui informasi akun Refresh Breeze Anda">
+    
+    <!-- CSS & Icons -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <!-- Favicon -->
     <link rel="apple-touch-icon" sizes="180x180" href="img/logo/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="img/logo/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="img/logo/favicon-16x16.png">
     <link rel="manifest" href="img/logo/site.webmanifest">
+    
+    <!-- ============================================================
+    STYLE HALAMAN EDIT PROFIL
+    Edit styling form di sini
+    ============================================================ -->
     <style>
         body { background-color: #f4f7f9; }
         .profile-card {
@@ -47,6 +60,9 @@
     </style>
 </head>
 <body>
+    <!-- ============================================================
+    HEADER / NAVBAR
+    ============================================================ -->
     <header>
         <nav class="container">
             <a href="index.html" class="logo">
@@ -64,7 +80,7 @@
                 <li><a href="cheki.html">Cheki</a></li>
             </ul>
             <div class="nav-auth-buttons">
-                <!-- Will be populated by auth.js -->
+                <!-- Diisi oleh auth.js -->
             </div>
             <button class="hamburger" id="hamburger-menu" aria-label="Buka menu navigasi"><i class="fas fa-bars"></i></button>
         </nav>
@@ -72,31 +88,46 @@
     </header>
 
     <main>
+        <!-- ============================================================
+        SECTION: FORM EDIT PROFIL
+        Field: Username, Email, WhatsApp, Instagram, Password
+        ============================================================ -->
         <section id="edit-profile-page">
             <div class="container">
                  <div class="profile-card">
                     <h2 style="text-align: center;">Edit Profil</h2>
                     <form id="profile-update-form" class="profile-form">
+                        <!-- Input Username -->
                         <div class="form-group">
                             <label for="profile-username">Username</label>
                             <input type="text" id="profile-username" required>
                         </div>
+                        
+                        <!-- Input Email -->
                         <div class="form-group">
                             <label for="profile-email">Email</label>
                             <input type="email" id="profile-email" required>
                         </div>
+                        
+                        <!-- Input WhatsApp -->
                         <div class="form-group">
                             <label for="profile-whatsapp">No. WhatsApp</label>
                             <input type="text" id="profile-whatsapp">
                         </div>
+                        
+                        <!-- Input Instagram -->
                         <div class="form-group">
                             <label for="profile-instagram">Instagram</label>
                             <input type="text" id="profile-instagram">
                         </div>
+                        
+                        <!-- Input Password Baru (opsional) -->
                          <div class="form-group">
                             <label for="profile-password">Password Baru (opsional)</label>
                             <input type="password" id="profile-password" placeholder="Isi untuk ganti password">
                         </div>
+                        
+                        <!-- Tombol Submit -->
                         <button type="submit" class="cta-button">Simpan Perubahan</button>
                     </form>
                     <a href="dashboard.html" class="back-link">Kembali ke Dashboard</a>
@@ -111,6 +142,7 @@
         </div>
     </footer>
     
+    <!-- JavaScript Files -->
     <script src="js/script.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/edit-profile.js"></script>

@@ -1,101 +1,277 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // Pastikan kode ini hanya berjalan di halaman galeri
-    if (!document.getElementById('gallery-page')) {
+// ================================================================
+// FILE: gallery.js - Logika Halaman Galeri
+// Menampilkan foto member dan event dengan filter & lightbox
+// Data diambil dari file JSON eksternal
+// ================================================================
+
+document.addEventListener('DOMContentLoaded', async () => {
+    // Pastikan hanya berjalan di halaman galeri
+    if (!document.querySelector('.gallery-hero')) {
         return;
     }
 
-    const galleryGrid = document.getElementById('gallery-grid');
+    // ============================================================
+    // LOAD DATA DARI JSON
+    // ============================================================
+    let galleryData = {
+        group: [],
+        member: {},
+        dokumentasi: []
+    };
+
+    try {
+        const response = await fetch('data/gallery-data.json');
+        if (response.ok) {
+            galleryData = await response.json();
+        }
+    } catch (error) {
+        console.warn('Tidak dapat memuat gallery-data.json, menggunakan data default');
+    }
+
+    // Daftar member untuk selector
+    const members = [
+        { name: 'Aca', imgKey: 'aca' },
+        { name: 'Sinta', imgKey: 'sinta' },
+        { name: 'Cissi', imgKey: 'cissi' },
+        { name: 'Channie', imgKey: 'channie' },
+        { name: 'Cally', imgKey: 'cally' },
+        { name: 'Yanyee', imgKey: 'yanyee' },
+        { name: 'Piya', imgKey: 'piya' }
+    ];
+
+    // ============================================================
+    // SELEKTOR DOM
+    // ============================================================
+    const groupGallery = document.getElementById('group-gallery');
+    const memberGallery = document.getElementById('member-gallery');
+    const memberAvatars = document.getElementById('member-avatars');
+    const eventGallery = document.getElementById('event-gallery');
+    const filterButtons = document.querySelectorAll('.filter-tab');
+
+    const groupSection = document.getElementById('group-section');
+    const memberSection = document.getElementById('member-section');
+    const eventSection = document.getElementById('event-section');
+
     const lightbox = document.getElementById('lightbox');
     const lightboxImg = document.getElementById('lightbox-img');
-    const lightboxCaption = document.getElementById('lightbox-caption');
+    const lightboxTitle = document.getElementById('lightbox-title');
+    const lightboxDesc = document.getElementById('lightbox-desc');
     const closeBtn = lightbox.querySelector('.close-btn');
     const prevBtn = lightbox.querySelector('.prev-btn');
     const nextBtn = lightbox.querySelector('.next-btn');
 
-    let galleryData = [];
+    let allImages = [];
     let currentIndex = 0;
+    let selectedMember = 'all';
 
-    // Fungsi untuk memuat gambar dari data.json
-    async function loadGalleryImages() {
-        if (!galleryGrid) return;
+    // ============================================================
+    // FUNGSI RENDER MEMBER AVATARS (SELECTOR)
+    // ============================================================
+    function renderMemberAvatars() {
+        if (!memberAvatars) return;
 
-        try {
-            const response = await fetch('data.json');
-            if (!response.ok) {
-                throw new Error(`Gagal mengambil data galeri: ${response.statusText}`);
-            }
-            const data = await response.json();
-            galleryData = data.gallery || [];
+        memberAvatars.innerHTML = '';
 
-            if (galleryData.length === 0) {
-                galleryGrid.innerHTML = '<p>Tidak ada gambar di galeri.</p>';
-                return;
-            }
+        // Tombol "Semua"
+        const allBtn = document.createElement('div');
+        allBtn.className = 'member-avatar all-btn active';
+        allBtn.dataset.member = 'all';
+        allBtn.innerHTML = '<span>Semua</span>';
+        allBtn.addEventListener('click', () => selectMember('all'));
+        memberAvatars.appendChild(allBtn);
 
-            renderGallery();
-        } catch (error) {
-            console.error(error);
-            galleryGrid.innerHTML = `<p>Gagal memuat galeri. Silakan coba lagi nanti.</p>`;
-        }
-    }
-
-    // Fungsi untuk menampilkan gambar ke dalam grid
-    function renderGallery() {
-        galleryGrid.innerHTML = '';
-        galleryData.forEach((item, index) => {
-            const galleryItem = document.createElement('div');
-            galleryItem.className = 'gallery-item';
-            galleryItem.innerHTML = `
-                <img src="${item.src}" alt="${item.alt}" loading="lazy">
-                <div class="gallery-item-overlay">
-                    <i class="fas fa-search-plus"></i>
-                </div>
+        // Avatar setiap member
+        members.forEach(member => {
+            const avatar = document.createElement('div');
+            avatar.className = 'member-avatar';
+            avatar.dataset.member = member.imgKey;
+            avatar.innerHTML = `
+                <img src="img/member/${member.imgKey}.webp" alt="${member.name}" loading="lazy">
+                <span class="member-name">${member.name}</span>
             `;
-            galleryItem.addEventListener('click', () => openLightbox(index));
-            galleryGrid.appendChild(galleryItem);
+            avatar.addEventListener('click', () => selectMember(member.imgKey));
+            memberAvatars.appendChild(avatar);
         });
     }
 
-    // Fungsi untuk membuka lightbox
-    function openLightbox(index) {
+    // ============================================================
+    // FUNGSI SELECT MEMBER
+    // ============================================================
+    function selectMember(memberKey) {
+        selectedMember = memberKey;
+
+        // Update avatar active state
+        document.querySelectorAll('.member-avatar').forEach(avatar => {
+            avatar.classList.toggle('active', avatar.dataset.member === memberKey);
+        });
+
+        // Render foto berdasarkan member yang dipilih
+        renderMemberPhotos();
+    }
+
+    // ============================================================
+    // FUNGSI RENDER MEMBER PHOTOS (FILTERED)
+    // ============================================================
+    function renderMemberPhotos() {
+        if (!memberGallery) return;
+
+        let photosToShow = [];
+
+        if (selectedMember === 'all') {
+            // Tampilkan semua foto member
+            Object.values(galleryData.member || {}).forEach(memberPhotos => {
+                photosToShow = photosToShow.concat(memberPhotos);
+            });
+        } else {
+            // Tampilkan foto dari member yang dipilih saja
+            photosToShow = (galleryData.member && galleryData.member[selectedMember]) || [];
+        }
+
+        renderGallery(memberGallery, photosToShow, 'member');
+
+        // Update count
+        const memberCount = document.getElementById('member-count');
+        if (memberCount) {
+            memberCount.textContent = photosToShow.length;
+        }
+    }
+
+    // ============================================================
+    // FUNGSI RENDER GALERI
+    // ============================================================
+    function renderGallery(container, items, category) {
+        if (!container) return;
+        container.innerHTML = '';
+
+        // Filter out placeholder items
+        const validItems = items.filter(item =>
+            item.src && !item.src.includes('example.webp')
+        );
+
+        if (validItems.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-images"></i>
+                    <p>Belum ada foto dalam kategori ini.</p>
+                </div>
+            `;
+            return;
+        }
+
+        validItems.forEach((item, index) => {
+            const div = document.createElement('div');
+            const isLandscape = category === 'group';
+            div.className = `gallery-item ${item.size || ''} ${isLandscape ? 'landscape' : ''}`;
+            div.innerHTML = `
+                <img src="${item.src}" alt="${item.title}" loading="lazy">
+                <div class="gallery-overlay">
+                    <h3>${item.title}</h3>
+                    <p>${item.description}</p>
+                    <div class="date"><i class="fas fa-calendar-alt"></i> ${item.date}</div>
+                </div>
+            `;
+            div.addEventListener('click', () => openLightbox(validItems, index));
+            container.appendChild(div);
+        });
+    }
+
+    // ============================================================
+    // FUNGSI UPDATE STATISTIK
+    // ============================================================
+    function updateStats() {
+        // Hitung total foto member
+        let totalMemberPhotos = 0;
+        Object.values(galleryData.member || {}).forEach(memberPhotos => {
+            totalMemberPhotos += memberPhotos.length;
+        });
+
+        const groupPhotos = (galleryData.group || []).length;
+        const dokPhotos = (galleryData.dokumentasi || []).filter(d => !d.src.includes('example.webp')).length;
+        const totalPhotos = groupPhotos + totalMemberPhotos + dokPhotos;
+
+        document.getElementById('total-photos').textContent = totalPhotos;
+        document.getElementById('total-events').textContent = dokPhotos;
+
+        const eventCount = document.getElementById('event-count');
+        if (eventCount) {
+            eventCount.textContent = dokPhotos;
+        }
+    }
+
+    // ============================================================
+    // FUNGSI FILTER
+    // ============================================================
+    function applyFilter(filter) {
+        if (groupSection) groupSection.style.display = (filter === 'all' || filter === 'group') ? 'block' : 'none';
+        if (memberSection) memberSection.style.display = (filter === 'all' || filter === 'member') ? 'block' : 'none';
+        if (eventSection) eventSection.style.display = (filter === 'all' || filter === 'event') ? 'block' : 'none';
+    }
+
+    filterButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            filterButtons.forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            applyFilter(btn.dataset.filter);
+        });
+    });
+
+    // ============================================================
+    // FUNGSI LIGHTBOX
+    // ============================================================
+    function openLightbox(images, index) {
+        allImages = images;
         currentIndex = index;
         updateLightboxImage();
         lightbox.classList.add('active');
+        document.body.style.overflow = 'hidden';
     }
 
-    // Fungsi untuk menutup lightbox
     function closeLightbox() {
         lightbox.classList.remove('active');
+        document.body.style.overflow = '';
     }
 
-    // Fungsi untuk memperbarui gambar dan caption di lightbox
     function updateLightboxImage() {
-        const item = galleryData[currentIndex];
+        const item = allImages[currentIndex];
         lightboxImg.src = item.src;
-        lightboxCaption.textContent = item.alt;
+        lightboxImg.alt = item.title;
+        lightboxTitle.textContent = item.title;
+        lightboxDesc.textContent = item.description;
     }
 
-    // Fungsi navigasi lightbox
-    function showNextImage() {
-        currentIndex = (currentIndex + 1) % galleryData.length;
+    function nextImage() {
+        currentIndex = (currentIndex + 1) % allImages.length;
         updateLightboxImage();
     }
 
-    function showPrevImage() {
-        currentIndex = (currentIndex - 1 + galleryData.length) % galleryData.length;
+    function prevImage() {
+        currentIndex = (currentIndex - 1 + allImages.length) % allImages.length;
         updateLightboxImage();
     }
 
-    // Event Listeners untuk lightbox
+    // Event Listeners Lightbox
     closeBtn.addEventListener('click', closeLightbox);
-    nextBtn.addEventListener('click', showNextImage);
-    prevBtn.addEventListener('click', showPrevImage);
+    prevBtn.addEventListener('click', prevImage);
+    nextBtn.addEventListener('click', nextImage);
+
     lightbox.addEventListener('click', (e) => {
-        if (e.target === lightbox) {
-            closeLightbox();
-        }
+        if (e.target === lightbox) closeLightbox();
     });
-    
-    // Panggil fungsi utama
-    loadGalleryImages();
+
+    // Keyboard Navigation
+    document.addEventListener('keydown', (e) => {
+        if (!lightbox.classList.contains('active')) return;
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowRight') nextImage();
+        if (e.key === 'ArrowLeft') prevImage();
+    });
+
+    // ============================================================
+    // INISIALISASI
+    // ============================================================
+    renderMemberAvatars();
+    renderGallery(groupGallery, galleryData.group || [], 'group');
+    renderMemberPhotos();
+    renderGallery(eventGallery, galleryData.dokumentasi || [], 'event');
+    updateStats();
 });

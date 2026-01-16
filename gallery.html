@@ -1,21 +1,506 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- ============================================================
+    HALAMAN GALERI - Foto Member & Event
+    ============================================================ -->
     <title>Galeri - Refresh Breeze</title>
+    <meta name="description" content="Galeri foto Refresh Breeze - Lihat momen-momen berharga dari member dan event kami.">
+    
+    <!-- CSS & Icons -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <!-- Favicon -->
     <link rel="apple-touch-icon" sizes="180x180" href="img/logo/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="img/logo/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="img/logo/favicon-16x16.png">
-    <link rel="manifest" href="img/logo/site.webmanifest">
-    <script src="js/gallery.js"></script> <script src="https://cdn.jsdelivr.net/npm/qrcode@1/build/qrcode.min.js"></script>
+    
+    <!-- ============================================================
+    STYLE HALAMAN GALERI
+    ============================================================ -->
+    <style>
+        /* Hero Banner */
+        .gallery-hero {
+            background: linear-gradient(135deg, #16a34a 0%, #15803d 50%, #166534 100%);
+            padding: 4rem 0;
+            text-align: center;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .gallery-hero::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.05'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+            opacity: 0.5;
+        }
+        
+        .gallery-hero h1 {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .gallery-hero p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .gallery-hero .stats {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            margin-top: 2rem;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .gallery-hero .stat-item {
+            text-align: center;
+        }
+        
+        .gallery-hero .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+        }
+        
+        .gallery-hero .stat-label {
+            font-size: 0.85rem;
+            opacity: 0.8;
+        }
+
+        /* Filter Tabs */
+        .gallery-filters {
+            display: flex;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 2rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .filter-tab {
+            padding: 0.75rem 1.5rem;
+            border: 2px solid var(--primary-color);
+            background: transparent;
+            color: var(--primary-color);
+            border-radius: 50px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .filter-tab:hover {
+            background: var(--primary-color);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        .filter-tab.active {
+            background: var(--primary-color);
+            color: white;
+            box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3);
+        }
+
+        /* Gallery Section */
+        .gallery-section {
+            padding: 0 0 4rem;
+        }
+        
+        .gallery-category {
+            margin-bottom: 3rem;
+        }
+        
+        .gallery-category-title {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--primary-light);
+        }
+        
+        .gallery-category-title h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-color);
+        }
+        
+        .gallery-category-title .badge {
+            background: var(--primary-color);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        /* Member Selector */
+        .member-selector {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: rgba(22, 163, 74, 0.05);
+            border-radius: 16px;
+            border: 1px solid rgba(22, 163, 74, 0.1);
+        }
+        
+        .member-selector-title {
+            text-align: center;
+            margin-bottom: 1rem;
+            font-size: 0.95rem;
+            color: var(--secondary-text-color);
+        }
+        
+        .member-avatars {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        .member-avatar {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            overflow: hidden;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .member-avatar:hover {
+            transform: scale(1.1);
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 15px rgba(22, 163, 74, 0.3);
+        }
+        
+        .member-avatar.active {
+            border-color: var(--primary-color);
+            box-shadow: 0 4px 15px rgba(22, 163, 74, 0.4);
+        }
+        
+        .member-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .member-avatar .member-name {
+            position: absolute;
+            bottom: -24px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--text-color);
+            white-space: nowrap;
+        }
+        
+        .member-avatar.all-btn {
+            background: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .member-avatar.all-btn:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Modern Masonry Grid */
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.25rem;
+        }
+
+        /* Special grid for group photos - full width landscape */
+        .group-gallery-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+        }
+
+        .group-gallery-grid .gallery-item {
+            aspect-ratio: 16/9;
+            max-height: 400px;
+        }
+
+        .group-gallery-grid .gallery-item.wide,
+        .group-gallery-grid .gallery-item.landscape {
+            grid-column: 1 / -1;
+        }
+        
+        .gallery-item {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.4s ease;
+            background: #f5f5f5;
+        }
+        
+        .gallery-item:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.5s ease;
+        }
+        
+        .gallery-item:hover img {
+            transform: scale(1.1);
+        }
+        
+        /* Card sizes for variation */
+        .gallery-item.tall {
+            grid-row: span 2;
+        }
+        
+        .gallery-item.wide {
+            grid-column: span 2;
+        }
+        
+        /* Photo overlay */
+        .gallery-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1.5rem;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            color: white;
+            opacity: 0;
+            transform: translateY(10px);
+            transition: all 0.3s ease;
+        }
+        
+        .gallery-item:hover .gallery-overlay {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .gallery-overlay h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin: 0 0 0.25rem;
+        }
+        
+        .gallery-overlay p {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin: 0;
+        }
+        
+        .gallery-overlay .date {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        /* Lightbox Modern */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .lightbox.active {
+            display: flex;
+        }
+        
+        .lightbox-content {
+            max-width: 90%;
+            max-height: 85vh;
+            object-fit: contain;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        
+        .lightbox-caption {
+            position: absolute;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            text-align: center;
+            max-width: 600px;
+        }
+        
+        .lightbox-caption h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .lightbox-caption p {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
+        .lightbox .close-btn {
+            position: absolute;
+            top: 1.5rem;
+            right: 2rem;
+            font-size: 2.5rem;
+            color: white;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+        
+        .lightbox .close-btn:hover {
+            opacity: 1;
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .lightbox .nav-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2rem;
+            color: white;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.3s ease;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+        }
+        
+        .lightbox .nav-arrow:hover {
+            opacity: 1;
+            background: rgba(255,255,255,0.2);
+        }
+        
+        .lightbox .prev-btn { left: 2rem; }
+        .lightbox .next-btn { right: 2rem; }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 4rem 2rem;
+            color: var(--secondary-text-color);
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            opacity: 0.3;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .gallery-hero h1 {
+                font-size: 1.8rem;
+            }
+            
+            .gallery-hero .stats {
+                gap: 1.5rem;
+            }
+            
+            .gallery-hero .stat-number {
+                font-size: 1.5rem;
+            }
+            
+            .gallery-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 0.75rem;
+            }
+            
+            .gallery-item.tall,
+            .gallery-item.wide {
+                grid-row: span 1;
+                grid-column: span 1;
+            }
+            
+            .filter-tab {
+                padding: 0.5rem 1rem;
+                font-size: 0.85rem;
+            }
+            
+            .lightbox .nav-arrow {
+                width: 45px;
+                height: 45px;
+                font-size: 1.5rem;
+            }
+            
+            .lightbox .prev-btn { left: 0.5rem; }
+            .lightbox .next-btn { right: 0.5rem; }
+            
+            .member-avatar {
+                width: 55px;
+                height: 55px;
+            }
+            
+            .member-avatars {
+                gap: 0.75rem;
+            }
+            
+            .member-avatar .member-name {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .member-avatar {
+                width: 45px;
+                height: 45px;
+            }
+        }
+    </style>
 </head>
-
 <body>
-
+    <!-- ============================================================
+    HEADER / NAVBAR
+    ============================================================ -->
     <header>
         <nav class="container">
             <a href="index.html" class="logo">
@@ -26,103 +511,147 @@
                 </div>
             </a>
             <ul class="nav-links" id="nav-links">
-                <li><a href="index.html#hero">Beranda</a></li>
-                <li><a href="index.html#about">Tentang</a></li>
+                <li><a href="index.html">Beranda</a></li>
                 <li><a href="index.html#members">Member</a></li>
-                <li><a href="index.html#news">Berita</a></li>
                 <li><a href="cheki.html">Cheki</a></li>
+                <li><a href="gallery.html" class="active">Galeri</a></li>
             </ul>
             <div class="nav-auth-buttons">
-                <!-- Will be populated by auth.js -->
+                <!-- Diisi oleh auth.js -->
             </div>
-            <button class="hamburger" id="hamburger-menu" aria-label="Buka menu">
-                <i class="fas fa-bars"></i>
-            </button>
+            <button class="hamburger" id="hamburger-menu" aria-label="Buka menu"><i class="fas fa-bars"></i></button>
         </nav>
         <div class="nav-menu" id="nav-menu"></div>
     </header>
 
     <main>
-        <section id="gallery-page" class="reveal">
+        <!-- ============================================================
+        HERO BANNER GALERI
+        ============================================================ -->
+        <section class="gallery-hero">
             <div class="container">
-                <h2>Galeri Refresh Breeze</h2>
-                <p class="page-intro">Momen-momen tak terlupakan dari lautan tanpa syarat kami.</p>
-                <div class="gallery-grid" id="gallery-grid"></div>
+                <h1><i class="fas fa-images"></i> Galeri Refresh Breeze</h1>
+                <p>Momen-momen berharga yang terekam dari perjalanan kami</p>
+                <div class="stats">
+                    <div class="stat-item">
+                        <div class="stat-number" id="total-photos">0</div>
+                        <div class="stat-label">Total Foto</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">7</div>
+                        <div class="stat-label">Member</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="total-events">0</div>
+                        <div class="stat-label">Event</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================================
+        FILTER TABS
+        ============================================================ -->
+        <div class="container">
+            <div class="gallery-filters" id="gallery-filters">
+                <button class="filter-tab active" data-filter="all">
+                    <i class="fas fa-th"></i> Semua
+                </button>
+                <button class="filter-tab" data-filter="group">
+                    <i class="fas fa-user-friends"></i> Grup
+                </button>
+                <button class="filter-tab" data-filter="member">
+                    <i class="fas fa-users"></i> Member
+                </button>
+                <button class="filter-tab" data-filter="event">
+                    <i class="fas fa-camera"></i> Dokumentasi
+                </button>
+            </div>
+        </div>
+
+        <!-- ============================================================
+        GALLERY CONTENT
+        ============================================================ -->
+        <section class="gallery-section">
+            <div class="container">
+                <!-- Group Photo Section (PALING ATAS - LANDSCAPE) -->
+                <div class="gallery-category" id="group-section">
+                    <div class="gallery-category-title">
+                        <h2><i class="fas fa-user-friends"></i> Foto Grup</h2>
+                        <span class="badge">Featured</span>
+                    </div>
+                    <div class="gallery-grid group-gallery-grid" id="group-gallery">
+                        <!-- Diisi oleh JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Member Photos Section -->
+                <div class="gallery-category" id="member-section">
+                    <div class="gallery-category-title">
+                        <h2><i class="fas fa-users"></i> Foto Member</h2>
+                        <span class="badge" id="member-count">0</span>
+                    </div>
+                    
+                    <!-- Member Selector -->
+                    <div class="member-selector">
+                        <p class="member-selector-title">Klik member untuk melihat foto mereka saja</p>
+                        <div class="member-avatars" id="member-avatars">
+                            <!-- Diisi oleh JavaScript -->
+                        </div>
+                    </div>
+                    
+                    <div class="gallery-grid" id="member-gallery">
+                        <!-- Diisi oleh JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Dokumentasi/Event Photos Section (Gabungan Event + Otsu) -->
+                <div class="gallery-category" id="event-section">
+                    <div class="gallery-category-title">
+                        <h2><i class="fas fa-camera"></i> Dokumentasi Event</h2>
+                        <span class="badge" id="event-count">0</span>
+                    </div>
+                    <div class="gallery-grid" id="event-gallery">
+                        <!-- Diisi oleh JavaScript -->
+                    </div>
+                </div>
             </div>
         </section>
     </main>
 
+    <!-- ============================================================
+    LIGHTBOX
+    ============================================================ -->
     <div id="lightbox" class="lightbox">
-        <span class="close-btn" aria-label="Tutup galeri">&times;</span>
-        <span class="nav-arrow prev-btn" aria-label="Gambar sebelumnya">&#10094;</span>
-        <img class="lightbox-content" id="lightbox-img">
-        <div id="lightbox-caption" class="lightbox-caption"></div>
-        <span class="nav-arrow next-btn" aria-label="Gambar selanjutnya">&#10095;</span>
-    </div>
-
-    <div class="modal-overlay" id="auth-modal">
-        <div class="modal-container">
-            <button class="modal-close-btn" id="modal-close-btn">&times;</button>
-
-            <div id="login-view">
-                <div class="modal-form-container">
-                    <h2>Login Akun</h2>
-                    <form id="login-form" class="modal-form">
-                        <input type="email" id="login-email" placeholder="Email" required>
-                        <input type="password" id="login-password" placeholder="Password" required>
-                        <a href="forgot-password.html"
-                            style="text-align: right; font-size: 0.9em; margin-top: -0.5rem;">Lupa Sandi?</a>
-                        <button type="submit" class="cta-button">Login</button>
-                        <p id="login-error" class="error-message" style="text-align: center;"></p>
-                    </form>
-                    <p class="modal-switch-link">
-                        Belum punya akun? <a id="show-register-link">Daftar di sini</a>
-                    </p>
-                </div>
-            </div>
-
-            <div id="register-view">
-                <div class="modal-form-container">
-                    <h2>Buat Akun Baru</h2>
-                    <form id="register-form" class="modal-form">
-                        <input type="text" id="register-username" placeholder="Username" required>
-                        <input type="email" id="register-email" placeholder="Email Aktif" required>
-                        <input type="password" id="register-password" placeholder="Password" required>
-                        <input type="text" id="register-whatsapp" placeholder="No. WhatsApp" required>
-                        <input type="text" id="register-instagram" placeholder="Username Instagram" required>
-                        <div class="sk-agreement">
-                            <input type="checkbox" id="sk-checkbox" required>
-                            <label for="sk-checkbox">Saya setuju dengan <a href="sk.html" target="_blank">Syarat &
-                                    Ketentuan</a>.</label>
-                        </div>
-                        <button type="submit" class="cta-button">Daftar</button>
-                        <p id="register-error" class="error-message" style="text-align: center;"></p>
-                    </form>
-                    <p class="modal-switch-link">
-                        Sudah punya akun? <a id="show-login-link">Login di sini</a>
-                    </p>
-                </div>
-            </div>
-
+        <span class="close-btn" aria-label="Tutup">&times;</span>
+        <span class="nav-arrow prev-btn" aria-label="Sebelumnya">&#10094;</span>
+        <img class="lightbox-content" id="lightbox-img" alt="">
+        <div class="lightbox-caption" id="lightbox-caption">
+            <h3 id="lightbox-title"></h3>
+            <p id="lightbox-desc"></p>
         </div>
+        <span class="nav-arrow next-btn" aria-label="Selanjutnya">&#10095;</span>
     </div>
 
+    <!-- Modal Autentikasi -->
+    <div id="auth-modal" class="modal"></div>
+
+    <!-- Footer -->
     <footer>
         <div class="container">
             <div class="social-media">
-                <a href="#"><i class="fab fa-twitter"></i></a>
-                <a href="#"><i class="fab fa-instagram"></i></a>
-                <a href="#"><i class="fab fa-youtube"></i></a>
-                <a href="#"><i class="fab fa-tiktok"></i></a>
+                <a href="#" target="_blank" rel="noopener noreferrer"><i class="fab fa-instagram"></i></a>
+                <a href="#" target="_blank" rel="noopener noreferrer"><i class="fab fa-youtube"></i></a>
+                <a href="#" target="_blank" rel="noopener noreferrer"><i class="fab fa-twitter"></i></a>
+                <a href="#" target="_blank" rel="noopener noreferrer"><i class="fab fa-tiktok"></i></a>
             </div>
             <p>&copy; 2025 Refresh Breeze. All Rights Reserved.</p>
         </div>
     </footer>
 
-    <script src="js/auth.js"></script>
+    <!-- JavaScript -->
     <script src="js/script.js"></script>
-    <script src="js/cheki.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode@1/build/qrcode.min.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/gallery.js"></script>
 </body>
-
 </html>

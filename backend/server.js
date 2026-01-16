@@ -460,22 +460,169 @@ app.get("/api/admin/all-users", authenticateToken, authorizeAdmin, async (req, r
     }
 });
 
-app.post("/api/admin/reset-user-password", authenticateToken, authorizeAdmin, async (req, res) => {
+// ===================================
+// --- RESET PASSWORD DENGAN KODE OTP ---
+// ===================================
+
+// Memory storage untuk reset codes (dalam production, gunakan Redis)
+const resetCodes = new Map();
+
+// Fungsi generate kode 6 digit
+const generateResetCode = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+};
+
+// ===================================
+// --- SELF-SERVICE PASSWORD RESET ---
+// ===================================
+
+// Endpoint: User verifikasi identitas dan mendapatkan OTP
+app.post("/api/verify-and-generate-otp", async (req, res) => {
+    try {
+        const { whatsapp, email } = req.body;
+
+        if (!whatsapp || !email) {
+            return res.status(400).json({ message: "Nomor WhatsApp dan Email wajib diisi." });
+        }
+
+        // Cari user dengan nomor WA DAN email yang cocok
+        const { data: user, error } = await supabase
+            .from('pengguna')
+            .select('id, nama_pengguna, email, nomor_whatsapp')
+            .eq('nomor_whatsapp', whatsapp)
+            .eq('email', email)
+            .single();
+
+        if (error || !user) {
+            return res.status(404).json({
+                message: "Data tidak ditemukan. Pastikan Nomor WhatsApp dan Email yang Anda masukkan sesuai dengan yang terdaftar."
+            });
+        }
+
+        // Generate kode OTP dan set expiry 15 menit
+        const code = generateResetCode();
+        const expiresAt = Date.now() + (15 * 60 * 1000); // 15 menit
+
+        // Simpan ke memory (key = code, value = userId + expiresAt)
+        resetCodes.set(code, {
+            userId: user.id,
+            username: user.nama_pengguna,
+            expiresAt: expiresAt
+        });
+
+        // Hitung sisa waktu dalam format mm:ss
+        const expiresInMs = expiresAt - Date.now();
+        const minutes = Math.floor(expiresInMs / 60000);
+        const seconds = Math.floor((expiresInMs % 60000) / 1000);
+        const expiresIn = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        res.json({
+            success: true,
+            message: "Verifikasi berhasil! Berikut kode OTP Anda.",
+            code: code,
+            expiresIn: expiresIn,
+            username: user.nama_pengguna
+        });
+
+    } catch (e) {
+        console.error('Error verify-and-generate-otp:', e);
+        res.status(500).json({ message: "Terjadi kesalahan pada server.", error: e.message });
+    }
+});
+
+// Endpoint: Admin generate reset code untuk user (backup)
+app.post("/api/admin/generate-reset-code", authenticateToken, authorizeAdmin, async (req, res) => {
     try {
         const { userId } = req.body;
         if (!userId) return res.status(400).json({ message: "User ID tidak ditemukan." });
 
-        const newPassword = "password123";
+        // Cek apakah user ada
+        const { data: user, error } = await supabase
+            .from('pengguna')
+            .select('id, nama_pengguna, email')
+            .eq('id', userId)
+            .single();
+
+        if (error || !user) {
+            return res.status(404).json({ message: "User tidak ditemukan." });
+        }
+
+        // Generate kode dan set expiry 15 menit
+        const code = generateResetCode();
+        const expiresAt = Date.now() + (15 * 60 * 1000); // 15 menit
+
+        // Simpan ke memory (key = code, value = userId + expiresAt)
+        resetCodes.set(code, {
+            userId: user.id,
+            username: user.nama_pengguna,
+            expiresAt: expiresAt
+        });
+
+        // Hitung sisa waktu dalam format mm:ss
+        const expiresInMs = expiresAt - Date.now();
+        const minutes = Math.floor(expiresInMs / 60000);
+        const seconds = Math.floor((expiresInMs % 60000) / 1000);
+        const expiresIn = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+
+        res.json({
+            message: "Kode reset berhasil dibuat.",
+            code: code,
+            expiresAt: expiresAt,
+            expiresIn: expiresIn,
+            username: user.nama_pengguna
+        });
+
+    } catch (e) {
+        res.status(500).json({ message: "Gagal membuat kode reset.", error: e.message });
+    }
+});
+
+// Endpoint: User reset password dengan kode OTP
+app.post("/api/reset-password-with-code", async (req, res) => {
+    try {
+        const { code, newPassword } = req.body;
+
+        if (!code || !newPassword) {
+            return res.status(400).json({ message: "Kode dan password baru wajib diisi." });
+        }
+
+        if (newPassword.length < 6) {
+            return res.status(400).json({ message: "Password minimal 6 karakter." });
+        }
+
+        // Cek apakah kode ada dan valid
+        const resetData = resetCodes.get(code);
+
+        if (!resetData) {
+            return res.status(400).json({ message: "Kode tidak valid atau sudah digunakan." });
+        }
+
+        // Cek apakah kode sudah expired
+        if (Date.now() > resetData.expiresAt) {
+            resetCodes.delete(code); // Hapus kode yang expired
+            return res.status(400).json({ message: "Kode sudah kadaluarsa. Silakan minta kode baru ke admin." });
+        }
+
+        // Hash password baru
         const salt = await bcrypt.genSalt(10);
         const password_hash = await bcrypt.hash(newPassword, salt);
 
+        // Update password di database
         const { error } = await supabase
             .from('pengguna')
             .update({ kata_sandi: password_hash })
-            .eq('id', userId);
+            .eq('id', resetData.userId);
 
         if (error) throw error;
-        res.json({ message: `Password berhasil direset. Password baru adalah: ${newPassword}` });
+
+        // Hapus kode setelah digunakan (sekali pakai)
+        resetCodes.delete(code);
+
+        res.json({
+            message: "Password berhasil diubah! Silakan login dengan password baru Anda.",
+            username: resetData.username
+        });
+
     } catch (e) {
         res.status(500).json({ message: "Gagal mereset password.", error: e.message });
     }

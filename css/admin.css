@@ -1,7 +1,27 @@
+/* ================================================================
+   FILE: admin.css - Stylesheet Halaman Admin Panel
+   ================================================================
+   
+   DAFTAR ISI (Gunakan Ctrl+F untuk mencari):
+   ============================================
+   1. VARIABEL GLOBAL        - Warna tema admin
+   2. LAYOUT ADMIN           - Sidebar, main content
+   3. SIDEBAR NAVIGATION     - Menu navigasi samping
+   4. STATISTICS GRID        - Kartu statistik
+   5. STOCK MANAGEMENT       - Kontrol stok tiket
+   6. ORDER/TICKET TABLE     - Tabel manajemen tiket
+   7. BUTTONS & BADGES       - Tombol aksi, status badge
+   8. RESPONSIVE (Mobile)    - Media queries
+   
+   ================================================================ */
+
 /* Import Google Fonts - Match Main Website */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap');
 
-/* Variabel Global untuk Admin - Match Main Website */
+/* ================================================================
+   1. VARIABEL GLOBAL
+   Edit warna tema admin panel di sini
+   ================================================================ */
 :root {
     /* Inherit from main website */
     --admin-bg: #f9fafb;

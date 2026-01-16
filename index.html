@@ -3,21 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- ============================================================
+    JUDUL WEBSITE - Edit di sini untuk mengubah judul tab browser
+    ============================================================ -->
     <title>Refresh Breeze - Official Website</title>
     
+    <!-- Meta Description untuk SEO -->
     <meta name="description" content="Refresh Breeze Official Website - Dapatkan tiket Cheki eksklusif bersama member favorit Anda. Beli tiket, lihat leaderboard, dan ikuti berita terbaru.">
+    
+    <!-- CSS Utama -->
     <link rel="stylesheet" href="css/style.css">
     
+    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
+    <!-- Favicon - Edit di folder img/logo/ jika ingin ganti logo -->
     <link rel="apple-touch-icon" sizes="180x180" href="img/logo/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="img/logo/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="img/logo/favicon-16x16.png">
 </head>
 <body>
 
+    <!-- ============================================================
+    HEADER / NAVBAR
+    Edit link navigasi atau logo di sini
+    ============================================================ -->
     <header>
         <nav class="container">
+            <!-- Logo Website -->
             <a href="#" class="logo">
                 <img src="img/logo/apple-touch-icon.png" alt="Logo">
                 <div class="logo-text">
@@ -26,30 +40,38 @@
                 </div>
             </a>
 
+            <!-- Link Navigasi Desktop -->
             <ul class="nav-links" id="nav-links">
                 <li><a href="#hero">Beranda</a></li>
-                <li><a href="#about">Tentang</a></li>
                 <li><a href="#members">Member</a></li>
-                <li><a href="#news">Berita</a></li>
+                <li><a href="cheki.html">Cheki</a></li>
+                <li><a href="gallery.html">Galeri</a></li>
             </ul>
 
+            <!-- Tombol Login/Register (diisi oleh auth.js) -->
             <div class="nav-auth-buttons">
                 <a href="#" id="login-btn" class="nav-button">Login</a>
                 <a href="#" id="register-btn" class="nav-button cta">Join Us</a>
             </div>
 
+            <!-- Hamburger Menu (Mobile) -->
             <button class="hamburger" id="hamburger-menu">
                 <i class="fas fa-bars"></i>
             </button>
         </nav>
         
+        <!-- Menu Mobile (diisi oleh auth.js) -->
         <div class="nav-menu" id="nav-menu"></div>
     </header>
 
+    <!-- ============================================================
+    SECTION: HERO - Slider/Carousel & Intro
+    ============================================================ -->
     <section id="hero" class="hero">
         <div class="slider-container">
             <div id="image-slider" class="slider">
-                </div>
+                <!-- Gambar slider diisi dari data.json via script.js -->
+            </div>
             
             <div class="slider-nav">
                 <button class="prev-btn"><i class="fas fa-chevron-left"></i></button>
@@ -67,12 +89,20 @@
         </div>
     </section>
 
+    <!-- ============================================================
+    SECTION: CARA MEMESAN
+    Langkah-langkah pemesanan dari data.json
+    ============================================================ -->
     <section id="how-to-order" class="container">
         <h2 class="section-title">CARA MEMESAN</h2>
         <div id="how-to-order-container" class="how-to-order-container">
-            </div>
+            <!-- Diisi dari data.json via script.js -->
+        </div>
     </section>
 
+    <!-- ============================================================
+    SECTION: LEADERBOARD - Top Spender Cheki
+    ============================================================ -->
     <section id="leaderboard" class="bg-gray">
         <div class="container">
             <h2 class="section-title">🏆 TOP SPENDER CHEKI</h2>
@@ -90,6 +120,10 @@
         </div>
     </section>
 
+    <!-- ============================================================
+    SECTION: MEMBER - Profil Semua Member
+    Data dari data.json, tampilan diatur di script.js
+    ============================================================ -->
     <section id="members" class="container">
         <h2 class="section-title">MEMBER KAMI</h2>
         <div id="member-grid" class="member-grid-detailed">
@@ -102,22 +136,55 @@
         </div>
     </section>
 
+    <!-- ============================================================
+    SECTION: BERITA TERBARU
+    ============================================================ -->
     <section id="news" class="bg-gray">
         <div class="container">
             <h2 class="section-title">BERITA TERBARU</h2>
             <div id="news-container" class="news-container">
+                <!-- Diisi dari data.json via script.js -->
             </div>
         </div>
     </section>
 
+    <!-- ============================================================
+    SECTION: GALERI FOTO
+    Menampilkan preview foto dari folder dokumentasi
+    ============================================================ -->
+    <section id="gallery-preview" class="bg-gray">
+        <div class="container">
+            <h2 class="section-title">📸 GALERI FOTO</h2>
+            <p style="text-align: center; margin-bottom: 2rem; color: var(--secondary-text-color);">
+                Momen-momen berharga dari event dan penampilan kami
+            </p>
+            <div id="gallery-preview-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; max-width: 800px; margin: 0 auto;">
+                <!-- Diisi oleh JavaScript -->
+            </div>
+            <div style="text-align: center; margin-top: 2rem;">
+                <a href="gallery.html" class="cta-button">
+                    <i class="fas fa-images"></i> Buka Galeri Lengkap
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============================================================
+    SECTION: FAQ
+    ============================================================ -->
     <section id="faq" class="container">
         <h2 class="section-title">FAQ</h2>
         <div id="faq-container" class="faq-container">
-            </div>
+            <!-- Diisi dari data.json via script.js -->
+        </div>
     </section>
 
+    <!-- Modal Autentikasi (Login/Register) - Diisi oleh auth.js -->
     <div id="auth-modal" class="modal"></div>
 
+    <!-- ============================================================
+    FOOTER
+    ============================================================ -->
     <footer>
         <div class="container">
             <div class="social-media">
@@ -135,6 +202,7 @@
         <p>Memproses...</p>
     </div>
 
+    <!-- JavaScript Files -->
     <script src="js/script.js"></script>
     <script src="js/auth.js"></script>
 

@@ -1,5 +1,7 @@
-// File: server-local.js
-// Local Development Server - Serves both static files and API endpoints
+// ================================================================
+// FILE: server-local.js - Server Development Lokal
+// Melayani file static dan API endpoints
+// ================================================================
 
 const express = require("express");
 const path = require("path");
@@ -14,25 +16,24 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- Load Product Data ---
+// Data produk dari data.json
 const productData = require('../data.json');
 
-// --- 1. Validasi Environment Variables ---
+// ============================================================
+// VALIDASI ENVIRONMENT VARIABLES
+// Jika tidak ada .env, server berjalan dalam Demo Mode
+// ============================================================
 const requiredEnv = ['MIDTRANS_SERVER_KEY', 'MIDTRANS_CLIENT_KEY', 'SUPABASE_URL', 'SUPABASE_ANON_KEY', 'JWT_SECRET'];
 const missingEnv = requiredEnv.filter(key => !process.env[key]);
+
 if (missingEnv.length > 0) {
-    console.error(`\n⚠️  PERHATIAN: Variabel lingkungan berikut belum diatur:`);
-    console.error(`   ${missingEnv.join(', ')}`);
-    console.error(`\n   Buat file .env di folder root dengan isi:`);
-    console.error(`   MIDTRANS_SERVER_KEY=your_server_key`);
-    console.error(`   MIDTRANS_CLIENT_KEY=your_client_key`);
-    console.error(`   SUPABASE_URL=your_supabase_url`);
-    console.error(`   SUPABASE_ANON_KEY=your_supabase_anon_key`);
-    console.error(`   JWT_SECRET=your_jwt_secret\n`);
-    console.error(`   Server akan tetap berjalan dalam mode DEMO (tanpa backend fungsional)\n`);
+    console.warn(`\n⚠️  Running in DEMO MODE. Missing env vars: ${missingEnv.join(', ')}`);
+    console.warn(`   Create .env in root for full functionality.\n`);
 }
 
-// --- 2. Inisialisasi Klien (dengan fallback untuk demo mode) ---
+// ============================================================
+// INISIALISASI CLIENT (Midtrans & Supabase)
+// ============================================================
 let snap = null;
 let supabase = null;
 const isDemoMode = missingEnv.length > 0;
@@ -46,9 +47,13 @@ if (!isDemoMode) {
     supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
 }
 
-// --- 3. Middleware Otentikasi & Otorisasi ---
+// ============================================================
+// MIDDLEWARE: AUTENTIKASI & OTORISASI
+// Verifikasi JWT token untuk route yang dilindungi
+// ============================================================
 const authenticateToken = (req, res, next) => {
     if (isDemoMode) {
+        // Mock user untuk demo
         req.user = { userId: 1, username: 'demo_user', email: 'demo@example.com', role: 'user' };
         return next();
     }
@@ -72,36 +77,33 @@ const authorizeAdmin = (req, res, next) => {
     next();
 };
 
-// --- 4. Fungsi Helper ---
+// Helper: Ambil stok realtime dari Supabase
 const getChekiStock = async () => {
-    if (isDemoMode) return 100; // Demo stock
+    if (isDemoMode) return 100;
 
     const { data, error } = await supabase.from('pengaturan').select('nilai').eq('nama', 'stok_cheki').single();
-    if (error || !data) {
-        console.error("Gagal mendapatkan stok:", error);
-        return 0;
-    }
+    if (error || !data) return 0;
     return parseInt(data.nilai, 10);
 };
 
-// ===================================
-// --- STATIC FILES (Serve Frontend) ---
-// ===================================
+// Serve Static Files dari folder parent
 app.use(express.static(path.join(__dirname, '..')));
 
-// ===================================
-// --- API ENDPOINTS ---
-// ===================================
+// ============================================================
+// API ENDPOINTS
+// ============================================================
 
-// --- Konfigurasi Midtrans ---
+// Endpoint: Dapatkan Midtrans Client Key
 app.get("/api/midtrans-client-key", (req, res) => {
-    if (isDemoMode) {
-        return res.json({ clientKey: 'demo_client_key' });
-    }
+    if (isDemoMode) return res.json({ clientKey: 'demo_client_key' });
     res.json({ clientKey: process.env.MIDTRANS_CLIENT_KEY });
 });
 
-// --- Otentikasi ---
+// ============================================================
+// ENDPOINT AUTENTIKASI
+// ============================================================
+
+// Endpoint: Register User Baru
 app.post("/api/register", async (req, res) => {
     if (isDemoMode) {
         return res.status(201).json({
@@ -113,15 +115,17 @@ app.post("/api/register", async (req, res) => {
     try {
         const { username, email, password, whatsapp_number, instagram_username, oshi } = req.body;
 
+        // Validasi input
         if (!username || !email || !password || !whatsapp_number) {
             return res.status(400).json({ message: "Data wajib diisi (Username, Email, Password, WA)." });
         }
-
         if (password.length < 6) return res.status(400).json({ message: "Password minimal 6 karakter." });
 
+        // Hash password
         const salt = await bcrypt.genSalt(10);
         const password_hash = await bcrypt.hash(password, salt);
 
+        // Insert ke database
         const { data, error } = await supabase.from("pengguna").insert([{
             nama_pengguna: username,
             email,
@@ -142,24 +146,17 @@ app.post("/api/register", async (req, res) => {
     }
 });
 
+// Endpoint: Login User
 app.post("/api/login", async (req, res) => {
     if (isDemoMode) {
         const demoToken = jwt.sign(
             { userId: 1, username: 'demo_user', email: req.body.email, role: 'user', oshi: 'Aca' },
-            'demo_secret',
-            { expiresIn: '1d' }
+            'demo_secret', { expiresIn: '1d' }
         );
         return res.json({
             message: "Login berhasil! (Demo Mode)",
             token: demoToken,
-            user: {
-                id: 1,
-                nama_pengguna: 'demo_user',
-                email: req.body.email,
-                peran: 'user',
-                oshi: 'Aca',
-                nomor_whatsapp: '08123456789'
-            }
+            user: { id: 1, nama_pengguna: 'demo_user', email: req.body.email, peran: 'user', oshi: 'Aca' }
         });
     }
 
@@ -167,25 +164,22 @@ app.post("/api/login", async (req, res) => {
         const { email, password } = req.body;
         if (!email || !password) return res.status(400).json({ message: "Input tidak boleh kosong." });
 
+        // Cari user berdasarkan email atau username
         const { data: user, error } = await supabase
-            .from("pengguna")
-            .select("*")
-            .or(`email.eq.${email},nama_pengguna.eq.${email}`)
-            .single();
+            .from("pengguna").select("*")
+            .or(`email.eq.${email},nama_pengguna.eq.${email}`).single();
 
         if (error || !user) return res.status(404).json({ message: "Email atau username tidak ditemukan." });
 
+        // Verifikasi password
         const isMatch = await bcrypt.compare(password, user.kata_sandi);
         if (!isMatch) return res.status(401).json({ message: "Password salah." });
 
-        const payload = {
-            userId: user.id,
-            username: user.nama_pengguna,
-            email: user.email,
-            role: user.peran,
-            oshi: user.oshi
-        };
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1d" });
+        // Generate JWT token
+        const token = jwt.sign({
+            userId: user.id, username: user.nama_pengguna, email: user.email,
+            role: user.peran, oshi: user.oshi
+        }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
         delete user.kata_sandi;
         res.json({ message: "Login berhasil!", token, user });
@@ -194,7 +188,11 @@ app.post("/api/login", async (req, res) => {
     }
 });
 
-// --- LEADERBOARD API ---
+// ============================================================
+// ENDPOINT FITUR
+// ============================================================
+
+// Endpoint: Leaderboard Global
 app.get("/api/leaderboard", async (req, res) => {
     if (isDemoMode) {
         return res.json([
@@ -212,6 +210,7 @@ app.get("/api/leaderboard", async (req, res) => {
 
         if (error) throw error;
 
+        // Hitung total per user
         const userTotals = {};
         orders.forEach(order => {
             const uid = order.id_pengguna;
@@ -222,69 +221,18 @@ app.get("/api/leaderboard", async (req, res) => {
                     totalCheki: 0
                 };
             }
-            const items = order.detail_item || [];
-            items.forEach(item => {
+            (order.detail_item || []).forEach(item => {
                 userTotals[uid].totalCheki += item.quantity;
             });
         });
 
-        const leaderboard = Object.values(userTotals)
-            .sort((a, b) => b.totalCheki - a.totalCheki)
-            .slice(0, 10);
-
-        res.json(leaderboard);
+        res.json(Object.values(userTotals).sort((a, b) => b.totalCheki - a.totalCheki).slice(0, 10));
     } catch (e) {
         res.status(500).json({ message: "Gagal memuat leaderboard.", error: e.message });
     }
 });
 
-app.get("/api/leaderboard-per-member", async (req, res) => {
-    if (isDemoMode) {
-        return res.json([
-            { username: 'fan_' + (req.query.memberName || 'member'), totalQuantity: 10 },
-            { username: 'sultan_' + (req.query.memberName || 'member'), totalQuantity: 8 }
-        ]);
-    }
-
-    try {
-        const { memberName } = req.query;
-        if (!memberName) return res.status(400).json({ message: "Nama member diperlukan." });
-
-        const { data: orders, error } = await supabase
-            .from('pesanan')
-            .select('detail_item, id_pengguna, pengguna(nama_pengguna)')
-            .in('status_tiket', ['berlaku', 'sudah_dipakai']);
-
-        if (error) throw error;
-
-        const fanTotals = {};
-        orders.forEach(order => {
-            const items = order.detail_item || [];
-            items.forEach(item => {
-                if (item.name.toLowerCase().includes(memberName.toLowerCase())) {
-                    const uid = order.id_pengguna;
-                    if (!fanTotals[uid]) {
-                        fanTotals[uid] = {
-                            username: order.pengguna?.nama_pengguna || 'Unknown',
-                            totalQuantity: 0
-                        };
-                    }
-                    fanTotals[uid].totalQuantity += item.quantity;
-                }
-            });
-        });
-
-        const leaderboard = Object.values(fanTotals)
-            .sort((a, b) => b.totalQuantity - a.totalQuantity)
-            .slice(0, 10);
-
-        res.json(leaderboard);
-    } catch (e) {
-        res.status(500).json({ message: "Gagal memuat leaderboard member.", error: e.message });
-    }
-});
-
-// --- Produk & Pembayaran ---
+// Endpoint: Dapatkan Produk & Stok
 app.get("/api/products-and-stock", async (req, res) => {
     try {
         const responseData = JSON.parse(JSON.stringify(productData));
@@ -295,27 +243,29 @@ app.get("/api/products-and-stock", async (req, res) => {
     }
 });
 
+// ============================================================
+// ENDPOINT PEMBAYARAN (Midtrans)
+// ============================================================
+
+// Endpoint: Dapatkan Snap Token untuk pembayaran
 app.post("/get-snap-token", authenticateToken, async (req, res) => {
-    if (isDemoMode) {
-        return res.json({ token: 'demo_snap_token_' + Date.now() });
-    }
+    if (isDemoMode) return res.json({ token: 'demo_snap_token_' + Date.now() });
 
     try {
         const { transaction_details, item_details, customer_details } = req.body;
+
         const enhanced_customer_details = { ...customer_details, first_name: req.user.username, email: req.user.email };
 
         const parameter = {
             transaction_details,
             item_details,
             customer_details: enhanced_customer_details,
-            enabled_payments: [
-                'qris', 'gopay', 'shopeepay', 'other_qris', 'credit_card',
-                'bca_va', 'bni_va', 'bri_va', 'permata_va', 'echannel', 'alfamart', 'indomaret'
-            ]
+            enabled_payments: ['qris', 'gopay', 'shopeepay', 'other_qris', 'credit_card', 'bca_va']
         };
 
         const token = await snap.createTransactionToken(parameter);
 
+        // Simpan pesanan pending ke database
         const { error } = await supabase.from("pesanan").insert([{
             id_pesanan: transaction_details.order_id,
             id_pengguna: req.user.userId,
@@ -325,340 +275,121 @@ app.post("/get-snap-token", authenticateToken, async (req, res) => {
             detail_item: item_details
         }]);
 
-        if (error) throw new Error(`Gagal menyimpan pesanan awal: ${error.message}`);
+        if (error) throw new Error(`DB Error: ${error.message}`);
         res.json({ token });
     } catch (error) {
         res.status(500).json({ message: "Gagal membuat token pembayaran.", error: error.message });
     }
 });
 
+// Endpoint: Update Status Pesanan (Callback Midtrans)
 app.post("/update-order-status", async (req, res) => {
-    if (isDemoMode) {
-        return res.status(200).json({ message: "Status pembayaran diterima. (Demo Mode)" });
-    }
+    if (isDemoMode) return res.status(200).json({ message: "OK (Demo Mode)" });
 
     try {
         const { order_id, transaction_status } = req.body;
-        if (!order_id || !transaction_status) return res.status(400).json({ message: "Data notifikasi tidak lengkap." });
+        if (!order_id || !transaction_status) return res.status(400).json({ message: "Invalid payload" });
 
+        // Update status ke 'berlaku' jika pembayaran sukses
         if (transaction_status === "settlement" || transaction_status === "capture") {
             const { data: updatedOrder, error } = await supabase
                 .from("pesanan").update({ status_tiket: "berlaku" })
                 .eq("id_pesanan", order_id).select().single();
 
-            if (error || !updatedOrder) throw new Error("Gagal update status pesanan.");
+            if (error || !updatedOrder) throw new Error("Update failed");
 
+            // Kurangi stok
             const totalItems = (updatedOrder.detail_item || []).reduce((sum, item) => sum + item.quantity, 0);
             if (totalItems > 0) {
                 await supabase.rpc('update_cheki_stock', { change_value: -totalItems });
             }
         }
-        res.status(200).json({ message: "Status pembayaran diterima." });
+        res.status(200).json({ message: "Status updated" });
     } catch (e) {
-        res.status(500).json({ message: "Gagal memproses notifikasi.", error: e.message });
+        res.status(500).json({ message: "Error processing notification", error: e.message });
     }
 });
 
-// --- Endpoint Pengguna ---
+// ============================================================
+// ENDPOINT PROFIL USER
+// ============================================================
+
+// Endpoint: Dapatkan Profil User
 app.get("/api/user/profile", authenticateToken, async (req, res) => {
     if (isDemoMode) {
-        return res.json({
-            id: 1,
-            nama_pengguna: 'demo_user',
-            email: 'demo@example.com',
-            nomor_whatsapp: '08123456789',
-            instagram: '@demo_user',
-            peran: 'user',
-            oshi: 'Aca'
-        });
+        return res.json({ id: 1, nama_pengguna: 'demo_user', email: 'demo@example.com', oshi: 'Aca', peran: 'user' });
     }
-
     try {
-        const { data: user, error } = await supabase
-            .from("pengguna")
+        const { data: user, error } = await supabase.from("pengguna")
             .select("id, nama_pengguna, email, nomor_whatsapp, instagram, peran, oshi")
-            .eq("id", req.user.userId)
-            .single();
+            .eq("id", req.user.userId).single();
 
-        if (error || !user) return res.status(404).json({ message: "Profil tidak ditemukan." });
+        if (error || !user) return res.status(404).json({ message: "User not found" });
         res.json(user);
     } catch (e) {
-        res.status(500).json({ message: "Gagal mengambil profil.", error: e.message });
+        res.status(500).json({ message: "Server error", error: e.message });
     }
 });
 
+// Endpoint: Update Profil User
 app.put("/api/user/profile", authenticateToken, async (req, res) => {
-    if (isDemoMode) {
-        return res.json({
-            message: "Profil berhasil diperbarui! (Demo Mode)",
-            token: 'demo_token',
-            user: { ...req.body, id: 1, peran: 'user', oshi: 'Aca' }
-        });
-    }
+    if (isDemoMode) return res.json({ message: "Updated (Demo)", token: 'demo', user: { ...req.body, id: 1 } });
 
     try {
         const { nama_pengguna, email, nomor_whatsapp, instagram, password } = req.body;
+        const updateData = { nama_pengguna, email, nomor_whatsapp, instagram };
 
-        if (!nama_pengguna || !email) {
-            return res.status(400).json({ message: "Username dan email tidak boleh kosong." });
-        }
-
-        const { data: existingUser, error: checkError } = await supabase
-            .from("pengguna")
-            .select("id")
-            .or(`nama_pengguna.eq.${nama_pengguna},email.eq.${email}`)
-            .neq("id", req.user.userId);
-
-        if (checkError) throw checkError;
-        if (existingUser && existingUser.length > 0) {
-            return res.status(409).json({ message: "Username atau email sudah digunakan oleh pengguna lain." });
-        }
-
-        const updateData = {
-            nama_pengguna,
-            email,
-            nomor_whatsapp: nomor_whatsapp || null,
-            instagram: instagram || null
-        };
-
+        // Hash password baru jika ada
         if (password && password.trim() !== "") {
-            if (password.length < 6) {
-                return res.status(400).json({ message: "Password minimal 6 karakter." });
-            }
             const salt = await bcrypt.genSalt(10);
             updateData.kata_sandi = await bcrypt.hash(password, salt);
         }
 
-        const { data: updatedUser, error: updateError } = await supabase
-            .from("pengguna")
-            .update(updateData)
-            .eq("id", req.user.userId)
-            .select("id, nama_pengguna, email, nomor_whatsapp, instagram, peran, oshi")
-            .single();
+        const { data: updatedUser, error } = await supabase.from("pengguna")
+            .update(updateData).eq("id", req.user.userId)
+            .select("id, nama_pengguna, email, nomor_whatsapp, instagram, peran, oshi").single();
 
-        if (updateError) throw updateError;
+        if (error) throw error;
 
-        const payload = {
-            userId: updatedUser.id,
-            username: updatedUser.nama_pengguna,
-            email: updatedUser.email,
-            role: updatedUser.peran,
-            oshi: updatedUser.oshi
-        };
-        const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: "1d" });
+        // Issue token baru
+        const token = jwt.sign({
+            userId: updatedUser.id, username: updatedUser.nama_pengguna,
+            email: updatedUser.email, role: updatedUser.peran, oshi: updatedUser.oshi
+        }, process.env.JWT_SECRET, { expiresIn: "1d" });
 
-        res.json({
-            message: "Profil berhasil diperbarui!",
-            token,
-            user: updatedUser
-        });
+        res.json({ message: "Profil diperbarui!", token, user: updatedUser });
     } catch (e) {
-        res.status(500).json({ message: "Gagal memperbarui profil.", error: e.message });
+        res.status(500).json({ message: "Update failed", error: e.message });
     }
 });
 
+// Endpoint: Dapatkan Pesanan User
 app.get("/api/my-orders", authenticateToken, async (req, res) => {
-    if (isDemoMode) {
-        return res.json([
-            {
-                id_pesanan: 'DEMO-001',
-                nama_pelanggan: 'demo_user',
-                total_harga: 50000,
-                status_tiket: 'berlaku',
-                detail_item: [{ id: 'Aca', name: 'Cheki Aca', quantity: 2, price: 25000 }],
-                dibuat_pada: new Date().toISOString()
-            }
-        ]);
-    }
-
-    try {
-        const { data, error } = await supabase.from("pesanan")
-            .select("*").eq("id_pengguna", req.user.userId)
-            .order("dibuat_pada", { ascending: false });
-        if (error) throw error;
-        res.json(data);
-    } catch (e) {
-        res.status(500).json({ message: "Gagal mengambil pesanan.", error: e.message });
-    }
+    if (isDemoMode) return res.json([]);
+    const { data } = await supabase.from("pesanan").select("*").eq("id_pengguna", req.user.userId);
+    res.json(data || []);
 });
 
-// --- Endpoint Admin ---
-app.get("/api/admin/stats", authenticateToken, authorizeAdmin, async (req, res) => {
-    if (isDemoMode) {
-        return res.json({
-            totalRevenue: 1500000,
-            totalCheki: 60,
-            chekiPerMember: { 'Aca': 15, 'Sinta': 12, 'Cissi': 10, 'Channie': 8, 'Cally': 7, 'Yanyee': 5, 'Piya': 3 }
-        });
-    }
-
-    try {
-        const { data: orders, error } = await supabase.from('pesanan').select('total_harga, detail_item')
-            .in('status_tiket', ['berlaku', 'sudah_dipakai']);
-        if (error) throw error;
-        let totalRevenue = 0, totalCheki = 0;
-        const chekiPerMember = {};
-        orders.forEach(order => {
-            totalRevenue += order.total_harga;
-            (order.detail_item || []).forEach(item => {
-                totalCheki += item.quantity;
-                const member = item.name.replace('Cheki ', '');
-                chekiPerMember[member] = (chekiPerMember[member] || 0) + item.quantity;
-            });
-        });
-        res.json({ totalRevenue, totalCheki, chekiPerMember });
-    } catch (e) {
-        res.status(500).json({ message: 'Gagal mengambil statistik.', error: e.message });
-    }
-});
-
-app.get("/api/admin/all-orders", authenticateToken, authorizeAdmin, async (req, res) => {
-    if (isDemoMode) {
-        return res.json([
-            {
-                id_pesanan: 'DEMO-001',
-                nama_pelanggan: 'demo_user',
-                total_harga: 50000,
-                status_tiket: 'berlaku',
-                detail_item: [{ id: 'Aca', name: 'Cheki Aca', quantity: 2, price: 25000 }],
-                dibuat_pada: new Date().toISOString()
-            }
-        ]);
-    }
-
-    try {
-        const { data, error } = await supabase.from('pesanan').select('*')
-            .neq('status_tiket', 'pending')
-            .order('dibuat_pada', { ascending: false });
-        if (error) throw error;
-        res.json(data);
-    } catch (e) {
-        res.status(500).json({ message: 'Gagal mengambil pesanan.', error: e.message });
-    }
-});
-
-app.post("/api/admin/update-ticket-status", authenticateToken, authorizeAdmin, async (req, res) => {
-    if (isDemoMode) {
-        return res.json({ message: "Status tiket berhasil diubah. (Demo Mode)" });
-    }
-
-    try {
-        const { order_id, new_status } = req.body;
-        if (!order_id || !new_status) return res.status(400).json({ message: "Data tidak lengkap." });
-        const { error } = await supabase.from('pesanan').update({ status_tiket: new_status }).eq('id_pesanan', order_id);
-        if (error) throw error;
-        res.json({ message: `Status tiket berhasil diubah.` });
-    } catch (e) {
-        res.status(500).json({ message: "Gagal update status tiket.", error: e.message });
-    }
-});
-
-app.post('/api/admin/update-cheki-stock', authenticateToken, authorizeAdmin, async (req, res) => {
-    if (isDemoMode) {
-        return res.json({ message: 'Stok berhasil diperbarui! (Demo Mode)', newStock: 100 + (req.body.changeValue || 0) });
-    }
-
-    try {
-        const { changeValue } = req.body;
-        if (typeof changeValue !== 'number') return res.status(400).json({ message: 'Nilai tidak valid.' });
-        const { error } = await supabase.rpc('update_cheki_stock', { change_value: changeValue });
-        if (error) throw new Error(`Gagal update stok: ${error.message}`);
-        const newStock = await getChekiStock();
-        res.json({ message: 'Stok berhasil diperbarui!', newStock });
-    } catch (e) {
-        res.status(500).json({ message: e.message });
-    }
-});
-
-app.get("/api/admin/all-users", authenticateToken, authorizeAdmin, async (req, res) => {
-    if (isDemoMode) {
-        return res.json([
-            { id: 1, nama_pengguna: 'demo_user', email: 'demo@example.com' },
-            { id: 2, nama_pengguna: 'test_user', email: 'test@example.com' }
-        ]);
-    }
-
-    try {
-        const { data, error } = await supabase
-            .from('pengguna')
-            .select('id, nama_pengguna, email')
-            .neq('peran', 'admin');
-        if (error) throw error;
-        res.json(data);
-    } catch (e) {
-        res.status(500).json({ message: "Gagal mengambil data pengguna.", error: e.message });
-    }
-});
-
-app.post("/api/admin/reset-user-password", authenticateToken, authorizeAdmin, async (req, res) => {
-    if (isDemoMode) {
-        return res.json({ message: "Password berhasil direset. Password baru adalah: password123 (Demo Mode)" });
-    }
-
-    try {
-        const { userId } = req.body;
-        if (!userId) return res.status(400).json({ message: "User ID tidak ditemukan." });
-
-        const newPassword = "password123";
-        const salt = await bcrypt.genSalt(10);
-        const password_hash = await bcrypt.hash(newPassword, salt);
-
-        const { error } = await supabase
-            .from('pengguna')
-            .update({ kata_sandi: password_hash })
-            .eq('id', userId);
-
-        if (error) throw error;
-        res.json({ message: `Password berhasil direset. Password baru adalah: ${newPassword}` });
-    } catch (e) {
-        res.status(500).json({ message: "Gagal mereset password.", error: e.message });
-    }
-});
-
-// --- Forgot Password & Reset Password ---
-app.post("/api/forgot-password", async (req, res) => {
-    if (isDemoMode) {
-        return res.json({ message: "Link reset password telah dikirim ke email Anda. (Demo Mode)" });
-    }
-    res.json({ message: "Fitur ini memerlukan konfigurasi email server." });
-});
-
-app.post("/api/reset-password", async (req, res) => {
-    if (isDemoMode) {
-        return res.json({ message: "Password berhasil direset. (Demo Mode)" });
-    }
-    res.json({ message: "Fitur ini memerlukan konfigurasi email server." });
-});
-
-// --- Fallback: Serve index.html for SPA routes ---
+// ============================================================
+// FALLBACK ROUTE - Serve index.html untuk SPA
+// ============================================================
 app.get('*', (req, res) => {
-    // Only serve HTML files, not API requests
     if (!req.path.startsWith('/api')) {
         const filePath = path.join(__dirname, '..', req.path);
         res.sendFile(filePath, (err) => {
-            if (err) {
-                res.sendFile(path.join(__dirname, '..', 'index.html'));
-            }
+            if (err) res.sendFile(path.join(__dirname, '..', 'index.html'));
         });
     }
 });
 
-// --- Server Listener ---
+// ============================================================
+// START SERVER
+// Edit PORT di sini jika diperlukan (default: 3000)
+// ============================================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log('\n========================================');
-    console.log('   🌸 REFRESH BREEZE - Local Server 🌸');
-    console.log('========================================');
-    console.log(`   Server berjalan di: http://localhost:${PORT}`);
-    console.log(`   Mode: ${isDemoMode ? '🎭 DEMO (tanpa backend)' : '✅ FULL (dengan Supabase)'}`);
-    console.log('========================================\n');
-
-    if (isDemoMode) {
-        console.log('   ℹ️  Dalam mode DEMO, fitur login/register');
-        console.log('      menggunakan data dummy. Untuk menghubungkan');
-        console.log('      ke backend asli, buat file .env dengan');
-        console.log('      kredensial Supabase dan Midtrans Anda.\n');
-    }
+    console.log(`\n🚀 Server running at http://localhost:${PORT}`);
+    console.log(`ℹ️  Mode: ${isDemoMode ? 'DEMO (No Backend)' : 'FULL (Supabase Connected)'}\n`);
 });
 
 module.exports = app;

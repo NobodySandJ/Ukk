@@ -1,10 +1,19 @@
+// ================================================================
+// FILE: edit-profile.js - Logika Halaman Edit Profil User
+// ================================================================
+
 document.addEventListener('DOMContentLoaded', function () {
     const token = localStorage.getItem('userToken');
+
+    // Redirect jika belum login
     if (!token) {
         window.location.href = 'index.html';
         return;
     }
 
+    // ============================================================
+    // SELEKTOR DOM
+    // ============================================================
     const profileForm = document.getElementById('profile-update-form');
     const usernameInput = document.getElementById('profile-username');
     const emailInput = document.getElementById('profile-email');
@@ -12,7 +21,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const instagramInput = document.getElementById('profile-instagram');
     const passwordInput = document.getElementById('profile-password');
 
-    // --- FORM VALIDATION HELPERS ---
+    // ============================================================
+    // HELPER VALIDASI FORM
+    // ============================================================
     function showError(input, message) {
         input.classList.add('error');
         input.classList.remove('success');
@@ -44,7 +55,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- REAL-TIME VALIDATION ---
+    // ============================================================
+    // VALIDASI REAL-TIME SAAT BLUR
+    // Edit pesan error di sini jika diperlukan
+    // ============================================================
     usernameInput?.addEventListener('blur', () => {
         const value = usernameInput.value.trim();
         if (!value) {
@@ -90,13 +104,16 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
 
-    // Clear validation on focus
+    // Clear validasi saat focus
     [usernameInput, emailInput, whatsappInput, instagramInput, passwordInput].forEach(input => {
         input?.addEventListener('focus', () => {
             clearValidation(input);
         });
     });
 
+    // ============================================================
+    // FETCH DATA PROFIL DARI SERVER
+    // ============================================================
     async function fetchProfile() {
         try {
             const response = await fetch('/api/user/profile', {
@@ -115,10 +132,13 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // ============================================================
+    // HANDLER SUBMIT FORM UPDATE PROFIL
+    // ============================================================
     profileForm.addEventListener('submit', async function (e) {
         e.preventDefault();
 
-        // Validate before submit
+        // Validasi sebelum submit
         let hasError = false;
 
         const username = usernameInput.value.trim();
@@ -161,6 +181,7 @@ document.addEventListener('DOMContentLoaded', function () {
         submitButton.disabled = true;
         submitButton.textContent = 'Menyimpan...';
 
+        // Data yang akan dikirim ke server
         const updatedData = {
             nama_pengguna: username,
             email: email,
@@ -168,6 +189,8 @@ document.addEventListener('DOMContentLoaded', function () {
             instagram: instagramInput.value,
             password: password,
         };
+
+        // Hapus password dari payload jika kosong
         if (!updatedData.password) {
             delete updatedData.password;
         }
@@ -184,6 +207,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const result = await response.json();
             if (!response.ok) throw new Error(result.message);
 
+            // Update token & data user di localStorage
             localStorage.setItem('userToken', result.token);
             localStorage.setItem('userData', JSON.stringify(result.user));
 

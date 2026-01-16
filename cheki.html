@@ -4,10 +4,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- ============================================================
+    JUDUL HALAMAN - Edit di sini
+    ============================================================ -->
     <title>Pesan Cheki - Refresh Breeze</title>
     <meta name="description" content="Pesan Tiket Cheki Refresh Breeze - Dapatkan momen spesial bersama member favoritmu! Pilih member dan lanjutkan ke pembayaran.">
+    
+    <!-- CSS & Icons -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <!-- Favicon -->
     <link rel="apple-touch-icon" sizes="180x180" href="img/logo/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="img/logo/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="img/logo/favicon-16x16.png">
@@ -15,6 +23,9 @@
 </head>
 
 <body>
+    <!-- ============================================================
+    HEADER / NAVBAR
+    ============================================================ -->
     <header>
         <nav class="container">
             <a href="index.html" class="logo">
@@ -24,17 +35,20 @@
                     <span>Official Website</span>
                 </div>
             </a>
+            
+            <!-- Link Navigasi -->
             <ul class="nav-links" id="nav-links">
-                <li><a href="index.html#hero">Beranda</a></li>
-                <li><a href="index.html#about">Tentang</a></li>
+                <li><a href="index.html">Beranda</a></li>
                 <li><a href="index.html#members">Member</a></li>
-                <li><a href="index.html#news">Berita</a></li>
-                <li><a href="cheki.html">Cheki</a></li>
+                <li><a href="cheki.html" class="active">Cheki</a></li>
+                <li><a href="gallery.html">Galeri</a></li>
             </ul>
+            
             <div class="nav-auth-buttons">
                 <a href="#" id="login-btn" class="nav-button">Login</a>
                 <a href="#" id="register-btn" class="nav-button cta">Join Us</a>
             </div>
+            
             <button class="hamburger" id="hamburger-menu" aria-label="Buka menu navigasi">
                 <i class="fas fa-bars"></i>
             </button>
@@ -43,22 +57,37 @@
     </header>
 
     <main>
+        <!-- ============================================================
+        SECTION: HALAMAN CHEKI
+        ID "cheki-page" digunakan oleh cheki.js untuk identifikasi
+        ============================================================ -->
         <section id="cheki-page">
             <div class="container">
+                <!-- Header Halaman -->
                 <div class="cheki-header">
                     <h2>Pesan Tiket Cheki</h2>
                     <p class="page-intro">Dapatkan momen spesial bersama member favoritmu! Pilih member di bawah dan lanjutkan ke pembayaran.</p>
+                    
+                    <!-- Tampilan Stok Tiket -->
                     <div class="stock-display">
                         <h3>Sisa Stok Tiket: <span id="cheki-stock-display">Memuat...</span></h3>
                     </div>
                 </div>
 
                 <div class="cheki-main-layout">
+                    <!-- ============================================================
+                    GRID PRODUK CHEKI
+                    Kartu member dirender oleh cheki.js dari data.json
+                    ============================================================ -->
                     <div class="cheki-selection-container">
                         <div class="cheki-member-grid" id="cheki-list">
-                            </div>
+                            <!-- Diisi oleh cheki.js -->
+                        </div>
                     </div>
 
+                    <!-- ============================================================
+                    RINGKASAN PESANAN
+                    ============================================================ -->
                     <div class="order-summary-container">
                         <h3>Ringkasan Pesanan</h3>
                         <div id="order-summary-items">
@@ -68,6 +97,7 @@
                             <p>Total Harga: <span id="total-price">Rp 0</span></p>
                         </div>
 
+                        <!-- Tombol Pembayaran -->
                         <button id="submit-button" class="cta-button">
                             <i class="fas fa-credit-card"></i> Lanjut ke Pembayaran
                         </button>
@@ -79,9 +109,11 @@
         </section>
     </main>
 
+    <!-- Modal Autentikasi -->
     <div id="auth-modal" class="modal">
-        </div>
+    </div>
 
+    <!-- Footer -->
     <footer>
         <div class="container">
             <p>&copy; 2025 Refresh Breeze. All Rights Reserved.</p>
@@ -94,6 +126,7 @@
         <p id="loading-text">Memproses pembayaran...</p>
     </div>
 
+    <!-- JavaScript Files -->
     <script src="js/auth.js"></script>
     <script src="js/script.js"></script>
     <script src="js/cheki.js"></script>

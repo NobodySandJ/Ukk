@@ -3,10 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- ============================================================
+    JUDUL HALAMAN - Edit di sini
+    ============================================================ -->
     <title>Leaderboard - Refresh Breeze</title>
     <meta name="description" content="Lihat peringkat Top Spender di Refresh Breeze. Siapa sultan yang paling banyak mengoleksi tiket Cheki?">
+    
+    <!-- CSS & Icons -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    
+    <!-- ============================================================
+    STYLE HALAMAN LEADERBOARD
+    Edit styling tampilan ranking di sini
+    ============================================================ -->
     <style>
         .leaderboard-wrapper {
             max-width: 800px;
@@ -16,6 +27,8 @@
             border-radius: 12px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.05);
         }
+        
+        /* Filter Buttons - Tombol filter kategori */
         .filter-buttons {
             display: flex;
             gap: 10px;
@@ -37,6 +50,8 @@
             color: white;
             border-color: var(--primary-color);
         }
+        
+        /* Rank Card - Kartu per user */
         .rank-card {
             display: flex;
             align-items: center;
@@ -50,9 +65,9 @@
             text-align: center;
             color: #555;
         }
-        .rank-1 { color: #f1c40f; }
-        .rank-2 { color: #95a5a6; }
-        .rank-3 { color: #cd7f32; }
+        .rank-1 { color: #f1c40f; } /* Gold */
+        .rank-2 { color: #95a5a6; } /* Silver */
+        .rank-3 { color: #cd7f32; } /* Bronze */
         
         .rank-user {
             flex-grow: 1;
@@ -68,6 +83,9 @@
     </style>
 </head>
 <body>
+    <!-- ============================================================
+    HEADER / NAVBAR
+    ============================================================ -->
     <header>
         <nav class="container">
             <a href="index.html" class="logo">
@@ -85,7 +103,7 @@
                 <li><a href="cheki.html">Cheki</a></li>
             </ul>
             <div class="nav-auth-buttons">
-                <!-- Will be populated by auth.js -->
+                <!-- Diisi oleh auth.js -->
             </div>
             <button class="hamburger" id="hamburger-menu" aria-label="Buka menu navigasi"><i class="fas fa-bars"></i></button>
         </nav>
@@ -96,6 +114,11 @@
         <div class="leaderboard-wrapper">
             <h1 style="text-align: center; margin-bottom: 2rem;">🏆 Top Spender Leaderboard</h1>
             
+            <!-- ============================================================
+            FILTER BUTTONS
+            Tombol filter: Global dan per-member
+            Edit nama member di sini jika ada perubahan lineup
+            ============================================================ -->
             <div class="filter-buttons" id="leaderboard-filters">
                 <button class="filter-btn active" data-filter="global">Top Spender</button>
                 <button class="filter-btn" data-filter="Aca">Aca</button>
@@ -107,12 +130,14 @@
                 <button class="filter-btn" data-filter="Yanyee">Yanyee</button>
             </div>
 
+            <!-- Leaderboard List - Diisi oleh leaderboard.js -->
             <div id="leaderboard-list">
                 <p style="text-align: center;">Memuat data...</p>
             </div>
         </div>
     </main>
 
+    <!-- Footer -->
     <footer>
         <div class="container">
             <div class="social-media">
@@ -124,6 +149,7 @@
         </div>
     </footer>
 
+    <!-- JavaScript Files -->
     <script src="js/script.js"></script>
     <script src="js/auth.js"></script>
     <script src="js/leaderboard.js"></script>

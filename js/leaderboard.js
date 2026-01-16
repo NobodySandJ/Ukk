@@ -1,24 +1,32 @@
-// File: js/leaderboard.js
+// ================================================================
+// FILE: leaderboard.js - Logika Halaman Leaderboard
+// ================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
     const filters = document.getElementById('leaderboard-filters');
     const listContainer = document.getElementById('leaderboard-list');
 
-    // Default Load: Global
+    // Load default: Global leaderboard
     loadLeaderboard('global');
 
+    // ============================================================
+    // EVENT LISTENER FILTER BUTTON
+    // ============================================================
     filters.addEventListener('click', (e) => {
         if (e.target.classList.contains('filter-btn')) {
-            // Update UI Active Button
+            // Update tombol aktif
             document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
             e.target.classList.add('active');
 
-            // Load Data
+            // Load data sesuai filter
             const filter = e.target.getAttribute('data-filter');
             loadLeaderboard(filter);
         }
     });
 
+    // ============================================================
+    // FUNGSI LOAD LEADERBOARD DARI API
+    // ============================================================
     async function loadLeaderboard(type) {
         listContainer.innerHTML = '<p style="text-align:center; padding: 2rem;">Mengambil data...</p>';
 
@@ -38,6 +46,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // ============================================================
+    // FUNGSI RENDER LIST LEADERBOARD
+    // Edit di sini untuk mengubah tampilan kartu ranking
+    // ============================================================
     function renderList(data, type) {
         listContainer.innerHTML = '';
 
@@ -50,7 +62,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const rankClass = index < 3 ? `rank-${index + 1}` : '';
             const rankIcon = index === 0 ? '👑' : `#${index + 1}`;
 
-            // Teks skor berbeda antara Global (Total Cheki) dan Member (Jumlah Tiket)
+            // Teks berbeda antara Global dan Per-Member
             let scoreText = '';
             let subText = '';
 

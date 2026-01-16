@@ -1,19 +1,25 @@
-// File: js/cheki.js
+// ================================================================
+// FILE: cheki.js - Logika Halaman Pemesanan Cheki
+// ================================================================
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Pastikan skrip ini hanya berjalan di halaman cheki
+    // Pastikan skrip hanya berjalan di halaman cheki
     if (!document.getElementById('cheki-page')) {
         return;
     }
 
-    // --- Selektor DOM ---
+    // ============================================================
+    // SELEKTOR DOM
+    // ============================================================
     const chekiListContainer = document.getElementById('cheki-list');
     const orderSummaryItemsEl = document.getElementById('order-summary-items');
     const totalPriceEl = document.getElementById('total-price');
     const submitButton = document.getElementById('submit-button');
     const chekiStockDisplay = document.getElementById('cheki-stock-display');
 
-    // --- State Aplikasi ---
+    // ============================================================
+    // STATE APLIKASI
+    // ============================================================
     let products = {
         members: [],
         group: {}
@@ -22,14 +28,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let availableStock = 0;
     let isMidtransScriptLoaded = false;
 
-    // --- Fungsi Inisialisasi ---
+    // ============================================================
+    // FUNGSI INISIALISASI HALAMAN
+    // ============================================================
     const initializePage = async () => {
-        // Show skeleton loading immediately
         renderProductSkeleton();
-
         loadMidtransScript();
         await fetchProductsAndStock();
-        // Hanya render jika data produk berhasil didapatkan
         if ((products.members && products.members.length > 0) || (products.group && products.group.id)) {
             renderProducts();
         }
@@ -37,7 +42,9 @@ document.addEventListener('DOMContentLoaded', () => {
         checkUrlForSuccess();
     };
 
-    // --- Fungsi Skeleton Loading ---
+    // ============================================================
+    // SKELETON LOADING - Tampilan loading sebelum data muncul
+    // ============================================================
     const renderProductSkeleton = () => {
         if (!chekiListContainer) return;
         chekiListContainer.innerHTML = '';
@@ -54,6 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // ============================================================
+    // LOAD SCRIPT MIDTRANS (Payment Gateway)
+    // ============================================================
     const loadMidtransScript = async () => {
         if (window.snap || isMidtransScriptLoaded) return;
         try {
@@ -74,6 +84,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // ============================================================
+    // FETCH PRODUK & STOK DARI SERVER
+    // ============================================================
     const fetchProductsAndStock = async () => {
         if (!chekiStockDisplay || !chekiListContainer) return;
         chekiStockDisplay.textContent = 'Memuat...';
@@ -94,7 +107,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- Fungsi Render Tampilan ---
+    // ============================================================
+    // FUNGSI RENDER KARTU PRODUK
+    // Edit di sini untuk mengubah tampilan kartu member cheki
+    // ============================================================
     const createProductCard = (product) => {
         const card = document.createElement('div');
         card.className = 'cheki-member-card';
@@ -135,6 +151,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // ============================================================
+    // FUNGSI UPDATE RINGKASAN PESANAN
+    // ============================================================
     const updateOrderSummary = () => {
         if (!orderSummaryItemsEl || !totalPriceEl) return;
         orderSummaryItemsEl.innerHTML = '';
@@ -159,7 +178,9 @@ document.addEventListener('DOMContentLoaded', () => {
         totalPriceEl.textContent = `Rp ${totalPrice.toLocaleString('id-ID')}`;
     };
 
-    // --- Fungsi Logika Keranjang (Cart) ---
+    // ============================================================
+    // FUNGSI LOGIKA KERANJANG (CART)
+    // ============================================================
     const updateCart = (productId, action) => {
         const allProducts = [products.group, ...products.members];
         const product = allProducts.find(p => p && p.id === productId);
@@ -195,11 +216,14 @@ document.addEventListener('DOMContentLoaded', () => {
         updateOrderSummary();
     };
 
-    // --- Logika Pembayaran ---
+    // ============================================================
+    // LOGIKA PEMBAYARAN - Integrasi Midtrans
+    // ============================================================
     const handlePayment = async () => {
         const token = localStorage.getItem('userToken');
         const userData = JSON.parse(localStorage.getItem('userData'));
 
+        // Cek apakah user sudah login
         if (!token || !userData) {
             showToast('Anda harus login untuk memesan.', false);
             document.getElementById('auth-modal')?.classList.add('active');
@@ -219,6 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         setPaymentButtonLoading(true);
 
+        // Data pesanan yang dikirim ke server
         const orderDetails = {
             item_details: itemsInCart.map(item => ({
                 id: item.id,
@@ -249,13 +274,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || 'Gagal memulai pembayaran.');
 
+            // Buka popup pembayaran Midtrans
             window.snap.pay(result.token, {
                 onSuccess: async (midtransResult) => {
                     try {
-                        // Tampilkan loading toast
                         showToast('Memproses pembayaran Anda...', 'info', 2000);
 
-                        // PENTING: Await update status SEBELUM redirect
+                        // Update status pesanan di server
                         const updateResponse = await fetch('/update-order-status', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -270,8 +295,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         }
 
                         resetCart();
-
-                        // Redirect setelah status berhasil diupdate
                         showToast('Pembayaran berhasil! Mengalihkan ke dashboard...', 'success', 1500);
                         setTimeout(() => {
                             window.location.href = `/dashboard.html?payment_success=true&order_id=${midtransResult.order_id}`;
@@ -279,7 +302,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     } catch (error) {
                         console.error('Error updating order status:', error);
                         showToast('Pembayaran berhasil, tapi ada kendala teknis. Silakan refresh halaman.', 'warning', 5000);
-                        // Tetap redirect meskipun ada error, user bisa refresh di dashboard
                         setTimeout(() => {
                             window.location.href = `/dashboard.html`;
                         }, 5000);
@@ -305,7 +327,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- Fungsi Utilitas ---
+    // ============================================================
+    // FUNGSI UTILITAS
+    // ============================================================
     const disablePaymentButton = (text) => {
         if (!submitButton) return;
         submitButton.disabled = true;
@@ -320,7 +344,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isLoading) {
             submitButton.disabled = true;
             submitButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
-            // Show loading overlay
             if (loadingOverlay) {
                 loadingOverlay.classList.add('active');
                 if (loadingTextEl) loadingTextEl.textContent = loadingText;
@@ -328,7 +351,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             submitButton.disabled = false;
             submitButton.innerHTML = '<i class="fas fa-credit-card"></i> Lanjut ke Pembayaran';
-            // Hide loading overlay
             if (loadingOverlay) {
                 loadingOverlay.classList.remove('active');
             }
@@ -336,19 +358,20 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const checkUrlForSuccess = () => {
-        // Cek jika ada status transaksi di URL (fallback)
         const urlParams = new URLSearchParams(window.location.search);
         const status = urlParams.get('transaction_status');
         if (status === 'settlement' || status === 'capture') {
-            // Jika user masih di halaman cheki tapi status sukses, arahkan juga ke dashboard
             window.location.href = `/dashboard.html?payment_success=true`;
         }
     };
 
-    // --- Event Listeners ---
+    // ============================================================
+    // EVENT LISTENERS
+    // ============================================================
     const addEventListeners = () => {
         if (!chekiListContainer || !submitButton) return;
 
+        // Delegasi event untuk tombol + dan -
         chekiListContainer.addEventListener('click', (e) => {
             const button = e.target.closest('.quantity-btn');
             if (!button) return;
@@ -361,6 +384,6 @@ document.addEventListener('DOMContentLoaded', () => {
         submitButton.addEventListener('click', handlePayment);
     };
 
-    // --- Jalankan Aplikasi ---
+    // Jalankan inisialisasi
     initializePage();
 });

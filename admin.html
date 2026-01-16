@@ -3,27 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- ============================================================
+    JUDUL HALAMAN ADMIN - Edit di sini
+    ============================================================ -->
     <title>Admin Panel - Refresh Breeze</title>
     <meta name="description" content="Admin Panel Refresh Breeze - Kelola pesanan, stok tiket, dan pengguna">
     
+    <!-- Fonts & Icons -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     
+    <!-- CSS Files -->
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/admin.css">
 
+    <!-- Favicon -->
     <link rel="apple-touch-icon" sizes="180x180" href="img/logo/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="img/logo/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="img/logo/favicon-16x16.png">
     <link rel="manifest" href="img/logo/site.webmanifest">
     
-    <!-- Chart.js for Visual Analytics -->
+    <!-- Chart.js untuk Grafik Penjualan -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <div class="admin-layout">
+        <!-- ============================================================
+        SIDEBAR NAVIGASI
+        Edit menu navigasi admin di sini
+        ============================================================ -->
         <aside class="sidebar">
             <div class="sidebar-header">
                 <a href="index.html" class="logo">
@@ -32,8 +43,11 @@
                 </a>
             </div>
             <nav class="sidebar-nav">
+                <!-- Link Dashboard -->
                 <a href="#" class="nav-link active" id="nav-dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                <!-- Link Manajemen User -->
                 <a href="#" class="nav-link" id="nav-reset-password"><i class="fas fa-users"></i> Akun User</a>
+                <!-- Link Kembali ke Homepage -->
                 <a href="index.html" class="nav-link"><i class="fas fa-home"></i> Kembali ke Situs</a>
             </nav>
             <div class="sidebar-footer">
@@ -44,21 +58,31 @@
         </aside>
 
         <main class="main-content">
+            <!-- Header Halaman -->
             <header class="main-header">
                 <h1 id="admin-welcome">Selamat Datang, Admin!</h1>
             </header>
 
+            <!-- ============================================================
+            SECTION: STATISTIK
+            Menampilkan total pendapatan, jumlah terjual, dan grafik
+            ============================================================ -->
             <section id="statistics">
+                <!-- Grid Kartu Statistik (diisi oleh admin.js) -->
                 <div class="stats-grid" id="stats-grid">
-                    </div>
+                </div>
                 
-                <!-- Visual Charts -->
+                <!-- Grafik Penjualan -->
                 <div class="content-card" style="margin-top: 2rem;">
                     <h3 class="section-title">Grafik Penjualan Per Member</h3>
                     <canvas id="salesChart" style="max-height: 400px;"></canvas>
                 </div>
             </section>
 
+            <!-- ============================================================
+            SECTION: MANAJEMEN STOK
+            Admin dapat menambah/mengurangi stok tiket
+            ============================================================ -->
             <section id="stock-management" class="content-card">
                 <h2 class="section-title">Manajemen Stok Cheki</h2>
                 <div class="stock-controls">
@@ -73,6 +97,10 @@
                 </div>
             </section>
 
+            <!-- ============================================================
+            SECTION: MANAJEMEN TIKET
+            Tabel semua pesanan dengan tombol Gunakan/Undo
+            ============================================================ -->
             <section id="orders-management" class="content-card">
                 <div class="management-header">
                     <h2 class="section-title">Manajemen Tiket</h2>
@@ -93,12 +121,17 @@
                                 <th>Aksi</th>
                             </tr>
                         </thead>
+                        <!-- Body tabel diisi oleh admin.js -->
                         <tbody id="orders-tbody">
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
             </section>
             
+            <!-- ============================================================
+            SECTION: MANAJEMEN AKUN USER
+            Reset password pengguna (hidden by default)
+            ============================================================ -->
             <section id="reset-password-view" class="content-card" style="display: none;">
                 <div class="management-header">
                     <h2 class="section-title">Manajemen Akun User</h2>
@@ -116,8 +149,9 @@
                                 <th>Aksi</th>
                             </tr>
                         </thead>
+                        <!-- Body tabel diisi oleh admin.js -->
                         <tbody id="user-list-tbody">
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
                 <button id="back-to-dashboard-btn" class="action-btn" style="margin-top: 1.5rem; background-color: var(--text-secondary);">
@@ -127,6 +161,7 @@
         </main>
     </div>
     
+    <!-- JavaScript Files -->
     <script src="js/script.js"></script>
     <script src="js/admin.js"></script>
 </body>

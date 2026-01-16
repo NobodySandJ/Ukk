@@ -1,8 +1,12 @@
-// ============================ 
-// TOAST NOTIFICATION (MERGED)
-// ============================
+// ================================================================
+// FILE: script.js - Logika Utama Website (Homepage)
+// ================================================================
+
+// ============================================================
+// FUNGSI TOAST NOTIFICATION
+// Menampilkan notifikasi popup di sudut kanan atas
+// ============================================================
 function showToast(message, type = 'info', duration = 3000) {
-    // Create toast container if it doesn't exist
     let container = document.getElementById('toast-container');
     if (!container) {
         container = document.createElement('div');
@@ -10,11 +14,10 @@ function showToast(message, type = 'info', duration = 3000) {
         document.body.appendChild(container);
     }
 
-    // Create toast element
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
 
-    // Icon based on type
+    // Icon berdasarkan tipe notifikasi
     const icons = {
         success: '<i class="fas fa-check-circle"></i>',
         error: '<i class="fas fa-exclamation-circle"></i>',
@@ -25,48 +28,40 @@ function showToast(message, type = 'info', duration = 3000) {
     toast.innerHTML = `
         <div class="toast-icon">${icons[type] || icons.info}</div>
         <div class="toast-message">${message}</div>
-        <button class="toast-close" onclick="this.parentElement.remove()">
-            <i class="fas fa-times"></i>
-        </button>
+        <button class="toast-close" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
     `;
 
-    // Add to container
     container.appendChild(toast);
-
-    // Trigger animation
     setTimeout(() => toast.classList.add('show'), 10);
 
-    // Auto remove after duration
+    // Hapus toast setelah durasi tertentu
     setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
     }, duration);
 }
 
-// ============================ 
-// MAIN SCRIPT
-// ============================
 document.addEventListener('DOMContentLoaded', function () {
 
-
-    // --- FUNGSI SLIDER GAMBAR ---
-    // Logika ini dipindahkan ke sini untuk memperbaiki error 'startSlider is not defined'
+    // ============================================================
+    // FUNGSI SLIDER/CAROUSEL
+    // Menampilkan gambar galeri di homepage dengan auto-slide
+    // ============================================================
     function startSlider(imageSources) {
         const slider = document.getElementById('image-slider');
         const dotsContainer = document.getElementById('slider-dots');
         const prevBtn = document.querySelector('.slider-nav .prev-btn');
         const nextBtn = document.querySelector('.slider-nav .next-btn');
 
-        if (!slider || !dotsContainer || imageSources.length === 0) {
-            return;
-        }
+        if (!slider || !dotsContainer || imageSources.length === 0) return;
 
         let currentSlide = 0;
         let autoSlideInterval;
 
-        // Buat slide dan dots
+        // Inisialisasi slides & dots
         slider.innerHTML = '';
         dotsContainer.innerHTML = '';
+
         imageSources.forEach((src, index) => {
             const slide = document.createElement('div');
             slide.className = 'slide';
@@ -88,23 +83,16 @@ document.addEventListener('DOMContentLoaded', function () {
         function goToSlide(slideIndex) {
             slides.forEach(s => s.classList.remove('active'));
             dots.forEach(d => d.classList.remove('active'));
-
             currentSlide = (slideIndex + slides.length) % slides.length;
-
             slides[currentSlide].classList.add('active');
             dots[currentSlide].classList.add('active');
         }
 
-        function nextSlide() {
-            goToSlide(currentSlide + 1);
-        }
-
-        function prevSlide() {
-            goToSlide(currentSlide - 1);
-        }
+        const nextSlide = () => goToSlide(currentSlide + 1);
+        const prevSlide = () => goToSlide(currentSlide - 1);
 
         function startAutoSlide() {
-            autoSlideInterval = setInterval(nextSlide, 5000);
+            autoSlideInterval = setInterval(nextSlide, 5000); // Ganti setiap 5 detik
         }
 
         function resetAutoSlide() {
@@ -112,86 +100,78 @@ document.addEventListener('DOMContentLoaded', function () {
             startAutoSlide();
         }
 
-        nextBtn.addEventListener('click', () => {
-            nextSlide();
-            resetAutoSlide();
-        });
-
-        prevBtn.addEventListener('click', () => {
-            prevSlide();
-            resetAutoSlide();
-        });
+        if (nextBtn) nextBtn.addEventListener('click', () => { nextSlide(); resetAutoSlide(); });
+        if (prevBtn) prevBtn.addEventListener('click', () => { prevSlide(); resetAutoSlide(); });
 
         goToSlide(0);
         startAutoSlide();
     }
 
 
-    // --- FUNGSI PEMUATAN DATA WEBSITE ---
+    // ============================================================
+    // FUNGSI LOAD DATA WEBSITE
+    // Mengambil data dari data.json dan menampilkan ke halaman
+    // ============================================================
     async function loadWebsiteData() {
         try {
             const response = await fetch('data.json');
-            if (!response.ok) {
-                throw new Error(`Gagal mengambil data: ${response.statusText}`);
-            }
+            if (!response.ok) throw new Error(`Fetch error: ${response.statusText}`);
             const data = await response.json();
 
-            if (!data || !data.group) {
-                throw new Error("Format data dari API tidak valid.");
-            }
+            if (!data || !data.group) throw new Error("Invalid data format");
 
-            // Panggil fungsi untuk mengisi konten halaman
             populatePage(data);
 
-            // Panggil fungsi slider jika ada galeri
+            // Inisialisasi slider jika ada
             if (document.querySelector('.slider-container') && data.gallery) {
-                startSlider(data.gallery.map(item => item.src)); // INI PERBAIKANNYA
+                startSlider(data.gallery.map(item => item.src));
             }
 
         } catch (error) {
-            console.error("Gagal memuat data website:", error);
+            console.error("Failed to load website data:", error);
         }
     }
 
+    // ============================================================
+    // FUNGSI POPULATE PAGE
+    // Mengisi konten halaman dengan data dari JSON
+    // Edit bagian ini untuk mengubah tampilan data
+    // ============================================================
     function populatePage(data) {
         document.title = `${data.group.name} - Official Website`;
 
-        // Header & Hero
-        const logoText = document.querySelector('.logo-text strong');
-        if (logoText) logoText.textContent = data.group.name;
+        const safeSetText = (selector, text) => {
+            const el = document.querySelector(selector);
+            if (el) el.textContent = text;
+        };
 
-        const groupName = document.getElementById('group-name');
-        if (groupName) groupName.textContent = data.group.name;
+        // Header & Hero Section
+        safeSetText('.logo-text strong', data.group.name);
+        safeSetText('#group-name', data.group.name);
+        safeSetText('#group-tagline', data.group.tagline);
+        safeSetText('#about-content', data.group.about);
 
-        const groupTagline = document.getElementById('group-tagline');
-        if (groupTagline) groupTagline.textContent = data.group.tagline;
-
-        const aboutContent = document.getElementById('about-content');
-        if (aboutContent) aboutContent.textContent = data.group.about;
-
-        // How to Order Section
+        // --- Section: Cara Memesan ---
         const howToOrderContainer = document.getElementById('how-to-order-container');
         if (howToOrderContainer && data.how_to_order) {
-            howToOrderContainer.innerHTML = '';
-            data.how_to_order.forEach((step, index) => {
-                const stepEl = document.createElement('div');
-                stepEl.className = 'order-step';
-                stepEl.innerHTML = `
+            howToOrderContainer.innerHTML = data.how_to_order.map((step, index) => `
+                <div class="order-step">
                     <div class="step-number">${index + 1}</div>
                     <div class="step-details">
                         <h3>${step.title}</h3>
                         <p>${step.description}</p>
                     </div>
-                `;
-                howToOrderContainer.appendChild(stepEl);
-            });
+                </div>
+            `).join('');
         }
 
-        // Member Section
+        // --- Section: Member ---
+        // Edit di sini untuk mengubah tampilan kartu member
         const memberGrid = document.getElementById('member-grid');
         if (memberGrid) {
             memberGrid.innerHTML = '';
 
+            // Kartu Grup
             const groupCard = document.createElement('div');
             groupCard.className = 'member-card-detailed group-card';
             groupCard.innerHTML = `
@@ -200,11 +180,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     <h3>${data.group.name}</h3>
                     <blockquote class="jiko">"${data.group.tagline}"</blockquote>
                     <p>${data.group.about}</p>
-                </div>
-            `;
+                </div>`;
+            memberGrid.appendChild(groupCard);
 
-            const allElements = [groupCard];
-
+            // Kartu Member Individual
             data.members.forEach(member => {
                 const card = document.createElement('div');
                 card.className = 'member-card-detailed';
@@ -218,87 +197,74 @@ document.addEventListener('DOMContentLoaded', function () {
                             <li><strong>Sifat:</strong> ${member.details.sifat}</li>
                             <li><strong>Hobi:</strong> ${member.details.hobi}</li>
                         </ul>
-                    </div>
-                `;
-                allElements.push(card);
-            });
-
-            allElements.forEach(element => {
-                memberGrid.appendChild(element);
+                    </div>`;
+                memberGrid.appendChild(card);
             });
         }
 
-        // News Section
+        // --- Section: Berita ---
         const newsContainer = document.getElementById('news-container');
         if (newsContainer) {
-            newsContainer.innerHTML = '';
-            data.news.forEach(item => {
-                const newsItem = document.createElement('div');
-                newsItem.className = 'news-item';
-                newsItem.innerHTML = `
+            newsContainer.innerHTML = data.news.map(item => `
+                <div class="news-item">
                     <h3>${item.title}</h3>
                     <div class="date">${item.date}</div>
                     <p>${item.content}</p>
-                `;
-                newsContainer.appendChild(newsItem);
-            });
+                </div>
+            `).join('');
         }
 
-        // FAQ Section
+        // --- Section: FAQ ---
         const faqContainer = document.getElementById('faq-container');
         if (faqContainer) {
-            faqContainer.innerHTML = '';
-            data.faq.forEach(faq => {
-                const faqItem = document.createElement('div');
-                faqItem.className = 'faq-item';
-                faqItem.innerHTML = `
+            faqContainer.innerHTML = data.faq.map(faq => `
+                <div class="faq-item">
                     <div class="faq-question">${faq.question}</div>
-                    <div class="faq-answer"><p>${faq.answer}</p></div>`;
-                faqContainer.appendChild(faqItem);
-            });
-            faqContainer.addEventListener('click', function (e) {
-                const question = e.target.closest('.faq-question');
-                if (question) {
-                    question.parentElement.classList.toggle('active');
+                    <div class="faq-answer"><p>${faq.answer}</p></div>
+                </div>
+            `).join('');
+
+            // Toggle FAQ
+            faqContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('faq-question')) {
+                    e.target.parentElement.classList.toggle('active');
                 }
             });
         }
 
         // Footer
-        const footerText = document.getElementById('footer-text');
-        if (footerText) {
-            footerText.innerHTML = `&copy; 2025 ${data.group.name}. All Rights Reserved.`;
-        }
+        safeSetText('#footer-text', `© 2025 ${data.group.name}. All Rights Reserved.`);
     }
 
-    // --- HOMEPAGE LEADERBOARD ---
+    // ============================================================
+    // FUNGSI LEADERBOARD HOMEPAGE
+    // Menampilkan Top 3 Spender di halaman utama
+    // ============================================================
     async function fetchHomepageLeaderboard() {
         const container = document.getElementById('homepage-leaderboard');
         if (!container) return;
 
         try {
             const response = await fetch('/api/leaderboard');
-            if (!response.ok) throw new Error('Gagal memuat leaderboard');
-
+            if (!response.ok) throw new Error('Fetch failed');
             const data = await response.json();
 
+            // Tampilan jika belum ada data
             if (!data || data.length === 0) {
                 container.innerHTML = `
                     <div style="text-align: center; padding: 2rem; color: var(--secondary-text-color);">
                         <p style="font-size: 3rem; margin-bottom: 1rem;">🏆</p>
                         <p>Belum ada Top Spender saat ini.</p>
                         <p style="margin-top: 0.5rem;">Jadilah yang pertama!</p>
-                    </div>
-                `;
+                    </div>`;
                 return;
             }
 
-            const top3 = data.slice(0, 3);
+            // Tampilkan Top 3
             const rankEmojis = ['🥇', '🥈', '🥉'];
-
             container.innerHTML = `
                 <div class="homepage-leaderboard-grid">
-                    ${top3.map((user, index) => `
+                    ${data.slice(0, 3).map((user, index) => `
                         <div class="leaderboard-card rank-${index + 1}">
                             <div class="leaderboard-rank">${rankEmojis[index]}</div>
                             <div class="leaderboard-name">${user.username}</div>
@@ -306,31 +272,92 @@ document.addEventListener('DOMContentLoaded', function () {
                             <div class="leaderboard-count">${user.totalQuantity || user.totalCheki || 0} Cheki</div>
                         </div>
                     `).join('')}
-                </div>
-            `;
+                </div>`;
 
         } catch (error) {
-            console.error('Error fetching leaderboard:', error);
+            console.error('Leaderboard error:', error);
             container.innerHTML = `
                 <div style="text-align: center; padding: 2rem; color: var(--secondary-text-color);">
                     <p>Tidak dapat memuat leaderboard.</p>
+                </div>`;
+        }
+    }
+
+    // ============================================================
+    // TOGGLE MENU MOBILE (HAMBURGER)
+    // ============================================================
+    const hamburger = document.getElementById('hamburger-menu');
+    const navMenu = document.getElementById('nav-menu');
+    if (hamburger && navMenu) {
+        hamburger.addEventListener('click', () => navMenu.classList.toggle('active'));
+    }
+
+    // ============================================================
+    // FUNGSI GALERI PREVIEW HOMEPAGE
+    // Menampilkan foto dari folder dokumentasi
+    // ============================================================
+    async function loadGalleryPreview() {
+        const container = document.getElementById('gallery-preview-grid');
+        if (!container) return;
+
+        try {
+            const response = await fetch('data/gallery-data.json');
+            if (!response.ok) throw new Error('Fetch failed');
+            const data = await response.json();
+
+            // Filter foto dokumentasi yang valid (bukan placeholder)
+            const dokumentasi = (data.dokumentasi || []).filter(item =>
+                item.src && !item.src.includes('example.webp')
+            );
+
+            // Jika tidak ada foto, tampilkan pesan
+            if (dokumentasi.length === 0) {
+                container.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; background: rgba(22, 163, 74, 0.05); border-radius: 16px; border: 2px dashed rgba(22, 163, 74, 0.2);">
+                        <i class="fas fa-images" style="font-size: 3rem; color: var(--primary-color); opacity: 0.5; margin-bottom: 1rem;"></i>
+                        <p style="color: var(--secondary-text-color); font-size: 1.1rem;">Foto belum tersedia</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Tampilkan maksimal 4 foto
+            const photos = dokumentasi.slice(0, 4);
+            container.innerHTML = photos.map((item, index) => {
+                const isLast = index === photos.length - 1 && dokumentasi.length > 4;
+                const extraStyle = isLast ? 'filter: brightness(0.5);' : '';
+                const overlay = isLast ? `
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; text-align: center;">
+                        <i class="fas fa-images" style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                        <p style="font-weight: 600;">+${dokumentasi.length - 3} Lainnya</p>
+                    </div>
+                ` : '';
+
+                return `
+                    <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); aspect-ratio: 1; position: relative; cursor: pointer;" onclick="window.location.href='gallery.html'">
+                        <img src="${item.src}" alt="${item.title}" style="width: 100%; height: 100%; object-fit: cover; ${extraStyle}" loading="lazy">
+                        ${overlay}
+                    </div>
+                `;
+            }).join('');
+
+        } catch (error) {
+            console.error('Gallery preview error:', error);
+            container.innerHTML = `
+                <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; background: rgba(22, 163, 74, 0.05); border-radius: 16px; border: 2px dashed rgba(22, 163, 74, 0.2);">
+                    <i class="fas fa-images" style="font-size: 3rem; color: var(--primary-color); opacity: 0.5; margin-bottom: 1rem;"></i>
+                    <p style="color: var(--secondary-text-color); font-size: 1.1rem;">Foto belum tersedia</p>
                 </div>
             `;
         }
     }
 
-    // Hamburger Menu Toggle
-    const hamburger = document.getElementById('hamburger-menu');
-    const navMenu = document.getElementById('nav-menu');
-    if (hamburger && navMenu) {
-        hamburger.addEventListener('click', () => {
-            navMenu.classList.toggle('active');
-        });
-    }
-
-    // Panggil fungsi utama jika ini adalah halaman utama (index.html)
+    // ============================================================
+    // INISIALISASI HOMEPAGE
+    // ============================================================
     if (document.querySelector('#hero')) {
         loadWebsiteData();
         fetchHomepageLeaderboard();
+        loadGalleryPreview();
     }
 });

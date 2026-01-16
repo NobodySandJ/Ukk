@@ -1,11 +1,14 @@
-// File: js/dashboard.js
-// VERSI FINAL: Dengan fitur Oshi, Badge, Notifikasi Bayar, & Leaderboard Preview
+// ================================================================
+// FILE: dashboard.js - Logika Halaman Dashboard User
+// ================================================================
 
 document.addEventListener('DOMContentLoaded', function () {
     const token = localStorage.getItem('userToken');
     const userData = JSON.parse(localStorage.getItem('userData'));
 
-    // 1. Cek Login
+    // ============================================================
+    // CEK LOGIN - Redirect jika belum login
+    // ============================================================
     if (!token || !userData) {
         window.location.href = 'index.html';
         return;
@@ -15,15 +18,19 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
-    // 2. Logika Notifikasi Pembayaran Sukses (Dari Redirect)
+    // ============================================================
+    // NOTIFIKASI PEMBAYARAN SUKSES (dari redirect)
+    // ============================================================
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('payment_success') === 'true') {
         showToast('Pembayaran Berhasil! Tiket Anda sudah tersedia di bawah.', 'success');
-        // Membersihkan URL agar notifikasi tidak muncul lagi saat refresh
         window.history.replaceState({}, document.title, window.location.pathname);
     }
 
-    // --- SETUP TAMPILAN PROFIL (OSHI & BADGES) ---
+    // ============================================================
+    // SETUP TAMPILAN PROFIL (Nama, Oshi, Badge)
+    // Edit di sini untuk mengubah tampilan profil user
+    // ============================================================
     const usernameDisplay = document.getElementById('username-display');
     const oshiDisplay = document.getElementById('oshi-display');
     const profileImg = document.getElementById('profile-oshi-img');
@@ -34,20 +41,21 @@ document.addEventListener('DOMContentLoaded', function () {
         usernameDisplay.textContent = userData.nama_pengguna.toUpperCase();
     }
 
-    // Display Oshi Name
+    // Tampilkan nama Oshi
     if (oshiDisplay && userData.oshi) {
         oshiDisplay.innerHTML = `❤️ Oshi: ${userData.oshi}`;
     }
 
-    // Update Leaderboard Title
+    // Update judul leaderboard sesuai Oshi
     if (leaderboardTitle && userData.oshi) {
         leaderboardTitle.innerHTML = `<i class="fas fa-trophy"></i> TOP SPENDER ${userData.oshi.toUpperCase()}`;
     }
 
-    // Fungsi mendapatkan gambar Oshi
+    // ============================================================
+    // FUNGSI MENDAPATKAN GAMBAR OSHI
+    // Pastikan file gambar ada di folder img/member/ (lowercase)
+    // ============================================================
     function getOshiImage(oshiName) {
-        // Pastikan Anda memiliki gambar-gambar ini di folder img/member/
-        // Format nama file harus lowercase (misal: aca.webp, cally.webp, sinta.webp, piya.webp, dll)
         if (!oshiName || oshiName === 'All Member') return 'img/logo/apple-touch-icon.png';
         return `img/member/${oshiName.toLowerCase()}.webp`;
     }
@@ -56,13 +64,12 @@ document.addEventListener('DOMContentLoaded', function () {
     if (profileImg && userData.oshi) {
         profileImg.src = getOshiImage(userData.oshi);
 
-        // Tampilkan Badge jika user punya Oshi spesifik
+        // Tampilkan badge jika user punya Oshi spesifik
         if (userData.oshi !== 'All Member') {
             if (userBadges) {
-                userBadges.innerHTML = ''; // Reset
+                userBadges.innerHTML = '';
                 const badge = document.createElement('span');
                 badge.className = 'badge';
-                // Styling inline untuk badge
                 badge.style.cssText = "background: #ffebee; color: #c62828; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 600; box-shadow: 0 2px 4px rgba(0,0,0,0.1);";
                 badge.innerHTML = `<i class="fas fa-heart"></i> Team ${userData.oshi}`;
                 userBadges.appendChild(badge);
@@ -70,14 +77,15 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- FETCH DASHBOARD LEADERBOARD (PREVIEW TOP 3 per OSHI) ---
+    // ============================================================
+    // FETCH LEADERBOARD DASHBOARD (Preview Top 3 per Oshi)
+    // ============================================================
     async function fetchDashboardLeaderboard() {
         const loadingDiv = document.getElementById('dashboard-leaderboard-loading');
         const container = document.getElementById('top-spenders-container');
 
         if (!container || !loadingDiv) return;
 
-        // Jika user tidak punya oshi spesifik, tampilkan global leaderboard
         const userOshi = userData.oshi;
         const isGlobal = !userOshi || userOshi === 'All Member';
 
@@ -101,9 +109,7 @@ document.addEventListener('DOMContentLoaded', function () {
             loadingDiv.style.display = 'none';
             container.style.display = 'flex';
 
-            // Ambil hanya Top 3 untuk preview di dashboard
             const top3 = data.slice(0, 3);
-
             const rankEmojis = ['🥇', '🥈', '🥉'];
 
             container.innerHTML = top3.map((user, index) => `
@@ -120,39 +126,40 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Panggil fungsi leaderboard
     fetchDashboardLeaderboard();
 
 
-    // --- LOGIKA RIWAYAT TIKET (SAMA SEPERTI SEBELUMNYA) ---
+    // ============================================================
+    // LOGIKA RIWAYAT TIKET
+    // ============================================================
     const ticketContainer = document.getElementById('ticket-container');
     const logoutBtn = document.getElementById('logout-btn');
     const logoutModal = document.getElementById('logout-modal');
     const cancelLogoutBtn = document.getElementById('cancel-logout');
     const confirmLogoutBtn = document.getElementById('confirm-logout');
 
-    // Open logout modal instead of direct logout
+    // Buka modal konfirmasi logout
     logoutBtn?.addEventListener('click', () => {
         if (logoutModal) {
             logoutModal.classList.add('active');
         }
     });
 
-    // Cancel logout
+    // Batal logout
     cancelLogoutBtn?.addEventListener('click', () => {
         if (logoutModal) {
             logoutModal.classList.remove('active');
         }
     });
 
-    // Close modal when clicking outside
+    // Tutup modal jika klik di luar
     logoutModal?.addEventListener('click', (e) => {
         if (e.target === logoutModal) {
             logoutModal.classList.remove('active');
         }
     });
 
-    // Confirm logout
+    // Konfirmasi logout
     confirmLogoutBtn?.addEventListener('click', () => {
         localStorage.removeItem('userToken');
         localStorage.removeItem('userData');
@@ -162,8 +169,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 1000);
     });
 
+    // ============================================================
+    // FETCH DATA PESANAN DARI SERVER
+    // ============================================================
     async function fetchOrders() {
-        // Show skeleton loading while fetching
         showSkeletonTickets();
 
         try {
@@ -188,6 +197,10 @@ document.addEventListener('DOMContentLoaded', function () {
         `;
     }
 
+    // ============================================================
+    // RENDER KARTU TIKET
+    // Edit di sini untuk mengubah tampilan kartu tiket
+    // ============================================================
     function renderTickets(orders) {
         if (orders.length === 0) {
             ticketContainer.innerHTML = `
@@ -201,16 +214,14 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
 
-        // Sort: Tiket berlaku paling atas, kemudian sort by tanggal terbaru
+        // Sort: Tiket berlaku di atas, lalu urutkan dari terbaru
         orders.sort((a, b) => {
-            // Prioritas 1: Tiket berlaku di atas
             if (a.status_tiket === 'berlaku' && b.status_tiket !== 'berlaku') return -1;
             if (a.status_tiket !== 'berlaku' && b.status_tiket === 'berlaku') return 1;
 
-            // Prioritas 2: Dalam kategori yang sama, tiket terbaru di atas
             const dateA = new Date(a.dibuat_pada || 0);
             const dateB = new Date(b.dibuat_pada || 0);
-            return dateB - dateA; // Descending order (terbaru dulu)
+            return dateB - dateA;
         });
 
         ticketContainer.innerHTML = '';
@@ -223,6 +234,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const itemsList = order.detail_item?.map(item => `${item.quantity}x ${item.name}`).join('<br>') || 'Tidak ada detail item.';
 
+            // Badge status tiket
             let statusBadge = '';
             if (order.status_tiket === 'berlaku') {
                 statusBadge = '<span style="background:#28a745;color:white;padding:4px 12px;border-radius:20px;font-size:0.85rem;font-weight:bold;">✓ BERLAKU</span>';
@@ -232,6 +244,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 statusBadge = `<span style="background:#ffc107;color:#000;padding:4px 12px;border-radius:20px;font-size:0.85rem;font-weight:bold;">${order.status_tiket.toUpperCase()}</span>`;
             }
 
+            // QR Code atau label "Sudah Terpakai"
             const qrSectionHTML = order.status_tiket === 'berlaku'
                 ? `<div class="ticket-qr"><canvas id="qr-${order.id_pesanan}"></canvas></div>`
                 : `<div class="ticket-qr-used"><span>SUDAH<br>TERPAKAI</span></div>`;
@@ -248,12 +261,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
             ticketContainer.appendChild(card);
 
-            // Generate QR Code
+            // Generate QR Code untuk tiket berlaku
             if (order.status_tiket === 'berlaku') {
                 const qrCanvas = document.getElementById(`qr-${order.id_pesanan}`);
                 if (qrCanvas && typeof QRCode !== 'undefined') {
-                    const qrItems = order.detail_item?.map(item => `${item.quantity}x ${item.name}`).join(', ') || 'N/A';
-                    // Data QR: ID Pesanan + Username untuk verifikasi admin
                     const qrData = `ID:${order.id_pesanan}|U:${userData.nama_pengguna}`;
 
                     QRCode.toCanvas(qrCanvas, qrData, { width: 120, margin: 1 }, (error) => {

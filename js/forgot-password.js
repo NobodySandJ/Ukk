@@ -1,35 +1,145 @@
-document.addEventListener('DOMContentLoaded', function() {
+// ================================================================
+// FILE: forgot-password.js - Self-Service Password Reset
+// Verifikasi identitas user dengan No WA + Email, tampilkan OTP
+// ================================================================
+
+document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('forgot-password-form');
+    const verifyBtn = document.getElementById('verify-btn');
+    const messageBox = document.getElementById('message-box');
+    const otpModal = document.getElementById('otp-modal');
+    const otpCodeDisplay = document.getElementById('otp-code-display');
+    const otpExpiry = document.getElementById('otp-expiry');
+    const copyBtn = document.getElementById('copy-btn');
+    const closeModalBtn = document.getElementById('close-modal-btn');
+
     if (!form) return;
 
-    form.addEventListener('submit', function(e) {
+    // Handle form submission
+    form.addEventListener('submit', async function (e) {
         e.preventDefault();
 
-        // Ambil data dari input
-        const username = document.getElementById('username').value;
-        const email = document.getElementById('email').value;
-        
-        // Nomor WhatsApp tujuan
-        const adminWhatsAppNumber = '6285765907580';
+        const whatsapp = document.getElementById('whatsapp').value.trim();
+        const email = document.getElementById('email').value.trim();
 
-        // Buat template pesan
-        const message = `Halo Admin,
+        // Clear previous messages
+        messageBox.textContent = '';
+        messageBox.className = 'message-box';
 
-Saya lupa password akun saya di website Mujōken no Umi.
-Berikut adalah data akun saya:
-- Username: ${username}
-- Email: ${email}
+        // Validasi input
+        if (!whatsapp || !email) {
+            showMessage('Harap isi semua field.', 'error');
+            return;
+        }
 
-Mohon bantuannya untuk mereset password saya.
-Terima kasih.`;
+        // Validasi format nomor WA (harus diawali 62)
+        if (!whatsapp.startsWith('62')) {
+            showMessage('Nomor WhatsApp harus diawali dengan 62 (contoh: 6281234567890)', 'error');
+            return;
+        }
 
-        // Encode pesan agar sesuai format URL
-        const encodedMessage = encodeURIComponent(message);
+        if (whatsapp.length < 10) {
+            showMessage('Nomor WhatsApp tidak valid.', 'error');
+            return;
+        }
 
-        // Buat URL WhatsApp
-        const whatsappUrl = `https://wa.me/${adminWhatsAppNumber}?text=${encodedMessage}`;
+        // Disable button saat proses
+        verifyBtn.disabled = true;
+        verifyBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memverifikasi...';
 
-        // Buka WhatsApp di tab baru
-        window.open(whatsappUrl, '_blank');
+        try {
+            const response = await fetch('/api/verify-and-generate-otp', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ whatsapp, email })
+            });
+
+            const result = await response.json();
+
+            if (response.ok) {
+                // Sukses - tampilkan modal OTP
+                showOtpModal(result.code, result.expiresIn);
+                form.reset();
+            } else {
+                showMessage(result.message || 'Verifikasi gagal.', 'error');
+            }
+
+        } catch (error) {
+            console.error('Error:', error);
+            showMessage('Terjadi kesalahan. Pastikan server berjalan.', 'error');
+        } finally {
+            verifyBtn.disabled = false;
+            verifyBtn.innerHTML = '<i class="fas fa-search"></i> Verifikasi Data';
+        }
     });
+
+    // Tampilkan OTP Modal
+    function showOtpModal(code, expiresIn) {
+        otpCodeDisplay.textContent = code;
+        otpExpiry.textContent = `Berlaku ${expiresIn}`;
+        otpModal.classList.add('active');
+
+        // Reset copy button
+        copyBtn.innerHTML = '<i class="fas fa-copy"></i> Salin Kode OTP';
+        copyBtn.classList.remove('copied');
+    }
+
+    // Tutup modal
+    if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', () => {
+            otpModal.classList.remove('active');
+        });
+    }
+
+    // Klik di luar modal untuk tutup
+    if (otpModal) {
+        otpModal.addEventListener('click', (e) => {
+            if (e.target === otpModal) {
+                otpModal.classList.remove('active');
+            }
+        });
+    }
+
+    // Copy OTP ke clipboard
+    if (copyBtn) {
+        copyBtn.addEventListener('click', async () => {
+            const code = otpCodeDisplay.textContent;
+
+            try {
+                await navigator.clipboard.writeText(code);
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Tersalin!';
+                copyBtn.classList.add('copied');
+
+                // Toast notification jika tersedia
+                if (typeof showToast === 'function') {
+                    showToast('Kode OTP berhasil disalin!', 'success');
+                }
+
+                // Reset setelah 2 detik
+                setTimeout(() => {
+                    copyBtn.innerHTML = '<i class="fas fa-copy"></i> Salin Kode OTP';
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+
+            } catch (err) {
+                console.error('Gagal menyalin:', err);
+                // Fallback untuk browser lama
+                const textArea = document.createElement('textarea');
+                textArea.value = code;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+
+                copyBtn.innerHTML = '<i class="fas fa-check"></i> Tersalin!';
+                copyBtn.classList.add('copied');
+            }
+        });
+    }
+
+    // Helper function untuk menampilkan pesan
+    function showMessage(msg, type) {
+        messageBox.textContent = msg;
+        messageBox.className = `message-box ${type}`;
+    }
 });

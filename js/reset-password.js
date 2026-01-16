@@ -1,58 +1,95 @@
-document.addEventListener('DOMContentLoaded', function() {
+// ================================================================
+// FILE: reset-password.js - Reset Password dengan Kode OTP
+// ================================================================
+
+document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('reset-password-form');
+    const otpInput = document.getElementById('otp-code');
     const newPasswordInput = document.getElementById('new-password');
     const confirmPasswordInput = document.getElementById('confirm-password');
+    const submitBtn = document.getElementById('submit-btn');
     const messageBox = document.getElementById('message-box');
-    const submitButton = form.querySelector('button');
 
-    const urlParams = new URLSearchParams(window.location.search);
-    const token = urlParams.get('token');
+    if (!form) return;
 
-    if (!token) {
-        messageBox.style.color = '#D33333';
-        messageBox.textContent = 'Token reset tidak ditemukan. Silakan coba lagi dari awal.';
-        submitButton.disabled = true;
-    }
+    // Auto-format OTP input (hanya angka)
+    otpInput.addEventListener('input', (e) => {
+        e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
+    });
 
-    form.addEventListener('submit', async function(e) {
+    // Handle form submission
+    form.addEventListener('submit', async function (e) {
         e.preventDefault();
 
-        if (newPasswordInput.value !== confirmPasswordInput.value) {
-            messageBox.style.color = '#D33333';
-            messageBox.textContent = 'Konfirmasi sandi tidak cocok.';
-            return;
-        }
-        if (newPasswordInput.value.length < 6) {
-            messageBox.style.color = '#D33333';
-            messageBox.textContent = 'Sandi minimal harus 6 karakter.';
+        const code = otpInput.value.trim();
+        const newPassword = newPasswordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
+
+        // Validasi
+        messageBox.textContent = '';
+        messageBox.className = 'message-box';
+
+        if (code.length !== 6) {
+            showMessage('Kode OTP harus 6 digit.', 'error');
             return;
         }
 
-        submitButton.disabled = true;
-        submitButton.textContent = 'Menyimpan...';
-        messageBox.textContent = '';
+        if (newPassword.length < 6) {
+            showMessage('Password minimal 6 karakter.', 'error');
+            return;
+        }
+
+        if (newPassword !== confirmPassword) {
+            showMessage('Password dan konfirmasi tidak cocok.', 'error');
+            return;
+        }
+
+        // Disable button saat proses
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
 
         try {
-            const response = await fetch('/api/reset-password', {
+            const response = await fetch('/api/reset-password-with-code', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ token: token, newPassword: newPasswordInput.value })
+                body: JSON.stringify({
+                    code: code,
+                    newPassword: newPassword
+                })
             });
-            const result = await response.json();
-            if (!response.ok) throw new Error(result.message);
 
-            messageBox.style.color = 'var(--success-color)';
-            messageBox.textContent = result.message + ' Anda akan dialihkan...';
-            
-            setTimeout(() => {
-                window.location.href = '/index.html'; 
-            }, 3000);
+            const result = await response.json();
+
+            if (response.ok) {
+                showMessage(result.message, 'success');
+
+                // Reset form
+                form.reset();
+
+                // Redirect ke login setelah 3 detik
+                setTimeout(() => {
+                    showToast('Mengarahkan ke halaman login...', 'info');
+                    setTimeout(() => {
+                        window.location.href = 'index.html';
+                    }, 1500);
+                }, 2000);
+
+            } else {
+                showMessage(result.message || 'Gagal mereset password.', 'error');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> Simpan Password Baru';
+            }
 
         } catch (error) {
-            messageBox.style.color = '#D33333';
-            messageBox.textContent = error.message;
-            submitButton.disabled = false;
-            submitButton.textContent = 'Simpan Sandi Baru';
+            console.error('Error:', error);
+            showMessage('Terjadi kesalahan. Silakan coba lagi.', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Simpan Password Baru';
         }
     });
+
+    function showMessage(msg, type) {
+        messageBox.textContent = msg;
+        messageBox.className = `message-box ${type}`;
+    }
 });
