@@ -427,29 +427,43 @@ app.get("/api/my-orders", authenticateToken, async (req, res) => {
 // ============================================================
 
 // Endpoint: Admin Stats
-app.get("/api/admin/stats", authenticateToken, authorizeAdmin, async (req, res) => {
+// Endpoint: Admin Dashboard Stats
+app.get("/api/admin/dashboard-stats", authenticateToken, authorizeAdmin, async (req, res) => {
     if (isDemoMode) {
         return res.json({
-            totalRevenue: 750000,
-            totalCheki: 30,
-            chekiPerMember: { 'Aca': 10, 'Sinta': 8, 'Cissi': 5, 'Cally': 4, 'Channie': 3 }
+            users: 15,
+            active_orders: 5,
+            revenue: 1500000,
+            stock: 8
         });
     }
     try {
-        const { data: orders, error } = await supabase.from('pesanan').select('total_harga, detail_item')
+        // 1. Total Users (Non-Admin)
+        const { count: users, error: errUsers } = await supabase
+            .from('pengguna')
+            .select('*', { count: 'exact', head: true })
+            .neq('peran', 'admin');
+
+        // 2. Active Orders
+        const { count: active_orders, error: errOrders } = await supabase
+            .from('pesanan')
+            .select('*', { count: 'exact', head: true })
+            .eq('status_tiket', 'berlaku');
+
+        // 3. Revenue (Status: berlaku/sudah_dipakai)
+        const { data: revenueData, error: errRevenue } = await supabase
+            .from('pesanan')
+            .select('total_harga')
             .in('status_tiket', ['berlaku', 'sudah_dipakai']);
-        if (error) throw error;
-        let totalRevenue = 0, totalCheki = 0;
-        const chekiPerMember = {};
-        orders.forEach(order => {
-            totalRevenue += order.total_harga;
-            (order.detail_item || []).forEach(item => {
-                totalCheki += item.quantity;
-                const member = item.name.replace('Cheki ', '');
-                chekiPerMember[member] = (chekiPerMember[member] || 0) + item.quantity;
-            });
-        });
-        res.json({ totalRevenue, totalCheki, chekiPerMember });
+
+        const revenue = (revenueData || []).reduce((sum, item) => sum + item.total_harga, 0);
+
+        // 4. Stock
+        const stock = await getChekiStock();
+
+        if (errUsers || errOrders || errRevenue) throw new Error("Database error");
+
+        res.json({ users: users || 0, active_orders: active_orders || 0, revenue, stock });
     } catch (e) {
         res.status(500).json({ message: 'Gagal mengambil statistik.', error: e.message });
     }
@@ -721,52 +735,6 @@ app.delete("/api/admin/gallery/:id", authenticateToken, authorizeAdmin, async (r
 // RESET PASSWORD ENDPOINTS
 // ============================================================
 
-// Endpoint khusus Redeem Tiket via QR Code
-app.post("/api/admin/redeem-ticket", authenticateToken, authorizeAdmin, async (req, res) => {
-    try {
-        const { orderId } = req.body;
-
-        // 1. Ambil data pesanan
-        const { data: order, error } = await supabase
-            .from('pesanan')
-            .select('*')
-            .eq('id_pesanan', orderId)
-            .single();
-
-        if (error || !order) return res.status(404).json({ message: "Tiket tidak ditemukan." });
-
-        // 2. Cek Status
-        if (order.status_tiket === 'sudah_dipakai') {
-            return res.status(400).json({ message: "TIKET SUDAH TERPAKAI sebelumnya. Jangan berikan barang lagi!" });
-        }
-        if (order.status_tiket === 'hangus') {
-            return res.status(400).json({ message: "Tiket sudah HANGUS/EXPIRED." });
-        }
-        if (order.status_tiket !== 'berlaku') {
-            return res.status(400).json({ message: `Status tiket tidak valid: ${order.status_tiket}` });
-        }
-
-        // 3. Update Status
-        const { error: updateError } = await supabase
-            .from('pesanan')
-            .update({ status_tiket: 'sudah_dipakai' })
-            .eq('id_pesanan', orderId);
-
-        if (updateError) throw updateError;
-
-        // 4. Return Success dengan detail item
-        // Format item biar enak dibaca
-        const itemsList = (order.detail_item || []).map(i => `${i.quantity}xc ${i.name}`).join(', ');
-
-        res.json({
-            success: true,
-            message: `SUKSES! Berikan Item: ${itemsList}`
-        });
-
-    } catch (e) {
-        res.status(500).json({ message: "Server error: " + e.message });
-    }
-});
 
 // Memory storage untuk reset codes
 const resetCodes = new Map();
@@ -846,27 +814,43 @@ app.post("/api/admin/reset-user-password", authenticateToken, authorizeAdmin, as
     }
 });
 
-// Admin Generate Reset Code
+// Endpoint: Admin Generate OTP Manual
 app.post("/api/admin/generate-reset-code", authenticateToken, authorizeAdmin, async (req, res) => {
-    if (isDemoMode) {
-        const code = generateResetCode();
-        return res.json({ message: "Kode reset berhasil dibuat. (Demo)", code, expiresIn: "05:00" });
-    }
+    if (isDemoMode) return res.json({ code: '123456', message: "Code generated (Demo)" });
+
     try {
         const { userId } = req.body;
-        if (!userId) return res.status(400).json({ message: "User ID tidak ditemukan." });
-
         const { data: user, error } = await supabase.from('pengguna').select('id, nama_pengguna').eq('id', userId).single();
+
         if (error || !user) return res.status(404).json({ message: "User tidak ditemukan." });
 
         const code = generateResetCode();
-        resetCodes.set(code, { userId: user.id, username: user.nama_pengguna, expiresAt: Date.now() + (5 * 60 * 1000) });
+        const expiresAt = Date.now() + (5 * 60 * 1000); // 5 menit
+        resetCodes.set(code, { userId: user.id, username: user.nama_pengguna, expiresAt });
 
-        res.json({ message: "Kode reset berhasil dibuat.", code, expiresIn: "05:00", username: user.nama_pengguna });
+        res.json({ success: true, code, message: "OTP Berhasil Digenerate" });
     } catch (e) {
-        res.status(500).json({ message: "Gagal membuat kode reset.", error: e.message });
+        res.status(500).json({ message: "Server error", error: e.message });
     }
 });
+
+// Endpoint: Admin Get Gallery (Mirror Public)
+app.get("/api/admin/gallery", authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) {
+        return res.json([
+            { id: '1', image_url: 'img/gallery/sample1.webp', alt_text: 'Foto 1', display_order: 1 }
+        ]);
+    }
+    try {
+        const { data, error } = await supabase.from('gallery').select('*').order('display_order', { ascending: true });
+        if (error) throw error;
+        res.json(data || []);
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengambil galeri.", error: e.message });
+    }
+});
+
+
 
 // Reset Password with OTP Code
 app.post("/api/reset-password-with-code", async (req, res) => {
