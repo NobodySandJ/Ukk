@@ -138,35 +138,47 @@ document.addEventListener('DOMContentLoaded', function () {
     const confirmLogoutBtn = document.getElementById('confirm-logout');
 
     // Buka modal konfirmasi logout
-    logoutBtn?.addEventListener('click', () => {
-        if (logoutModal) {
-            logoutModal.classList.add('active');
-        }
-    });
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            console.log('Logout button clicked');
+            if (logoutModal) {
+                logoutModal.classList.add('active');
+                console.log('Modal should be visible now');
+            }
+        });
+    }
 
     // Batal logout
-    cancelLogoutBtn?.addEventListener('click', () => {
-        if (logoutModal) {
-            logoutModal.classList.remove('active');
-        }
-    });
+    if (cancelLogoutBtn) {
+        cancelLogoutBtn.addEventListener('click', () => {
+            if (logoutModal) {
+                logoutModal.classList.remove('active');
+            }
+        });
+    }
 
     // Tutup modal jika klik di luar
-    logoutModal?.addEventListener('click', (e) => {
-        if (e.target === logoutModal) {
-            logoutModal.classList.remove('active');
-        }
-    });
+    if (logoutModal) {
+        logoutModal.addEventListener('click', (e) => {
+            if (e.target === logoutModal) {
+                logoutModal.classList.remove('active');
+            }
+        });
+    }
 
     // Konfirmasi logout
-    confirmLogoutBtn?.addEventListener('click', () => {
-        localStorage.removeItem('userToken');
-        localStorage.removeItem('userData');
-        showToast('Anda telah logout. Sampai jumpa!', 'success');
-        setTimeout(() => {
-            window.location.href = `${basePath}index.html`;
-        }, 1000);
-    });
+    if (confirmLogoutBtn) {
+        confirmLogoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('userToken');
+            localStorage.removeItem('userData');
+            if (typeof showToast === 'function') {
+                showToast('Anda telah logout. Sampai jumpa!', 'success');
+            }
+            setTimeout(() => {
+                window.location.href = `${basePath}index.html`;
+            }, 1000);
+        });
+    }
 
     // ============================================================
     // FETCH DATA PESANAN DARI SERVER
