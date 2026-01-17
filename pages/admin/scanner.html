@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan Tiket - Refresh Breeze Admin</title>
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <style>
+        body { margin: 0; background: #000; color: #fff; font-family: system-ui, -apple-system, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; }
+        #reader { width: 100%; max-width: 600px; }
+        .controls { padding: 20px; text-align: center; width: 100%; box-sizing: border-box; background: #111; }
+        .btn { padding: 12px 24px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        .btn-cancel { background: #fee2e2; color: #dc2626; }
+        h2 { margin: 0 0 10px 0; font-size: 1.2rem; }
+        p { color: #aaa; margin: 0 0 20px 0; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <div class="controls" style="border-bottom: 1px solid #333;">
+        <h2>Scanner Tiket</h2>
+        <p>Arahkan kamera ke QR Code Tiket User</p>
+    </div>
+    
+    <div id="reader"></div>
+
+    <div class="controls">
+        <button class="btn btn-cancel" onclick="history.back()">Kembali</button>
+    </div>
+
+    <script>
+        function onScanSuccess(decodedText, decodedResult) {
+            // Stop scanning
+            html5QrcodeScanner.clear();
+            
+            // Cek apakah URL valid (mengandung redeem.html)
+            if (decodedText.includes('redeem.html')) {
+                // Redirect ke URL tersebut
+                window.location.href = decodedText;
+            } else {
+                alert("QR Code tidak dikenali sebagai tiket valid.\nIsi: " + decodedText);
+                window.location.reload();
+            }
+        }
+
+        function onScanFailure(error) {
+            // handle scan failure, usually better to ignore and keep scanning.
+            // for example:
+            // console.warn(`Code scan error = ${error}`);
+        }
+
+        let html5QrcodeScanner = new Html5QrcodeScanner(
+            "reader",
+            { fps: 10, qrbox: {width: 250, height: 250} },
+            /* verbose= */ false);
+        html5QrcodeScanner.render(onScanSuccess, onScanFailure);
+    </script>
+</body>
+</html>

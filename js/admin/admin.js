@@ -28,6 +28,27 @@ document.addEventListener('DOMContentLoaded', function () {
     // ============================================================
     // DOM ELEMENTS
     // ============================================================
+    // Hamburger & Sidebar
+    const adminHamburger = document.getElementById('admin-hamburger');
+    const sidebar = document.querySelector('.sidebar');
+
+    // Toggle Sidebar
+    if (adminHamburger && sidebar) {
+        adminHamburger.addEventListener('click', () => {
+            sidebar.classList.toggle('active');
+        });
+
+        // Close sidebar when clicking outside (Mobile)
+        document.addEventListener('click', (e) => {
+            if (window.innerWidth <= 768 &&
+                sidebar.classList.contains('active') &&
+                !sidebar.contains(e.target) &&
+                !adminHamburger.contains(e.target)) {
+                sidebar.classList.remove('active');
+            }
+        });
+    }
+
     const adminWelcome = document.getElementById('admin-welcome');
     const logoutBtn = document.getElementById('admin-logout-btn');
     const navLinks = document.querySelectorAll('.sidebar-nav .nav-link[data-view]');
@@ -98,6 +119,13 @@ document.addEventListener('DOMContentLoaded', function () {
         if (viewName === 'dashboard') fetchDashboardData();
         else if (viewName === 'members') fetchMembers();
         else if (viewName === 'news') fetchNews();
+        else if (viewName === 'verification') {
+            // Reset verification view
+            const resDiv = document.getElementById('verification-result');
+            const manInp = document.getElementById('manual-order-id');
+            if (resDiv) resDiv.style.display = 'none';
+            if (manInp) manInp.value = '';
+        }
         else if (viewName === 'gallery') fetchGallery();
         else if (viewName === 'orders') fetchOrders();
         else if (viewName === 'users') fetchUsers();
@@ -798,6 +826,59 @@ document.addEventListener('DOMContentLoaded', function () {
         const filtered = allUsers.filter(u => u.nama_pengguna.toLowerCase().includes(term));
         renderUsers(filtered);
     });
+
+    // ============================================================
+    // VERIFICATION LOGIC
+    // ============================================================
+    const manualVerifyBtn = document.getElementById('manual-verify-btn');
+    const manualInput = document.getElementById('manual-order-id');
+    const resultDiv = document.getElementById('verification-result');
+    const startScanBtn = document.getElementById('start-scan-btn');
+
+    if (manualVerifyBtn) {
+        manualVerifyBtn.addEventListener('click', async () => {
+            const orderId = manualInput.value.trim();
+            if (!orderId) return showToast('Masukkan ID Pesanan', 'warning');
+
+            try {
+                // Use existing apiRequest helper
+                const result = await apiRequest('/api/admin/redeem-ticket', {
+                    method: 'POST',
+                    body: JSON.stringify({ orderId })
+                });
+
+                resultDiv.style.display = 'block';
+                // Success logic
+                resultDiv.innerHTML = `
+                    <div style="padding:1.5rem; background:#dcfce7; border:1px solid #22c55e; border-radius:12px; text-align:center;">
+                        <i class="fas fa-check-circle" style="font-size:3rem; color:#16a34a; margin-bottom:1rem;"></i>
+                        <h3 style="color:#15803d; margin:0;">VERIFIKASI SUKSES</h3>
+                        <p style="font-size:1.1rem; color:#166534; margin:1rem 0;">${result.message}</p>
+                    </div>
+                `;
+                showToast('Tiket Valid & Terpakai', 'success');
+
+            } catch (error) {
+                // Error logic
+                console.error("Verification failed:", error);
+                resultDiv.style.display = 'block';
+                resultDiv.innerHTML = `
+                    <div style="padding:1.5rem; background:#fee2e2; border:1px solid #ef4444; border-radius:12px; text-align:center;">
+                        <i class="fas fa-times-circle" style="font-size:3rem; color:#dc2626; margin-bottom:1rem;"></i>
+                        <h3 style="color:#b91c1c; margin:0;">VERIFIKASI GAGAL</h3>
+                        <p style="font-size:1.1rem; color:#991b1b; margin:1rem 0;">${error.message || 'Tiket tidak ditemukan atau error server.'}</p>
+                    </div>
+                `;
+            }
+        });
+    }
+
+    if (startScanBtn) {
+        startScanBtn.addEventListener('click', () => {
+            // Buka scanner
+            window.location.href = 'scanner.html';
+        });
+    }
 
     // ============================================================
     // LOGOUT

@@ -72,6 +72,9 @@
           <a href="#" class="nav-link" data-view="users">
             <i class="fas fa-user-cog"></i> Akun User
           </a>
+          <a href="#" class="nav-link" data-view="verification">
+            <i class="fas fa-qrcode"></i> Verifikasi Tiket
+          </a>
           <hr style="border-color: rgba(255, 255, 255, 0.1); margin: 1rem 0" />
           <a href="../../index.html" class="nav-link">
             <i class="fas fa-home"></i> Kembali ke Situs
@@ -87,6 +90,9 @@
       <main class="main-content">
         <!-- Header -->
         <header class="main-header">
+          <button class="admin-hamburger" id="admin-hamburger">
+            <i class="fas fa-bars"></i>
+          </button>
           <h1 id="admin-welcome">Selamat Datang, Admin!</h1>
         </header>
 
@@ -473,6 +479,52 @@
         .close-modal-btn { margin-top: 1rem; background: none; border: none; color: #6b7280; font-size: 0.9rem; cursor: pointer; text-decoration: underline; }
         .close-modal-btn:hover { color: #374151; }
     </style>
+
+        <!-- ============================================================
+            VIEW: VERIFICATION (MANUAL & SCAN)
+            ============================================================ -->
+        <section id="view-verification" class="admin-view">
+          <div class="content-card">
+            <h2 class="section-title">Verifikasi Tiket</h2>
+            <div class="verification-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+                
+                <!-- Manual Input Card -->
+                <div style="background: #f8fafc; padding: 2rem; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center;">
+                    <div style="width: 60px; height: 60px; background: #e0f2fe; color: #0284c7; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 1.5rem;">
+                        <i class="fas fa-keyboard"></i>
+                    </div>
+                    <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">Input Manual</h3>
+                    <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;">Masukkan Order ID jika scan gagal.</p>
+                    
+                    <div style="display: flex; gap: 0.5rem;">
+                        <input type="text" id="manual-order-id" placeholder="ORD-XXXXX" style="flex: 1; padding: 0.8rem; border: 1px solid #cbd5e1; border-radius: 8px;">
+                        <button id="manual-verify-btn" class="action-btn btn-success" style="padding: 0 1.2rem;">
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Scan Button Card -->
+                <div style="background: #f8fafc; padding: 2rem; border-radius: 12px; border: 1px solid #e2e8f0; text-align: center;">
+                    <div style="width: 60px; height: 60px; background: #dcfce7; color: #16a34a; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; font-size: 1.5rem;">
+                        <i class="fas fa-camera"></i>
+                    </div>
+                    <h3 style="margin-bottom: 0.5rem; font-size: 1.1rem;">Scan QR</h3>
+                    <p style="color: #64748b; font-size: 0.9rem; margin-bottom: 1.5rem;">Gunakan kamera untuk scan tiket.</p>
+                    
+                    <button id="start-scan-btn" class="action-btn btn-success" style="width: 100%; justify-content: center; padding: 0.9rem;">
+                        <i class="fas fa-qrcode"></i> Buka Scanner
+                    </button>
+                    <p style="font-size:0.8rem; color:#999; margin-top:0.5rem;">Membutuhkan izin kamera.</p>
+                </div>
+            </div>
+
+            <!-- Result Area -->
+            <div id="verification-result" style="margin-top: 2rem; display: none;">
+                <!-- Diisi via JS -->
+            </div>
+          </div>
+        </section>
 
     <!-- Custom JS -->
     <script>
