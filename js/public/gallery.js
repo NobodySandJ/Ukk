@@ -20,12 +20,58 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     try {
-        const response = await fetch(basePath + 'data/gallery-data.json');
+        // Fetch dari API database, bukan JSON statis
+        const response = await fetch('/api/public/gallery');
         if (response.ok) {
-            galleryData = await response.json();
+            const flatData = await response.json();
+
+            // Siapkan struktur data
+            galleryData = { group: [], member: {}, dokumentasi: [] };
+            members.forEach(m => galleryData.member[m.imgKey] = []);
+
+            // Transform data flat dari DB ke struktur frontend
+            flatData.forEach(item => {
+                const src = item.image_url || '';
+                const lowerSrc = src.toLowerCase();
+                const galleryItem = {
+                    src: src,
+                    title: item.alt_text || 'Foto Gallery',
+                    description: item.alt_text || '',
+                    date: 'Terbaru',
+                    size: 'medium'
+                };
+
+                let isMember = false;
+                // Cek apakah ini foto member tertentu
+                members.forEach(m => {
+                    if (lowerSrc.includes(m.imgKey.toLowerCase()) || lowerSrc.includes(m.name.toLowerCase())) {
+                        if (!galleryData.member[m.imgKey]) galleryData.member[m.imgKey] = [];
+                        galleryData.member[m.imgKey].push(galleryItem);
+                        isMember = true;
+                    }
+                });
+
+                // Jika bukan member spesifik, cek apakah grup
+                if (!isMember) {
+                    if (lowerSrc.includes('group') || lowerSrc.includes('grup')) {
+                        galleryData.group.push(galleryItem);
+                    } else {
+                        // Masukkan ke dokumentasi/event
+                        galleryData.dokumentasi.push(galleryItem);
+                    }
+                }
+            });
+        } else {
+            throw new Error("API response not ok");
         }
     } catch (error) {
-        console.warn('Tidak dapat memuat gallery-data.json, menggunakan data default');
+        console.warn('Gagal memuat data dari API, mencoba fallback ke JSON...', error);
+        try {
+            const fallbackResponse = await fetch(basePath + 'data/gallery-data.json');
+            if (fallbackResponse.ok) galleryData = await fallbackResponse.json();
+        } catch (e) {
+            console.error('Gagal memuat data gallery sama sekali.');
+        }
     }
 
     // List member buat filter, key-nya harus sama kayak nama file gambar

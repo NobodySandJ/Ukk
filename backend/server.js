@@ -237,23 +237,32 @@ app.get("/api/leaderboard-per-member", async (req, res) => {
 // UPDATED: Fetch members from Supabase database instead of data.json
 app.get("/api/products-and-stock", async (req, res) => {
     try {
-        // Get members from database
-        const { data: dbMembers, error: membersError } = await supabase
-            .from('members')
-            .select('*')
-            .eq('is_active', true)
-            .order('display_order', { ascending: true });
+        // Fetch dynamic data from Supabase in parallel
+        const [membersRes, newsRes, galleryRes] = await Promise.all([
+            supabase.from('members').select('*').eq('is_active', true).order('display_order', { ascending: true }),
+            supabase.from('news').select('title, content, date').eq('is_published', true).order('created_at', { ascending: false }).limit(3),
+            supabase.from('gallery').select('image_url, alt_text').order('display_order', { ascending: true })
+        ]);
 
-        if (membersError) throw membersError;
+        if (membersRes.error) console.error("Members fetch error:", membersRes.error);
 
-        // Transform database format to match existing frontend format
-        const members = (dbMembers || []).map(m => ({
-            id: m.name, // Use name as ID for cart compatibility
+        // Transform Members
+        const members = (membersRes.data || []).map(m => ({
+            id: m.name,
             name: m.name,
             role: m.role,
             image: m.image_url || `img/member/placeholder.webp`,
             price: m.price || 25000,
             details: m.details || {}
+        }));
+
+        // Transform News
+        const news = newsRes.data || [];
+
+        // Transform Gallery
+        const gallery = (galleryRes.data || []).map(g => ({
+            src: g.image_url,
+            alt: g.alt_text
         }));
 
         // Keep group cheki and other static data from data.json
@@ -262,11 +271,13 @@ app.get("/api/products-and-stock", async (req, res) => {
             group_cheki: productData.group_cheki || {},
             how_to_order: productData.how_to_order || [],
             images: productData.images || {},
-            news: productData.news || [],
-            gallery: productData.gallery || [],
             faq: productData.faq || [],
-            // Use database members if available, otherwise fallback to data.json
+
+            // Dynamic Data with JSON Fallback
             members: members.length > 0 ? members : productData.members || [],
+            news: news.length > 0 ? news : productData.news || [],
+            gallery: gallery.length > 0 ? gallery : productData.gallery || [],
+
             cheki_stock: await getChekiStock()
         };
 
@@ -501,7 +512,7 @@ app.get("/api/admin/all-users", authenticateToken, authorizeAdmin, async (req, r
     try {
         const { data, error } = await supabase
             .from('pengguna')
-            .select('id, nama_pengguna, email')
+            .select('id, nama_pengguna, email, nomor_whatsapp')
             .neq('peran', 'admin');
         if (error) throw error;
         res.json(data);

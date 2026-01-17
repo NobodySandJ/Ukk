@@ -120,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         card.innerHTML = `
             <div class="card-image-wrapper">
-                <img src="${product.image}" alt="Cheki ${product.name}" loading="lazy">
+                <img src="${product.image.startsWith('http') ? product.image : basePath + product.image}" alt="Cheki ${product.name}" loading="lazy">
             </div>
             <div class="card-content">
                 <h3>${product.name}</h3>

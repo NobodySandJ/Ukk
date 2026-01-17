@@ -695,20 +695,20 @@ document.addEventListener('DOMContentLoaded', function () {
     // ============================================================
     async function fetchUsers() {
         if (!userListTbody) return;
-        userListTbody.innerHTML = '<tr><td colspan="3"><div class="skeleton skeleton-table-row"></div></td></tr>';
+        userListTbody.innerHTML = '<tr><td colspan="4"><div class="skeleton skeleton-table-row"></div></td></tr>';
 
         try {
             allUsers = await apiRequest('/api/admin/all-users');
             renderUsers(allUsers);
         } catch (error) {
-            userListTbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Gagal memuat user</td></tr>';
+            userListTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Gagal memuat user</td></tr>';
         }
     }
 
     function renderUsers(users) {
         if (!userListTbody) return;
         if (users.length === 0) {
-            userListTbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">Tidak ada user</td></tr>';
+            userListTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">Tidak ada user</td></tr>';
             return;
         }
 
@@ -716,6 +716,7 @@ document.addEventListener('DOMContentLoaded', function () {
             <tr>
                 <td data-label="Username">${u.nama_pengguna}</td>
                 <td data-label="Email">${u.email}</td>
+                <td data-label="No. WhatsApp">${u.nomor_whatsapp || '-'}</td>
                 <td data-label="Aksi">
                     <button class="action-btn btn-reset btn-generate-code" data-userid="${u.id}" data-username="${u.nama_pengguna}">
                         <i class="fas fa-key"></i> Generate Kode
