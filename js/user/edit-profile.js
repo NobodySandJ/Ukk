@@ -1,19 +1,18 @@
-// ================================================================
-// FILE: edit-profile.js - Logika Halaman Edit Profil User
-// ================================================================
+// Konfigurasi dasar buat path file
+const basePath = window.appBasePath || '../../';
 
 document.addEventListener('DOMContentLoaded', function () {
     const token = localStorage.getItem('userToken');
 
-    // Redirect jika belum login
+    // Kalo belum login, jangan kasih masuk sini
     if (!token) {
-        window.location.href = 'index.html';
+        window.location.href = `${basePath}index.html`;
         return;
     }
 
-    // ============================================================
-    // SELEKTOR DOM
-    // ============================================================
+    // ==========================================
+    // AREA INI BUAT AMBIL DATA DARI FORM HTML
+    // ==========================================
     const profileForm = document.getElementById('profile-update-form');
     const usernameInput = document.getElementById('profile-username');
     const emailInput = document.getElementById('profile-email');
@@ -21,9 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const instagramInput = document.getElementById('profile-instagram');
     const passwordInput = document.getElementById('profile-password');
 
-    // ============================================================
-    // HELPER VALIDASI FORM
-    // ============================================================
+    // Fungsi buat nampilin pesan error di bawah input
     function showError(input, message) {
         input.classList.add('error');
         input.classList.remove('success');
@@ -55,10 +52,8 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // ============================================================
-    // VALIDASI REAL-TIME SAAT BLUR
-    // Edit pesan error di sini jika diperlukan
-    // ============================================================
+    // Cek inputan user tiap kali mereka selesai ngetik (blur event)
+    // Biar langsung ketahuan kalo ada yang salah
     usernameInput?.addEventListener('blur', () => {
         const value = usernameInput.value.trim();
         if (!value) {

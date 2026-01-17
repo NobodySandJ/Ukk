@@ -7,8 +7,22 @@ const cors = require("cors");
 const { createClient } = require("@supabase/supabase-js");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const multer = require("multer");
 const productData = require('../data.json');
 require("dotenv").config();
+
+// Multer config for memory storage (we'll upload to Supabase)
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    fileFilter: (req, file, cb) => {
+        if (file.mimetype.startsWith('image/')) {
+            cb(null, true);
+        } else {
+            cb(new Error('Only image files are allowed!'), false);
+        }
+    }
+});
 
 const app = express();
 app.use(cors());
@@ -220,13 +234,49 @@ app.get("/api/leaderboard-per-member", async (req, res) => {
 });
 
 // --- Produk & Pembayaran ---
+// UPDATED: Fetch members from Supabase database instead of data.json
 app.get("/api/products-and-stock", async (req, res) => {
     try {
+        // Get members from database
+        const { data: dbMembers, error: membersError } = await supabase
+            .from('members')
+            .select('*')
+            .eq('is_active', true)
+            .order('display_order', { ascending: true });
+
+        if (membersError) throw membersError;
+
+        // Transform database format to match existing frontend format
+        const members = (dbMembers || []).map(m => ({
+            id: m.name, // Use name as ID for cart compatibility
+            name: m.name,
+            role: m.role,
+            image: m.image_url || `img/member/placeholder.webp`,
+            price: m.price || 25000,
+            details: m.details || {}
+        }));
+
+        // Keep group cheki and other static data from data.json
+        const responseData = {
+            group: productData.group || {},
+            group_cheki: productData.group_cheki || {},
+            how_to_order: productData.how_to_order || [],
+            images: productData.images || {},
+            news: productData.news || [],
+            gallery: productData.gallery || [],
+            faq: productData.faq || [],
+            // Use database members if available, otherwise fallback to data.json
+            members: members.length > 0 ? members : productData.members || [],
+            cheki_stock: await getChekiStock()
+        };
+
+        res.json(responseData);
+    } catch (e) {
+        console.error("Error fetching products:", e);
+        // Fallback to data.json on error
         const responseData = JSON.parse(JSON.stringify(productData));
         responseData.cheki_stock = await getChekiStock();
         res.json(responseData);
-    } catch (e) {
-        res.status(500).json({ message: "Tidak dapat memuat data produk." });
     }
 });
 
@@ -625,6 +675,287 @@ app.post("/api/reset-password-with-code", async (req, res) => {
 
     } catch (e) {
         res.status(500).json({ message: "Gagal mereset password.", error: e.message });
+    }
+});
+
+// ===================================
+// --- MEMBERS CRUD API ---
+// ===================================
+
+// GET: Semua member (Public)
+app.get("/api/public/members", async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('members')
+            .select('*')
+            .eq('is_active', true)
+            .order('display_order', { ascending: true });
+
+        if (error) throw error;
+        res.json(data || []);
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengambil data member.", error: e.message });
+    }
+});
+
+// GET: Semua member untuk admin (termasuk non-active)
+app.get("/api/admin/members", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('members')
+            .select('*')
+            .order('display_order', { ascending: true });
+
+        if (error) throw error;
+        res.json(data || []);
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengambil data member.", error: e.message });
+    }
+});
+
+// POST: Tambah member baru
+app.post("/api/admin/members", authenticateToken, authorizeAdmin, upload.single('image'), async (req, res) => {
+    try {
+        const { name, role, price, sifat, hobi, jiko, display_order } = req.body;
+
+        if (!name) {
+            return res.status(400).json({ message: "Nama member wajib diisi." });
+        }
+
+        let image_url = null;
+
+        // Upload image to Supabase Storage if provided
+        if (req.file) {
+            const fileName = `members/${Date.now()}-${req.file.originalname.replace(/\s/g, '_')}`;
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('public-images')
+                .upload(fileName, req.file.buffer, {
+                    contentType: req.file.mimetype,
+                    upsert: false
+                });
+
+            if (uploadError) throw new Error(`Upload gagal: ${uploadError.message}`);
+
+            // Get public URL
+            const { data: urlData } = supabase.storage.from('public-images').getPublicUrl(fileName);
+            image_url = urlData.publicUrl;
+        }
+
+        // Insert to database
+        const { data, error } = await supabase.from('members').insert([{
+            name,
+            role: role || 'Member',
+            price: parseInt(price) || 25000,
+            image_url,
+            details: { sifat: sifat || '', hobi: hobi || '', jiko: jiko || '' },
+            display_order: parseInt(display_order) || 0,
+            is_active: true
+        }]).select().single();
+
+        if (error) throw error;
+        res.status(201).json({ message: "Member berhasil ditambahkan!", member: data });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal menambahkan member.", error: e.message });
+    }
+});
+
+// PUT: Update member
+app.put("/api/admin/members/:id", authenticateToken, authorizeAdmin, upload.single('image'), async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { name, role, price, sifat, hobi, jiko, display_order, is_active } = req.body;
+
+        const updateData = {
+            name,
+            role,
+            price: parseInt(price) || 25000,
+            details: { sifat: sifat || '', hobi: hobi || '', jiko: jiko || '' },
+            display_order: parseInt(display_order) || 0,
+            is_active: is_active === 'true' || is_active === true,
+            updated_at: new Date().toISOString()
+        };
+
+        // Upload new image if provided
+        if (req.file) {
+            const fileName = `members/${Date.now()}-${req.file.originalname.replace(/\s/g, '_')}`;
+            const { error: uploadError } = await supabase.storage
+                .from('public-images')
+                .upload(fileName, req.file.buffer, {
+                    contentType: req.file.mimetype,
+                    upsert: false
+                });
+
+            if (uploadError) throw new Error(`Upload gagal: ${uploadError.message}`);
+
+            const { data: urlData } = supabase.storage.from('public-images').getPublicUrl(fileName);
+            updateData.image_url = urlData.publicUrl;
+        }
+
+        const { data, error } = await supabase
+            .from('members')
+            .update(updateData)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.json({ message: "Member berhasil diupdate!", member: data });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengupdate member.", error: e.message });
+    }
+});
+
+// DELETE: Hapus member
+app.delete("/api/admin/members/:id", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const { error } = await supabase.from('members').delete().eq('id', id);
+        if (error) throw error;
+
+        res.json({ message: "Member berhasil dihapus!" });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal menghapus member.", error: e.message });
+    }
+});
+
+// ===================================
+// --- NEWS CRUD API ---
+// ===================================
+
+app.get("/api/public/news", async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('news')
+            .select('*')
+            .eq('is_published', true)
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        res.json(data || []);
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengambil berita.", error: e.message });
+    }
+});
+
+app.get("/api/admin/news", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('news')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        res.json(data || []);
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengambil berita.", error: e.message });
+    }
+});
+
+app.post("/api/admin/news", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { title, content, date } = req.body;
+        if (!title) return res.status(400).json({ message: "Judul berita wajib diisi." });
+
+        const { data, error } = await supabase.from('news').insert([{
+            title, content, date, is_published: true
+        }]).select().single();
+
+        if (error) throw error;
+        res.status(201).json({ message: "Berita berhasil ditambahkan!", news: data });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal menambahkan berita.", error: e.message });
+    }
+});
+
+app.put("/api/admin/news/:id", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, content, date, is_published } = req.body;
+
+        const { data, error } = await supabase
+            .from('news')
+            .update({ title, content, date, is_published })
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.json({ message: "Berita berhasil diupdate!", news: data });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengupdate berita.", error: e.message });
+    }
+});
+
+app.delete("/api/admin/news/:id", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { error } = await supabase.from('news').delete().eq('id', id);
+        if (error) throw error;
+        res.json({ message: "Berita berhasil dihapus!" });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal menghapus berita.", error: e.message });
+    }
+});
+
+// ===================================
+// --- GALLERY CRUD API ---
+// ===================================
+
+app.get("/api/public/gallery", async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('gallery')
+            .select('*')
+            .order('display_order', { ascending: true });
+
+        if (error) throw error;
+        res.json(data || []);
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengambil galeri.", error: e.message });
+    }
+});
+
+app.post("/api/admin/gallery", authenticateToken, authorizeAdmin, upload.single('image'), async (req, res) => {
+    try {
+        const { alt_text, display_order } = req.body;
+
+        if (!req.file) {
+            return res.status(400).json({ message: "File gambar wajib diupload." });
+        }
+
+        const fileName = `gallery/${Date.now()}-${req.file.originalname.replace(/\s/g, '_')}`;
+        const { error: uploadError } = await supabase.storage
+            .from('public-images')
+            .upload(fileName, req.file.buffer, {
+                contentType: req.file.mimetype
+            });
+
+        if (uploadError) throw new Error(`Upload gagal: ${uploadError.message}`);
+
+        const { data: urlData } = supabase.storage.from('public-images').getPublicUrl(fileName);
+
+        const { data, error } = await supabase.from('gallery').insert([{
+            image_url: urlData.publicUrl,
+            alt_text: alt_text || '',
+            display_order: parseInt(display_order) || 0
+        }]).select().single();
+
+        if (error) throw error;
+        res.status(201).json({ message: "Foto berhasil ditambahkan!", gallery: data });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal menambahkan foto.", error: e.message });
+    }
+});
+
+app.delete("/api/admin/gallery/:id", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { error } = await supabase.from('gallery').delete().eq('id', id);
+        if (error) throw error;
+        res.json({ message: "Foto berhasil dihapus!" });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal menghapus foto.", error: e.message });
     }
 });
 

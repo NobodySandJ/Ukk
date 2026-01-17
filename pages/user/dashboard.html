@@ -6,13 +6,13 @@
     <title>Dashboard - Refresh Breeze</title>
     
     <meta name="description" content="Dashboard Refresh Breeze - Lihat riwayat tiket Cheki Anda, status pembelian, dan informasi akun.">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../../css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     
-    <link rel="apple-touch-icon" sizes="180x180" href="img/logo/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="img/logo/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="img/logo/favicon-16x16.png">
-    <link rel="manifest" href="img/logo/site.webmanifest">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../img/logo/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../img/logo/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../img/logo/favicon-16x16.png">
+    <link rel="manifest" href="../../img/logo/site.webmanifest">
     
     <style>
         body { background-color: #f4f7f9; }
@@ -292,19 +292,19 @@
 <body>
     <header>
         <nav class="container">
-            <a href="index.html" class="logo">
-                <img src="img/logo/apple-touch-icon.png" alt="Refresh Breeze Logo">
+            <a href="../../index.html" class="logo">
+                <img src="../../img/logo/apple-touch-icon.png" alt="Refresh Breeze Logo">
                 <div class="logo-text">
                     <strong>Refresh Breeze</strong>
                     <span>Official Website</span>
                 </div>
             </a>
             <ul class="nav-links" id="nav-links">
-                <li><a href="index.html#hero">Beranda</a></li>
-                <li><a href="index.html#about">Tentang</a></li>
-                <li><a href="index.html#members">Member</a></li>
-                <li><a href="index.html#news">Berita</a></li>
-                <li><a href="cheki.html">Cheki</a></li>
+                <li><a href="../../index.html#hero">Beranda</a></li>
+                <li><a href="../../index.html#about">Tentang</a></li>
+                <li><a href="../../index.html#members">Member</a></li>
+                <li><a href="../../index.html#news">Berita</a></li>
+                <li><a href="../public/cheki.html">Cheki</a></li>
             </ul>
             <div class="nav-auth-buttons">
                 <!-- Will be populated by auth.js -->
@@ -319,7 +319,7 @@
             
             <div class="profile-header">
                 <div class="profile-image-container">
-                    <img id="profile-oshi-img" src="img/logo/apple-touch-icon.png" alt="Profile">
+                    <img id="profile-oshi-img" src="../../img/logo/apple-touch-icon.png" alt="Profile">
                 </div>
                 <div class="welcome-header">
                     <h2>SELAMAT DATANG</h2>
@@ -330,11 +330,11 @@
             </div>
             
             <div class="dashboard-actions">
-                <a href="index.html" class="action-btn">
+                <a href="../../index.html" class="action-btn">
                     <i class="fas fa-home"></i> Beranda
                 </a>
                 
-                <a href="cheki.html" class="action-btn buy">
+                <a href="../public/cheki.html" class="action-btn buy">
                     <i class="fas fa-shopping-cart"></i> Beli Tiket
                 </a>
                 
@@ -359,7 +359,7 @@
                 <div id="top-spenders-container" class="top-spenders-container" style="display: none;"></div>
                 
                 <div style="text-align: center;">
-                    <a href="leaderboard.html" style="font-size: 0.9rem; color: #d4ac0d; font-weight: 600; text-decoration: none;">
+                    <a href="../public/leaderboard.html" style="font-size: 0.9rem; color: #d4ac0d; font-weight: 600; text-decoration: none;">
                         Lihat Semua Leaderboard →
                     </a>
                 </div>
@@ -386,8 +386,9 @@
 
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1/build/qrcode.min.js"></script>
     
-    <script src="js/script.js"></script>
-    <script src="js/auth.js"></script>
-    <script src="js/dashboard.js"></script>
+    <script>window.appBasePath = '../../';</script>
+    <script src="../../js/shared/script.js"></script>
+    <script src="../../js/shared/auth.js"></script>
+    <script src="../../js/user/dashboard.js"></script>
 </body>
 </html>

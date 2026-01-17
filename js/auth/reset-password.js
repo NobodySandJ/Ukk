@@ -1,6 +1,6 @@
-// ================================================================
-// FILE: reset-password.js - Reset Password dengan Kode OTP
-// ================================================================
+// Logic buat halaman reset password
+// User masukin kode OTP + Password baru disini
+const basePath = window.appBasePath || '../../';
 
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('reset-password-form');
@@ -9,8 +9,23 @@ document.addEventListener('DOMContentLoaded', function () {
     const confirmPasswordInput = document.getElementById('confirm-password');
     const submitBtn = document.getElementById('submit-btn');
     const messageBox = document.getElementById('message-box');
+    const resetBtn = document.getElementById('reset-btn');
 
     if (!form) return;
+
+    // Fitur buat intip password (toggle lihat/sembunyi)
+    const togglePassword = (toggleId, inputId) => {
+        const toggle = document.getElementById(toggleId);
+        const input = document.getElementById(inputId);
+        if (toggle && input) {
+            toggle.addEventListener('click', () => {
+                const type = input.getAttribute('type') === 'password' ? 'text' : 'password';
+                input.setAttribute('type', type);
+                toggle.classList.toggle('fa-eye');
+                toggle.classList.toggle('fa-eye-slash');
+            });
+        }
+    };
 
     // Auto-format OTP input (hanya angka)
     otpInput.addEventListener('input', (e) => {
@@ -70,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 setTimeout(() => {
                     showToast('Mengarahkan ke halaman login...', 'info');
                     setTimeout(() => {
-                        window.location.href = 'index.html';
+                        window.location.href = `${basePath}index.html`;
                     }, 1500);
                 }, 2000);
 

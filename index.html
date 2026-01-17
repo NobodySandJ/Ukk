@@ -44,8 +44,8 @@
             <ul class="nav-links" id="nav-links">
                 <li><a href="#hero">Beranda</a></li>
                 <li><a href="#members">Member</a></li>
-                <li><a href="cheki.html">Cheki</a></li>
-                <li><a href="gallery.html">Galeri</a></li>
+                <li><a href="pages/public/cheki.html">Cheki</a></li>
+                <li><a href="pages/public/gallery.html">Galeri</a></li>
             </ul>
 
             <!-- Tombol Login/Register (diisi oleh auth.js) -->
@@ -203,8 +203,9 @@
     </div>
 
     <!-- JavaScript Files -->
-    <script src="js/script.js"></script>
-    <script src="js/auth.js"></script>
+    <script>window.appBasePath = './';</script>
+    <script src="js/shared/script.js"></script>
+    <script src="js/shared/auth.js"></script>
 
 </body>
 </html>

@@ -1,15 +1,23 @@
-// ================================================================
-// FILE: auth.js - Logika Autentikasi & Navigasi
-// ================================================================
-
+// Konfigurasi dasar buat navigasi & path
 document.addEventListener('DOMContentLoaded', function () {
     const navLinksContainer = document.getElementById('nav-links');
     const authModal = document.getElementById('auth-modal');
 
-    // ============================================================
-    // FUNGSI INISIALISASI APLIKASI
-    // Mengatur tampilan navbar berdasarkan status login user
-    // ============================================================
+    // Settingan path biar link ga rusak kalo dibuka dari subfolder
+    const basePath = window.appBasePath || './';
+    const paths = {
+        home: `${basePath}index.html`,
+        members: `${basePath}index.html#members`,
+        cheki: `${basePath}pages/public/cheki.html`,
+        gallery: `${basePath}pages/public/gallery.html`,
+        dashboard: `${basePath}pages/user/dashboard.html`,
+        admin: `${basePath}pages/admin/index.html`,
+        forgotPassword: `${basePath}pages/auth/forgot-password.html`,
+        sk: `${basePath}pages/public/sk.html`
+    };
+
+    // Fungsi utama buat ngecek user udah login apa belum
+    // Kalo udah, menu navbar bakal berubah (ada dashboard/admin panel)
     function initializeApp() {
         const token = localStorage.getItem('userToken');
         const userData = localStorage.getItem('userData') ? JSON.parse(localStorage.getItem('userData')) : null;
@@ -22,17 +30,17 @@ document.addEventListener('DOMContentLoaded', function () {
                     <i class="fas fa-times"></i>
                 </button>
                 <ul class="mobile-nav-links">
-                    <li><a href="index.html" data-page="index">Beranda</a></li>
-                    <li><a href="index.html#members" data-page="index">Member</a></li>
-                    <li><a href="cheki.html" data-page="cheki">Cheki</a></li>
-                    <li><a href="gallery.html" data-page="gallery">Galeri</a></li>
+                    <li><a href="${paths.home}" data-page="index">Beranda</a></li>
+                    <li><a href="${paths.members}" data-page="index">Member</a></li>
+                    <li><a href="${paths.cheki}" data-page="cheki">Cheki</a></li>
+                    <li><a href="${paths.gallery}" data-page="gallery">Galeri</a></li>
                 </ul>
                 <div class="mobile-auth-buttons">
             `;
 
             // Jika user sudah login, tampilkan tombol Dashboard/Admin
             if (token && userData) {
-                const destination = userData.peran === 'admin' ? 'admin.html' : 'dashboard.html';
+                const destination = userData.peran === 'admin' ? paths.admin : paths.dashboard;
                 const buttonText = userData.peran === 'admin' ? 'Admin Panel' : 'My Dashboard';
                 mobileMenuHTML += `
                     <a href="${destination}" class="nav-button cta">
@@ -99,7 +107,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const navAuthButtons = document.querySelector('.nav-auth-buttons');
         if (navAuthButtons) {
             if (token && userData) {
-                const destination = userData.peran === 'admin' ? 'admin.html' : 'dashboard.html';
+                const destination = userData.peran === 'admin' ? paths.admin : paths.dashboard;
                 const buttonText = userData.peran === 'admin' ? 'Admin Panel' : 'My Dashboard';
                 navAuthButtons.innerHTML = `
                     <a href="${destination}" class="nav-user-button">
@@ -115,10 +123,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // ============================================================
-    // FUNGSI HIGHLIGHT LINK NAVIGASI AKTIF
-    // ============================================================
+    // Nentuin menu mana yang aktif (kasih warna/underline di navbar)
     function setActiveNavLink() {
+        // Ambil nama file dari URL, misal 'index.html' atau 'dashboard.html'
         const currentPage = window.location.pathname.split('/').pop() || 'index.html';
         const pageMap = {
             'index.html': 'index', '': 'index',
@@ -128,13 +135,14 @@ document.addEventListener('DOMContentLoaded', function () {
         };
         const currentPageKey = pageMap[currentPage] || 'index';
 
-        // Reset semua link
+        // Reset semua link dulu biar bersih
         const desktopLinks = document.querySelectorAll('ul.nav-links a');
         desktopLinks.forEach(link => link.classList.remove('active'));
 
         const mobileLinks = document.querySelectorAll('.mobile-nav-links a');
         mobileLinks.forEach(link => link.classList.remove('active'));
 
+        // Cek halaman apa sekarang, terus aktifin link yang sesuai
         if (currentPageKey === 'index') {
             const berandaLink = document.querySelector('ul.nav-links a[href="#hero"]');
             if (berandaLink) berandaLink.classList.add('active');
@@ -152,10 +160,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 
-    // ============================================================
-    // KOMPONEN MODAL AUTENTIKASI (LOGIN & REGISTER)
-    // Edit bagian ini untuk mengubah tampilan form login/register
-    // ============================================================
+    // Logic buat Modal Login & Register
+    // Isinya HTML form buat popup login/daftar
     if (authModal) {
         authModal.innerHTML = `
         <div class="modal-container">
@@ -175,7 +181,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <i id="toggle-login-pass" class="fas fa-eye" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888;"></i>
                         </div>
 
-                        <a href="forgot-password.html" style="display:block; text-align: right; font-size: 0.9em; margin-top: 0.5rem; color: #666;">Lupa Sandi?</a>
+                        <a href="${paths.forgotPassword}" style="display:block; text-align: right; font-size: 0.9em; margin-top: 0.5rem; color: #666;">Lupa Sandi?</a>
                         <button type="submit" class="cta-button" style="margin-top: 1rem;">Login</button>
                         <p id="login-error" class="error-message" style="text-align: center; color: red; margin-top: 0.5rem;"></p>
                     </form>
@@ -249,7 +255,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <!-- Checkbox Syarat & Ketentuan -->
                             <div class="sk-agreement">
                                 <input type="checkbox" id="sk-checkbox" required>
-                                <label for="sk-checkbox">Saya setuju dengan <a href="sk.html" target="_blank">Syarat & Ketentuan</a>.</label>
+                                <label for="sk-checkbox">Saya setuju dengan <a href="${paths.sk}" target="_blank">Syarat & Ketentuan</a>.</label>
                             </div>
 
                             <div style="display: flex; gap: 0.5rem;">
@@ -508,7 +514,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     showToast(`Selamat datang, ${data.user.nama_pengguna}!`, 'success');
                     setTimeout(() => {
                         // Redirect berdasarkan role
-                        window.location.href = data.user.peran === 'admin' ? 'admin.html' : 'dashboard.html';
+                        window.location.href = data.user.peran === 'admin' ? paths.admin : paths.dashboard;
                     }, 1000);
                 } catch (err) {
                     errorMsg.textContent = err.message;
@@ -572,7 +578,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             if (loginRes.ok) {
                                 localStorage.setItem('userToken', loginData.token);
                                 localStorage.setItem('userData', JSON.stringify(loginData.user));
-                                window.location.href = loginData.user.peran === 'admin' ? 'admin.html' : 'dashboard.html';
+                                window.location.href = loginData.user.peran === 'admin' ? paths.admin : paths.dashboard;
                             }
                         } catch (err) {
                             console.error('Auto-login failed:', err);

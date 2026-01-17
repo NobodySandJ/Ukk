@@ -1,18 +1,15 @@
-// ================================================================
-// FILE: gallery.js - Logika Halaman Galeri
-// Menampilkan foto member dan event dengan filter & lightbox
-// Data diambil dari file JSON eksternal
-// ================================================================
+// Logika buat halaman Galeri
+// Nampilin foto member, group, sama event
+// Datanya diambil dari file JSON terpisah biar gampang update
+const basePath = window.appBasePath || '../../';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Pastikan hanya berjalan di halaman galeri
+    // Cek dulu ada elemen galeri gak, biar gak error di halaman lain
     if (!document.querySelector('.gallery-hero')) {
         return;
     }
 
-    // ============================================================
-    // LOAD DATA DARI JSON
-    // ============================================================
+    // Tempat nyimpen data galeri
     let galleryData = {
         group: [],
         member: {},
@@ -20,7 +17,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     try {
-        const response = await fetch('data/gallery-data.json');
+        const response = await fetch(basePath + 'data/gallery-data.json');
         if (response.ok) {
             galleryData = await response.json();
         }
@@ -28,7 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.warn('Tidak dapat memuat gallery-data.json, menggunakan data default');
     }
 
-    // Daftar member untuk selector
+    // List member buat filter, key-nya harus sama kayak nama file gambar
     const members = [
         { name: 'Aca', imgKey: 'aca' },
         { name: 'Sinta', imgKey: 'sinta' },
@@ -39,9 +36,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         { name: 'Piya', imgKey: 'piya' }
     ];
 
-    // ============================================================
-    // SELEKTOR DOM
-    // ============================================================
+    // Ambil elemen-elemen HTML yang bakal diisi
     const groupGallery = document.getElementById('group-gallery');
     const memberGallery = document.getElementById('member-gallery');
     const memberAvatars = document.getElementById('member-avatars');
@@ -86,7 +81,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             avatar.className = 'member-avatar';
             avatar.dataset.member = member.imgKey;
             avatar.innerHTML = `
-                <img src="img/member/${member.imgKey}.webp" alt="${member.name}" loading="lazy">
+                <img src="${basePath}img/member/${member.imgKey}.webp" alt="${member.name}" loading="lazy">
                 <span class="member-name">${member.name}</span>
             `;
             avatar.addEventListener('click', () => selectMember(member.imgKey));
@@ -162,8 +157,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             const div = document.createElement('div');
             const isLandscape = category === 'group';
             div.className = `gallery-item ${item.size || ''} ${isLandscape ? 'landscape' : ''}`;
+            const imgSrc = item.src.startsWith('http') ? item.src : basePath + item.src;
             div.innerHTML = `
-                <img src="${item.src}" alt="${item.title}" loading="lazy">
+                <img src="${imgSrc}" alt="${item.title}" loading="lazy">
                 <div class="gallery-overlay">
                     <h3>${item.title}</h3>
                     <p>${item.description}</p>
@@ -233,7 +229,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function updateLightboxImage() {
         const item = allImages[currentIndex];
-        lightboxImg.src = item.src;
+        lightboxImg.src = item.src.startsWith('http') ? item.src : basePath + item.src;
         lightboxImg.alt = item.title;
         lightboxTitle.textContent = item.title;
         lightboxDesc.textContent = item.description;

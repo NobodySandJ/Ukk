@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - Refresh Breeze</title>
+    <meta name="description" content="Admin Panel Refresh Breeze - Kelola Member, Berita, Pesanan, dan Stok">
+    
+    <!-- Fonts & Icons -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS Files -->
+    <link rel="stylesheet" href="../../css/style.css">
+    <link rel="stylesheet" href="../../css/admin.css">
+
+    <!-- Favicon -->
+    <link rel="apple-touch-icon" sizes="180x180" href="../../img/logo/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../img/logo/favicon-32x32.png">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <div class="admin-layout">
+        <!-- ============================================================
+        SIDEBAR NAVIGASI
+        ============================================================ -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <a href="../../index.html" class="logo">
+                    <img src="../../img/logo/apple-touch-icon.png" alt="Logo">
+                    <span>Admin Panel</span>
+                </a>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-link active" data-view="dashboard">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="#" class="nav-link" data-view="members">
+                    <i class="fas fa-users"></i> Kelola Member
+                </a>
+                <a href="#" class="nav-link" data-view="news">
+                    <i class="fas fa-newspaper"></i> Kelola Berita
+                </a>
+                <a href="#" class="nav-link" data-view="gallery">
+                    <i class="fas fa-images"></i> Kelola Galeri
+                </a>
+                <a href="#" class="nav-link" data-view="orders">
+                    <i class="fas fa-ticket-alt"></i> Manajemen Tiket
+                </a>
+                <a href="#" class="nav-link" data-view="users">
+                    <i class="fas fa-user-cog"></i> Akun User
+                </a>
+                <hr style="border-color: rgba(255,255,255,0.1); margin: 1rem 0;">
+                <a href="../../index.html" class="nav-link">
+                    <i class="fas fa-home"></i> Kembali ke Situs
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button id="admin-logout-btn" class="logout-button">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <!-- Header -->
+            <header class="main-header">
+                <h1 id="admin-welcome">Selamat Datang, Admin!</h1>
+            </header>
+
+            <!-- ============================================================
+            VIEW: DASHBOARD
+            ============================================================ -->
+            <section id="view-dashboard" class="admin-view active">
+                <!-- Statistics Grid -->
+                <div class="stats-grid" id="stats-grid">
+                    <div class="skeleton skeleton-stat-card"></div>
+                    <div class="skeleton skeleton-stat-card"></div>
+                    <div class="skeleton skeleton-stat-card"></div>
+                </div>
+                
+                <!-- Sales Chart -->
+                <div class="content-card" style="margin-top: 2rem;">
+                    <h3 class="section-title">Grafik Penjualan Per Member</h3>
+                    <canvas id="salesChart" style="max-height: 400px;"></canvas>
+                </div>
+
+                <!-- Stock Management -->
+                <div class="content-card">
+                    <h2 class="section-title">Manajemen Stok Cheki</h2>
+                    <div class="stock-controls">
+                        <div class="stock-info">
+                            Stok Saat Ini: <strong id="current-stock">Memuat...</strong>
+                        </div>
+                        <div class="stock-actions">
+                            <input type="number" id="stock-change-value" placeholder="Jumlah" min="1">
+                            <button id="increase-stock-btn" class="action-btn btn-success"><i class="fas fa-plus"></i> Tambah</button>
+                            <button id="decrease-stock-btn" class="action-btn btn-danger"><i class="fas fa-minus"></i> Kurangi</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================
+            VIEW: MEMBERS MANAGEMENT
+            ============================================================ -->
+            <section id="view-members" class="admin-view">
+                <div class="content-card">
+                    <div class="management-header">
+                        <h2 class="section-title" style="margin: 0;">Kelola Member</h2>
+                        <button id="add-member-btn" class="action-btn btn-success">
+                            <i class="fas fa-plus"></i> Tambah Member
+                        </button>
+                    </div>
+                    <div class="members-grid" id="members-grid">
+                        <!-- Diisi oleh JavaScript -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================
+            VIEW: NEWS MANAGEMENT
+            ============================================================ -->
+            <section id="view-news" class="admin-view">
+                <div class="content-card">
+                    <div class="management-header">
+                        <h2 class="section-title" style="margin: 0;">Kelola Berita</h2>
+                        <button id="add-news-btn" class="action-btn btn-success">
+                            <i class="fas fa-plus"></i> Tambah Berita
+                        </button>
+                    </div>
+                    <div class="news-list" id="news-list">
+                        <!-- Diisi oleh JavaScript -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================
+            VIEW: GALLERY MANAGEMENT
+            ============================================================ -->
+            <section id="view-gallery" class="admin-view">
+                <div class="content-card">
+                    <div class="management-header">
+                        <h2 class="section-title" style="margin: 0;">Kelola Galeri</h2>
+                        <button id="add-gallery-btn" class="action-btn btn-success">
+                            <i class="fas fa-plus"></i> Tambah Foto
+                        </button>
+                    </div>
+                    <div class="gallery-grid" id="gallery-grid">
+                        <!-- Diisi oleh JavaScript -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================
+            VIEW: ORDERS/TICKETS MANAGEMENT
+            ============================================================ -->
+            <section id="view-orders" class="admin-view">
+                <div class="content-card">
+                    <div class="management-header">
+                        <h2 class="section-title" style="margin: 0;">Manajemen Tiket</h2>
+                        <div class="search-bar">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="search-input" placeholder="Cari berdasarkan nama atau ID pesanan...">
+                        </div>
+                    </div>
+                    <div class="order-table-container">
+                        <table class="order-table">
+                            <thead>
+                                <tr>
+                                    <th>ID Pesanan</th>
+                                    <th>Pelanggan</th>
+                                    <th>Detail Item</th>
+                                    <th>Dibuat Pada</th>
+                                    <th>Status Tiket</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="orders-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ============================================================
+            VIEW: USERS MANAGEMENT
+            ============================================================ -->
+            <section id="view-users" class="admin-view">
+                <div class="content-card">
+                    <div class="management-header">
+                        <h2 class="section-title" style="margin: 0;">Manajemen Akun User</h2>
+                        <div class="search-bar">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="user-search-input" placeholder="Cari username...">
+                        </div>
+                    </div>
+                    <div class="order-table-container">
+                        <table class="order-table">
+                            <thead>
+                                <tr>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="user-list-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- ============================================================
+    MODAL: ADD/EDIT MEMBER
+    ============================================================ -->
+    <div id="member-modal" class="admin-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="member-modal-title">Tambah Member Baru</h3>
+                <button class="modal-close" data-close="member-modal">&times;</button>
+            </div>
+            <form id="member-form" enctype="multipart/form-data">
+                <input type="hidden" id="member-id">
+                <div class="form-group">
+                    <label for="member-name">Nama Member *</label>
+                    <input type="text" id="member-name" required placeholder="Contoh: Aca">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="member-role">Role/Posisi</label>
+                        <input type="text" id="member-role" placeholder="Contoh: Kapten">
+                    </div>
+                    <div class="form-group">
+                        <label for="member-price">Harga Cheki (Rp)</label>
+                        <input type="number" id="member-price" value="25000">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="member-image">Foto Member</label>
+                    <input type="file" id="member-image" accept="image/*">
+                    <div id="image-preview" class="image-preview"></div>
+                </div>
+                <div class="form-group">
+                    <label for="member-sifat">Sifat</label>
+                    <input type="text" id="member-sifat" placeholder="Contoh: Ceria, Usil, Lincah">
+                </div>
+                <div class="form-group">
+                    <label for="member-hobi">Hobi</label>
+                    <input type="text" id="member-hobi" placeholder="Contoh: Nyanyi, main game">
+                </div>
+                <div class="form-group">
+                    <label for="member-jiko">Jikoshoukai (Perkenalan Diri)</label>
+                    <textarea id="member-jiko" rows="3" placeholder="Kata-kata perkenalan member..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="member-order">Urutan Tampil</label>
+                    <input type="number" id="member-order" value="0" min="0">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="action-btn" style="background: #6b7280;" data-close="member-modal">Batal</button>
+                    <button type="submit" class="action-btn btn-success">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    MODAL: ADD/EDIT NEWS
+    ============================================================ -->
+    <div id="news-modal" class="admin-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="news-modal-title">Tambah Berita Baru</h3>
+                <button class="modal-close" data-close="news-modal">&times;</button>
+            </div>
+            <form id="news-form">
+                <input type="hidden" id="news-id">
+                <div class="form-group">
+                    <label for="news-title">Judul Berita *</label>
+                    <input type="text" id="news-title" required placeholder="Contoh: Jadwal Theater Bulan Ini">
+                </div>
+                <div class="form-group">
+                    <label for="news-date">Tanggal</label>
+                    <input type="text" id="news-date" placeholder="Contoh: 25 Oktober 2025">
+                </div>
+                <div class="form-group">
+                    <label for="news-content">Isi Berita</label>
+                    <textarea id="news-content" rows="4" placeholder="Tulis isi berita di sini..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="action-btn" style="background: #6b7280;" data-close="news-modal">Batal</button>
+                    <button type="submit" class="action-btn btn-success">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================
+    MODAL: ADD GALLERY
+    ============================================================ -->
+    <div id="gallery-modal" class="admin-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Tambah Foto Galeri</h3>
+                <button class="modal-close" data-close="gallery-modal">&times;</button>
+            </div>
+            <form id="gallery-form" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="gallery-image">Pilih Foto *</label>
+                    <input type="file" id="gallery-image" accept="image/*" required>
+                    <div id="gallery-image-preview" class="image-preview"></div>
+                </div>
+                <div class="form-group">
+                    <label for="gallery-alt">Deskripsi/Alt Text</label>
+                    <input type="text" id="gallery-alt" placeholder="Contoh: Member di atas panggung">
+                </div>
+                <div class="form-group">
+                    <label for="gallery-order">Urutan Tampil</label>
+                    <input type="number" id="gallery-order" value="0" min="0">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="action-btn" style="background: #6b7280;" data-close="gallery-modal">Batal</button>
+                    <button type="submit" class="action-btn btn-success">Upload</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Custom JS -->
+    <script>window.appBasePath = '../../';</script>
+    <script src="../../js/shared/script.js"></script>
+    <script src="../../js/admin/admin.js"></script>
+    <script src="../../js/shared/auth.js"></script>
+</body>
+</html>

@@ -1,25 +1,23 @@
-// ================================================================
-// FILE: cheki.js - Logika Halaman Pemesanan Cheki
-// ================================================================
+// Halaman buat beli cheki
+// Disini ngatur keranjang belanja, stok, sama integrasi Midtrans
+const basePath = window.appBasePath || '../../';
 
 document.addEventListener('DOMContentLoaded', () => {
-    // Pastikan skrip hanya berjalan di halaman cheki
+    // Cek dulu ini beneran halaman cheki bukan
     if (!document.getElementById('cheki-page')) {
         return;
     }
 
-    // ============================================================
-    // SELEKTOR DOM
-    // ============================================================
+    // ==========================================
+    // AREA Variabel & State
+    // ==========================================
     const chekiListContainer = document.getElementById('cheki-list');
     const orderSummaryItemsEl = document.getElementById('order-summary-items');
     const totalPriceEl = document.getElementById('total-price');
     const submitButton = document.getElementById('submit-button');
     const chekiStockDisplay = document.getElementById('cheki-stock-display');
 
-    // ============================================================
-    // STATE APLIKASI
-    // ============================================================
+    // Simpen data produk & keranjang disini
     let products = {
         members: [],
         group: {}

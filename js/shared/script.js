@@ -1,11 +1,7 @@
-// ================================================================
-// FILE: script.js - Logika Utama Website (Homepage)
-// ================================================================
+// Konfigurasi dasar buat path file, biar ga error pas di subfolder
+const basePath = window.appBasePath || './';
 
-// ============================================================
-// FUNGSI TOAST NOTIFICATION
-// Menampilkan notifikasi popup di sudut kanan atas
-// ============================================================
+// Fungsi buat nampilin notifikasi toast (popup kecil di pojok kanan atas)
 function showToast(message, type = 'info', duration = 3000) {
     let container = document.getElementById('toast-container');
     if (!container) {
@@ -17,7 +13,7 @@ function showToast(message, type = 'info', duration = 3000) {
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
 
-    // Icon berdasarkan tipe notifikasi
+    // Ikon sesuai tipe notifikasi
     const icons = {
         success: '<i class="fas fa-check-circle"></i>',
         error: '<i class="fas fa-exclamation-circle"></i>',
@@ -34,7 +30,7 @@ function showToast(message, type = 'info', duration = 3000) {
     container.appendChild(toast);
     setTimeout(() => toast.classList.add('show'), 10);
 
-    // Hapus toast setelah durasi tertentu
+    // Otomatis ilang setelah beberapa detik
     setTimeout(() => {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
@@ -43,10 +39,7 @@ function showToast(message, type = 'info', duration = 3000) {
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    // ============================================================
-    // FUNGSI SLIDER/CAROUSEL
-    // Menampilkan gambar galeri di homepage dengan auto-slide
-    // ============================================================
+    // Slider gambar otomatis buat di homepage
     function startSlider(imageSources) {
         const slider = document.getElementById('image-slider');
         const dotsContainer = document.getElementById('slider-dots');
@@ -58,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function () {
         let currentSlide = 0;
         let autoSlideInterval;
 
-        // Inisialisasi slides & dots
+        // Bersihin dulu konten lama biar ga numpuk
         slider.innerHTML = '';
         dotsContainer.innerHTML = '';
 
@@ -92,7 +85,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const prevSlide = () => goToSlide(currentSlide - 1);
 
         function startAutoSlide() {
-            autoSlideInterval = setInterval(nextSlide, 5000); // Ganti setiap 5 detik
+            autoSlideInterval = setInterval(nextSlide, 5000); // Ganti slide tiap 5 detik
         }
 
         function resetAutoSlide() {
@@ -110,13 +103,27 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ============================================================
     // FUNGSI LOAD DATA WEBSITE
-    // Mengambil data dari data.json dan menampilkan ke halaman
+    // UPDATED: Mengambil data dari API (dengan Supabase members) atau fallback ke data.json
     // ============================================================
     async function loadWebsiteData() {
         try {
-            const response = await fetch('data.json');
-            if (!response.ok) throw new Error(`Fetch error: ${response.statusText}`);
-            const data = await response.json();
+            // Try fetching from API first (supports dynamic members from Supabase)
+            let data;
+            try {
+                const response = await fetch('/api/products-and-stock');
+                if (response.ok) {
+                    data = await response.json();
+                }
+            } catch (apiError) {
+                console.log('API not available, falling back to data.json');
+            }
+
+            // Fallback to data.json if API fails
+            if (!data || !data.group) {
+                const fallbackResponse = await fetch(`${basePath}data.json`);
+                if (!fallbackResponse.ok) throw new Error(`Fetch error: ${fallbackResponse.statusText}`);
+                data = await fallbackResponse.json();
+            }
 
             if (!data || !data.group) throw new Error("Invalid data format");
 
@@ -124,7 +131,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Inisialisasi slider jika ada
             if (document.querySelector('.slider-container') && data.gallery) {
-                startSlider(data.gallery.map(item => item.src));
+                startSlider(data.gallery.map(item => {
+                    const src = item.src || item.image_url || '';
+                    return src.startsWith('http') ? src : basePath + src;
+                }));
             }
 
         } catch (error) {
@@ -175,7 +185,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const groupCard = document.createElement('div');
             groupCard.className = 'member-card-detailed group-card';
             groupCard.innerHTML = `
-                <img src="${data.group_cheki.image}" alt="${data.group.name}" loading="lazy">
+                <img src="${basePath}${data.group_cheki.image}" alt="${data.group.name}" loading="lazy">
                 <div class="member-details">
                     <h3>${data.group.name}</h3>
                     <blockquote class="jiko">"${data.group.tagline}"</blockquote>
@@ -187,15 +197,18 @@ document.addEventListener('DOMContentLoaded', function () {
             data.members.forEach(member => {
                 const card = document.createElement('div');
                 card.className = 'member-card-detailed';
+                // Handle both full URLs (Supabase) and relative paths (data.json)
+                const imgSrc = (member.image || '').startsWith('http') ? member.image : basePath + member.image;
+                const details = member.details || {};
                 card.innerHTML = `
-                    <img src="${member.image}" alt="${member.name}" loading="lazy">
+                    <img src="${imgSrc}" alt="${member.name}" loading="lazy" onerror="this.src='${basePath}img/placeholder.png'">
                     <div class="member-details">
-                        <span class="role">${member.role}</span>
+                        <span class="role">${member.role || 'Member'}</span>
                         <h3>${member.name}</h3>
-                        <blockquote class="jiko">"${member.details.jiko}"</blockquote>
+                        <blockquote class="jiko">"${details.jiko || ''}"</blockquote>
                         <ul>
-                            <li><strong>Sifat:</strong> ${member.details.sifat}</li>
-                            <li><strong>Hobi:</strong> ${member.details.hobi}</li>
+                            <li><strong>Sifat:</strong> ${details.sifat || '-'}</li>
+                            <li><strong>Hobi:</strong> ${details.hobi || '-'}</li>
                         </ul>
                     </div>`;
                 memberGrid.appendChild(card);
@@ -301,7 +314,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!container) return;
 
         try {
-            const response = await fetch('data/gallery-data.json');
+            const response = await fetch(`${basePath}data/gallery-data.json`);
             if (!response.ok) throw new Error('Fetch failed');
             const data = await response.json();
 
@@ -334,8 +347,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 ` : '';
 
                 return `
-                    <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); aspect-ratio: 1; position: relative; cursor: pointer;" onclick="window.location.href='gallery.html'">
-                        <img src="${item.src}" alt="${item.title}" style="width: 100%; height: 100%; object-fit: cover; ${extraStyle}" loading="lazy">
+                    <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); aspect-ratio: 1; position: relative; cursor: pointer;" onclick="window.location.href='${basePath}pages/public/gallery.html'">
+                        <img src="${basePath}${item.src}" alt="${item.title}" style="width: 100%; height: 100%; object-fit: cover; ${extraStyle}" loading="lazy">
                         ${overlay}
                     </div>
                 `;

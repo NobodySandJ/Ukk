@@ -12,14 +12,14 @@
     <meta name="description" content="Pesan Tiket Cheki Refresh Breeze - Dapatkan momen spesial bersama member favoritmu! Pilih member dan lanjutkan ke pembayaran.">
     
     <!-- CSS & Icons -->
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="../../css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     
     <!-- Favicon -->
-    <link rel="apple-touch-icon" sizes="180x180" href="img/logo/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="img/logo/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="img/logo/favicon-16x16.png">
-    <link rel="manifest" href="img/logo/site.webmanifest">
+    <link rel="apple-touch-icon" sizes="180x180" href="../../img/logo/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="../../img/logo/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="../../img/logo/favicon-16x16.png">
+    <link rel="manifest" href="../../img/logo/site.webmanifest">
 </head>
 
 <body>
@@ -28,8 +28,8 @@
     ============================================================ -->
     <header>
         <nav class="container">
-            <a href="index.html" class="logo">
-                <img src="img/logo/apple-touch-icon.png" alt="Refresh Breeze Logo">
+            <a href="../../index.html" class="logo">
+                <img src="../../img/logo/apple-touch-icon.png" alt="Refresh Breeze Logo">
                 <div class="logo-text">
                     <strong>Refresh Breeze</strong>
                     <span>Official Website</span>
@@ -38,8 +38,8 @@
             
             <!-- Link Navigasi -->
             <ul class="nav-links" id="nav-links">
-                <li><a href="index.html">Beranda</a></li>
-                <li><a href="index.html#members">Member</a></li>
+                <li><a href="../../index.html">Beranda</a></li>
+                <li><a href="../../index.html#members">Member</a></li>
                 <li><a href="cheki.html" class="active">Cheki</a></li>
                 <li><a href="gallery.html">Galeri</a></li>
             </ul>
@@ -127,9 +127,10 @@
     </div>
 
     <!-- JavaScript Files -->
-    <script src="js/auth.js"></script>
-    <script src="js/script.js"></script>
-    <script src="js/cheki.js"></script>
+    <script>window.appBasePath = '../../';</script>
+    <script src="../../js/shared/auth.js"></script>
+    <script src="../../js/shared/script.js"></script>
+    <script src="../../js/public/cheki.js"></script>
 </body>
 
 </html>

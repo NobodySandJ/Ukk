@@ -1,8 +1,5 @@
-// ================================================================
-// FILE: forgot-password.js - Self-Service Password Reset
-// Verifikasi identitas user dengan No WA + Email, tampilkan OTP
-// ================================================================
-
+// Ini file buat ngurus filter lupa password
+// Jadi user verifikasi pake WA + Email, terus dapet OTP
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('forgot-password-form');
     const verifyBtn = document.getElementById('verify-btn');
@@ -15,30 +12,30 @@ document.addEventListener('DOMContentLoaded', function () {
 
     if (!form) return;
 
-    // Handle form submission
+    // Pas tombol 'Verifikasi' diklik
     form.addEventListener('submit', async function (e) {
         e.preventDefault();
 
         const whatsapp = document.getElementById('whatsapp').value.trim();
         const email = document.getElementById('email').value.trim();
 
-        // Clear previous messages
+        // Bersihin pesan error sebelumnya
         messageBox.textContent = '';
         messageBox.className = 'message-box';
 
-        // Validasi input
+        // Cek dulu udah diisi semua belum
         if (!whatsapp || !email) {
             showMessage('Harap isi semua field.', 'error');
             return;
         }
 
-        // Normalize nomor WA: convert 08xxx ke 62xxx
+        // Benerin format nomor WA, kalo mulainya 08 ganti jadi 62
         let normalizedWA = whatsapp;
         if (whatsapp.startsWith('08')) {
             normalizedWA = '62' + whatsapp.substring(1);
         }
 
-        // Validasi format nomor WA (harus diawali 62 atau 08)
+        // Pastikan formatnya bener (62 atau 08)
         if (!normalizedWA.startsWith('62')) {
             showMessage('Format nomor tidak valid. Gunakan 08xxx atau 62xxx', 'error');
             return;

@@ -1,17 +1,13 @@
-// ================================================================
-// FILE: leaderboard.js - Logika Halaman Leaderboard
-// ================================================================
-
+// Logic buat halaman Leaderboard
+// Nampilin siapa aja sultan yang paling banyak beli
 document.addEventListener('DOMContentLoaded', () => {
     const filters = document.getElementById('leaderboard-filters');
     const listContainer = document.getElementById('leaderboard-list');
 
-    // Load default: Global leaderboard
+    // Defaultnya tampilin semua (Global)
     loadLeaderboard('global');
 
-    // ============================================================
-    // EVENT LISTENER FILTER BUTTON
-    // ============================================================
+    // Kalo tombol filter diklik (misal per member)
     filters.addEventListener('click', (e) => {
         if (e.target.classList.contains('filter-btn')) {
             // Update tombol aktif

@@ -1,20 +1,19 @@
-// ================================================================
-// FILE: dashboard.js - Logika Halaman Dashboard User
-// ================================================================
+// Konfigurasi dasar buat path file
+const basePath = window.appBasePath || '../../';
 
 document.addEventListener('DOMContentLoaded', function () {
+    // Cek user login atau belum
+    // Kalo belum, lempar balik ke halaman utama
     const token = localStorage.getItem('userToken');
     const userData = JSON.parse(localStorage.getItem('userData'));
 
-    // ============================================================
-    // CEK LOGIN - Redirect jika belum login
-    // ============================================================
     if (!token || !userData) {
-        window.location.href = 'index.html';
+        window.location.href = `${basePath}index.html`;
         return;
     }
+    // Kalo admin, lempar ke halaman admin
     if (userData.peran === 'admin') {
-        window.location.href = 'admin.html';
+        window.location.href = `${basePath}pages/admin/index.html`;
         return;
     }
 
@@ -56,8 +55,8 @@ document.addEventListener('DOMContentLoaded', function () {
     // Pastikan file gambar ada di folder img/member/ (lowercase)
     // ============================================================
     function getOshiImage(oshiName) {
-        if (!oshiName || oshiName === 'All Member') return 'img/logo/apple-touch-icon.png';
-        return `img/member/${oshiName.toLowerCase()}.webp`;
+        if (!oshiName || oshiName === 'All Member') return `${basePath}img/logo/apple-touch-icon.png`;
+        return `${basePath}img/member/${oshiName.toLowerCase()}.webp`;
     }
 
     // Update Foto Profil & Badge
@@ -165,7 +164,7 @@ document.addEventListener('DOMContentLoaded', function () {
         localStorage.removeItem('userData');
         showToast('Anda telah logout. Sampai jumpa!', 'success');
         setTimeout(() => {
-            window.location.href = 'index.html';
+            window.location.href = `${basePath}index.html`;
         }, 1000);
     });
 
@@ -206,7 +205,7 @@ document.addEventListener('DOMContentLoaded', function () {
             ticketContainer.innerHTML = `
                 <div style="text-align: center; padding: 2rem 0;">
                     <p style="margin-bottom: 1.5rem; color: #6c757d;">Anda belum memiliki tiket saat ini.</p>
-                    <a href="cheki.html" class="cta-button">
+                    <a href="${basePath}pages/public/cheki.html" class="cta-button">
                         <i class="fas fa-ticket-alt"></i> Beli Tiket Cheki Sekarang
                     </a>
                 </div>
