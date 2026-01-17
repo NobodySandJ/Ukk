@@ -33,7 +33,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const response = await fetch(url);
+
+            // Check if response is OK
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
+
+            // Pastikan data adalah array
+            if (!Array.isArray(data)) {
+                throw new Error('Invalid response format');
+            }
 
             renderList(data, type);
         } catch (error) {

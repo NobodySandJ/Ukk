@@ -99,9 +99,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 response = await fetch(`/api/leaderboard-per-member?memberName=${encodeURIComponent(userOshi)}`);
             }
 
+            // Check if response is OK
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
             const data = await response.json();
 
-            if (!data || data.length === 0) {
+            // Pastikan data adalah array
+            if (!Array.isArray(data) || data.length === 0) {
                 loadingDiv.textContent = isGlobal
                     ? "Belum ada sultan saat ini."
                     : `Belum ada sultan ${userOshi} saat ini.`;

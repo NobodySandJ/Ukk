@@ -163,9 +163,16 @@ app.get("/api/leaderboard", async (req, res) => {
 
         if (error) throw error;
 
+        // Pastikan orders adalah array
+        if (!orders || !Array.isArray(orders)) {
+            return res.json([]);
+        }
+
         const userTotals = {};
         orders.forEach(order => {
             const uid = order.id_pengguna;
+            if (!uid) return; // Skip jika tidak ada id_pengguna
+
             if (!userTotals[uid]) {
                 userTotals[uid] = {
                     username: order.pengguna?.nama_pengguna || 'Unknown',
@@ -176,9 +183,11 @@ app.get("/api/leaderboard", async (req, res) => {
 
             // Hitung total cheki dari detail_item
             const items = order.detail_item || [];
-            items.forEach(item => {
-                userTotals[uid].totalCheki += item.quantity;
-            });
+            if (Array.isArray(items)) {
+                items.forEach(item => {
+                    userTotals[uid].totalCheki += (item.quantity || 0);
+                });
+            }
         });
 
         // Urutkan dari terbanyak cheki
@@ -188,6 +197,7 @@ app.get("/api/leaderboard", async (req, res) => {
 
         res.json(leaderboard);
     } catch (e) {
+        console.error("Leaderboard API Error:", e);
         res.status(500).json({ message: "Gagal memuat leaderboard.", error: e.message });
     }
 });
@@ -205,20 +215,29 @@ app.get("/api/leaderboard-per-member", async (req, res) => {
 
         if (error) throw error;
 
+        // Pastikan orders adalah array
+        if (!orders || !Array.isArray(orders)) {
+            return res.json([]);
+        }
+
         const fanTotals = {};
         orders.forEach(order => {
             const items = order.detail_item || [];
+            if (!Array.isArray(items)) return;
+
             items.forEach(item => {
                 // Filter item berdasarkan nama member (case insensitive)
-                if (item.name.toLowerCase().includes(memberName.toLowerCase())) {
+                if (item.name && item.name.toLowerCase().includes(memberName.toLowerCase())) {
                     const uid = order.id_pengguna;
+                    if (!uid) return;
+
                     if (!fanTotals[uid]) {
                         fanTotals[uid] = {
                             username: order.pengguna?.nama_pengguna || 'Unknown',
                             totalQuantity: 0
                         };
                     }
-                    fanTotals[uid].totalQuantity += item.quantity;
+                    fanTotals[uid].totalQuantity += (item.quantity || 0);
                 }
             });
         });
@@ -229,6 +248,7 @@ app.get("/api/leaderboard-per-member", async (req, res) => {
 
         res.json(leaderboard);
     } catch (e) {
+        console.error("Leaderboard Per-Member API Error:", e);
         res.status(500).json({ message: "Gagal memuat leaderboard member.", error: e.message });
     }
 });

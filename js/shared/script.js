@@ -266,8 +266,8 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!response.ok) throw new Error('Fetch failed');
             const data = await response.json();
 
-            // Tampilan jika belum ada data
-            if (!data || data.length === 0) {
+            // Tampilan jika belum ada data atau data bukan array
+            if (!Array.isArray(data) || data.length === 0) {
                 container.innerHTML = `
                     <div style="text-align: center; padding: 2rem; color: var(--secondary-text-color);">
                         <p style="font-size: 3rem; margin-bottom: 1rem;">🏆</p>

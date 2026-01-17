@@ -246,6 +246,67 @@ app.get("/api/leaderboard", async (req, res) => {
     }
 });
 
+// Endpoint: Leaderboard Per Member
+app.get("/api/leaderboard-per-member", async (req, res) => {
+    const { memberName } = req.query;
+    if (!memberName) return res.status(400).json({ message: "Nama member diperlukan." });
+
+    if (isDemoMode) {
+        // Demo data filtered by member name
+        const demoData = [
+            { username: 'sultan_piya', totalQuantity: 15 },
+            { username: 'fan_piya', totalQuantity: 8 },
+            { username: 'demo_user', totalQuantity: 5 }
+        ];
+        return res.json(demoData);
+    }
+
+    try {
+        const { data: orders, error } = await supabase
+            .from('pesanan')
+            .select('detail_item, id_pengguna, pengguna(nama_pengguna)')
+            .in('status_tiket', ['berlaku', 'sudah_dipakai']);
+
+        if (error) throw error;
+
+        // Pastikan orders adalah array
+        if (!orders || !Array.isArray(orders)) {
+            return res.json([]);
+        }
+
+        const fanTotals = {};
+        orders.forEach(order => {
+            const items = order.detail_item || [];
+            if (!Array.isArray(items)) return;
+
+            items.forEach(item => {
+                // Filter item berdasarkan nama member (case insensitive)
+                if (item.name && item.name.toLowerCase().includes(memberName.toLowerCase())) {
+                    const uid = order.id_pengguna;
+                    if (!uid) return;
+
+                    if (!fanTotals[uid]) {
+                        fanTotals[uid] = {
+                            username: order.pengguna?.nama_pengguna || 'Unknown',
+                            totalQuantity: 0
+                        };
+                    }
+                    fanTotals[uid].totalQuantity += (item.quantity || 0);
+                }
+            });
+        });
+
+        const leaderboard = Object.values(fanTotals)
+            .sort((a, b) => b.totalQuantity - a.totalQuantity)
+            .slice(0, 10);
+
+        res.json(leaderboard);
+    } catch (e) {
+        console.error("Leaderboard Per-Member API Error:", e);
+        res.status(500).json({ message: "Gagal memuat leaderboard member.", error: e.message });
+    }
+});
+
 // Endpoint: Dapatkan Produk & Stok
 app.get("/api/products-and-stock", async (req, res) => {
     try {
