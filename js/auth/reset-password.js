@@ -30,9 +30,9 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
-    // Auto-format OTP input (hanya angka)
+    // Auto-format OTP input (Hanya Alphanumeric & Uppercase)
     otpInput.addEventListener('input', (e) => {
-        e.target.value = e.target.value.replace(/[^0-9]/g, '').slice(0, 6);
+        e.target.value = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6);
     });
 
     // Handle form submission

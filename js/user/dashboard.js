@@ -279,9 +279,11 @@ document.addEventListener('DOMContentLoaded', function () {
             if (order.status_tiket === 'berlaku') {
                 const qrCanvas = document.getElementById(`qr-${order.id_pesanan}`);
                 if (qrCanvas && typeof QRCode !== 'undefined') {
-                    const qrData = `ID:${order.id_pesanan}|U:${userData.nama_pengguna}`;
+                    // QR Code berisi URL Magic untuk Redeem Otomatis
+                    // Saat discan staff, akan membuka halaman verifikasi & update status tiket
+                    const redeemUrl = `${window.location.origin}/pages/admin/redeem.html?id=${order.id_pesanan}`;
 
-                    QRCode.toCanvas(qrCanvas, qrData, { width: 120, margin: 1 }, (error) => {
+                    QRCode.toCanvas(qrCanvas, redeemUrl, { width: 120, margin: 1 }, (error) => {
                         if (error) console.error('QR Code Error:', error);
                     });
                 }

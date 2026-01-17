@@ -718,12 +718,49 @@ document.addEventListener('DOMContentLoaded', function () {
                 <td data-label="Email">${u.email}</td>
                 <td data-label="No. WhatsApp">${u.nomor_whatsapp || '-'}</td>
                 <td data-label="Aksi">
-                    <button class="action-btn btn-reset btn-generate-code" data-userid="${u.id}" data-username="${u.nama_pengguna}">
-                        <i class="fas fa-key"></i> Generate Kode
+                    <button class="action-btn btn-reset btn-generate-code" data-userid="${u.id}" data-username="${u.nama_pengguna}" title="Generate Kode OTP">
+                        <i class="fas fa-key"></i>
+                    </button>
+                    <button class="action-btn btn-delete btn-force-reset" data-userid="${u.id}" data-username="${u.nama_pengguna}" title="Reset ke 123456" style="margin-left:5px;">
+                        <i class="fas fa-history"></i>
                     </button>
                 </td>
             </tr>
         `).join('');
+    }
+
+    // OTP Modal Logic
+    const otpModal = document.getElementById('otp-modal');
+    const otpCodeDisplay = document.getElementById('otp-code-display');
+    const otpExpiry = document.getElementById('otp-expiry');
+    const otpCopyBtn = document.getElementById('copy-btn');
+    const otpCloseBtn = document.getElementById('close-modal-btn');
+
+    if (otpCloseBtn) otpCloseBtn.onclick = () => otpModal.classList.remove('active');
+    if (otpModal) otpModal.onclick = (e) => { if (e.target === otpModal) otpModal.classList.remove('active'); };
+
+    if (otpCopyBtn) {
+        otpCopyBtn.onclick = () => {
+            const code = otpCodeDisplay.textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                showToast('Kode berhasil disalin!', 'success');
+                otpCopyBtn.innerHTML = '<i class="fas fa-check"></i> Tersalin!';
+                otpCopyBtn.classList.add('copied');
+                setTimeout(() => {
+                    otpCopyBtn.innerHTML = '<i class="fas fa-copy"></i> Salin Kode OTP';
+                    otpCopyBtn.classList.remove('copied');
+                }, 2000);
+            });
+        };
+    }
+
+    function showCodeModal(code, expiry) {
+        if (!otpModal) return alert("Kode: " + code);
+        otpCodeDisplay.textContent = code;
+        otpExpiry.textContent = 'Berlaku ' + expiry;
+        otpModal.classList.add('active');
+        otpCopyBtn.innerHTML = '<i class="fas fa-copy"></i> Salin Kode OTP';
+        otpCopyBtn.classList.remove('copied');
     }
 
     userListTbody?.addEventListener('click', async (e) => {
@@ -735,8 +772,23 @@ document.addEventListener('DOMContentLoaded', function () {
                         method: 'POST',
                         body: JSON.stringify({ userId: genBtn.dataset.userid })
                     });
-                    alert(`Kode Reset: ${result.code}\n\nBerlaku selama 15 menit.\nKirim kode ini ke user via WhatsApp.`);
+                    showCodeModal(result.code, result.expiresIn);
                 } catch (error) { /* handled */ }
+            }
+        }
+
+        const resetBtn = e.target.closest('.btn-force-reset');
+        if (resetBtn) {
+            if (confirm(`Yakin FORCE RESET password user ${resetBtn.dataset.username} menjadi "123456"?\n\nTindakan ini tidak dapat dibatalkan.`)) {
+                try {
+                    const result = await apiRequest('/api/admin/reset-user-password', {
+                        method: 'POST',
+                        body: JSON.stringify({ userId: resetBtn.dataset.userid })
+                    });
+                    alert(result.message);
+                } catch (error) {
+                    alert('Gagal reset password: ' + error.message);
+                }
             }
         }
     });

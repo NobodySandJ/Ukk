@@ -430,6 +430,50 @@
       </div>
     </div>
 
+    <!-- OTP Modal Popup (Unified Style) -->
+    <div class="otp-modal-overlay" id="otp-modal">
+        <div class="otp-modal">
+            <div class="otp-modal-icon">
+                <i class="fas fa-key"></i>
+            </div>
+            <h3>Kode Reset Generated!</h3>
+            <p>Berikan kode ini kepada user. Kode hanya berlaku 5 menit.</p>
+            
+            <div class="otp-code-display">
+                <div class="otp-code" id="otp-code-display">------</div>
+                <div class="otp-expiry" id="otp-expiry">Berlaku 05:00</div>
+            </div>
+            
+            <button class="copy-btn" id="copy-btn">
+                <i class="fas fa-copy"></i> Salin Kode OTP
+            </button>
+            
+            <button class="close-modal-btn" id="close-modal-btn">
+                Tutup
+            </button>
+        </div>
+    </div>
+
+    <style>
+        /* Copied Modal Styles */
+        .otp-modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.6); backdrop-filter: blur(4px); z-index: 10000; justify-content: center; align-items: center; }
+        .otp-modal-overlay.active { display: flex; }
+        .otp-modal { background: white; border-radius: 20px; padding: 2rem; max-width: 420px; width: 90%; text-align: center; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); animation: modalSlideIn 0.3s ease; }
+        @keyframes modalSlideIn { from { opacity: 0; transform: translateY(-30px) scale(0.95); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .otp-modal-icon { width: 70px; height: 70px; background: linear-gradient(135deg, #10b981, #059669); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; }
+        .otp-modal-icon i { font-size: 2rem; color: white; }
+        .otp-modal h3 { color: #1f2937; margin-bottom: 0.5rem; font-size: 1.3rem; }
+        .otp-modal p { color: #6b7280; margin-bottom: 1.5rem; font-size: 0.95rem; }
+        .otp-code-display { background: linear-gradient(135deg, #fef3c7, #fde68a); border: 2px dashed #f59e0b; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
+        .otp-code { font-size: 2.5rem; font-weight: 700; letter-spacing: 4px; color: #92400e; font-family: monospace; }
+        .otp-expiry { font-size: 0.85rem; color: #b45309; margin-top: 0.5rem; }
+        .copy-btn { width: 100%; padding: 0.9rem; background: linear-gradient(135deg, #3b82f6, #2563eb); color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: all 0.3s ease; display: flex; align-items: center; justify-content: center; gap: 0.5rem; margin-bottom: 0.75rem; }
+        .copy-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3); }
+        .copy-btn.copied { background: linear-gradient(135deg, #10b981, #059669); }
+        .close-modal-btn { margin-top: 1rem; background: none; border: none; color: #6b7280; font-size: 0.9rem; cursor: pointer; text-decoration: underline; }
+        .close-modal-btn:hover { color: #374151; }
+    </style>
+
     <!-- Custom JS -->
     <script>
       window.appBasePath = "../../";

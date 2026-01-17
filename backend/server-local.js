@@ -721,34 +721,128 @@ app.delete("/api/admin/gallery/:id", authenticateToken, authorizeAdmin, async (r
 // RESET PASSWORD ENDPOINTS
 // ============================================================
 
+// Endpoint khusus Redeem Tiket via QR Code
+app.post("/api/admin/redeem-ticket", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { orderId } = req.body;
+
+        // 1. Ambil data pesanan
+        const { data: order, error } = await supabase
+            .from('pesanan')
+            .select('*')
+            .eq('id_pesanan', orderId)
+            .single();
+
+        if (error || !order) return res.status(404).json({ message: "Tiket tidak ditemukan." });
+
+        // 2. Cek Status
+        if (order.status_tiket === 'sudah_dipakai') {
+            return res.status(400).json({ message: "TIKET SUDAH TERPAKAI sebelumnya. Jangan berikan barang lagi!" });
+        }
+        if (order.status_tiket === 'hangus') {
+            return res.status(400).json({ message: "Tiket sudah HANGUS/EXPIRED." });
+        }
+        if (order.status_tiket !== 'berlaku') {
+            return res.status(400).json({ message: `Status tiket tidak valid: ${order.status_tiket}` });
+        }
+
+        // 3. Update Status
+        const { error: updateError } = await supabase
+            .from('pesanan')
+            .update({ status_tiket: 'sudah_dipakai' })
+            .eq('id_pesanan', orderId);
+
+        if (updateError) throw updateError;
+
+        // 4. Return Success dengan detail item
+        // Format item biar enak dibaca
+        const itemsList = (order.detail_item || []).map(i => `${i.quantity}xc ${i.name}`).join(', ');
+
+        res.json({
+            success: true,
+            message: `SUKSES! Berikan Item: ${itemsList}`
+        });
+
+    } catch (e) {
+        res.status(500).json({ message: "Server error: " + e.message });
+    }
+});
+
 // Memory storage untuk reset codes
 const resetCodes = new Map();
-const generateResetCode = () => Math.floor(100000 + Math.random() * 900000).toString();
+const generateResetCode = () => {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+    let result = '';
+    for (let i = 0; i < 6; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    return result;
+};
 
 // Self-service OTP Generation
 app.post("/api/verify-and-generate-otp", async (req, res) => {
     if (isDemoMode) {
         const code = generateResetCode();
-        resetCodes.set(code, { userId: 1, username: 'demo_user', expiresAt: Date.now() + 900000 });
-        return res.json({ success: true, message: "Verifikasi berhasil! (Demo)", code: code, expiresIn: "15:00", username: "demo_user" });
+        resetCodes.set(code, { userId: 1, username: 'demo_user', expiresAt: Date.now() + 300000 });
+        return res.json({ success: true, message: "Verifikasi berhasil! (Demo)", code: code, expiresIn: "05:00", username: "demo_user" });
     }
     try {
         const { whatsapp, email } = req.body;
+        console.log(`[OTP Attempt] Email: ${email}, WA: ${whatsapp}`); // Debug Log
+
         if (!whatsapp || !email) return res.status(400).json({ message: "Nomor WhatsApp dan Email wajib diisi." });
 
+        // Cari user by Email (lebih aman karena unik)
         const { data: user, error } = await supabase.from('pengguna')
             .select('id, nama_pengguna, email, nomor_whatsapp')
-            .eq('nomor_whatsapp', whatsapp).eq('email', email).single();
+            .eq('email', email)
+            .single();
 
-        if (error || !user) return res.status(404).json({ message: "Data tidak ditemukan. Pastikan Nomor WhatsApp dan Email sesuai." });
+        if (error || !user) return res.status(404).json({ message: "Email tidak ditemukan." });
+
+        // Normalisasi nomor HP untuk perbandingan (abaikan perbedaan 08 vs 62)
+        const normalize = (phone) => {
+            if (!phone) return "";
+            let p = phone.toString().replace(/\D/g, ''); // Hapus non-digit
+            if (p.startsWith('62')) p = '0' + p.substring(2); // Ubah 62 jadi 0
+            if (p.startsWith('8')) p = '0' + p; // Handle 8xxx jadi 08xxx
+            return p;
+        };
+
+        const dbWA = normalize(user.nomor_whatsapp);
+        const inputWA = normalize(whatsapp);
+
+        if (dbWA !== inputWA) {
+            return res.status(400).json({ message: "Nomor WhatsApp tidak cocok dengan Email tersebut." });
+        }
 
         const code = generateResetCode();
-        const expiresAt = Date.now() + 900000;
+        const expiresAt = Date.now() + (5 * 60 * 1000); // 5 menit
         resetCodes.set(code, { userId: user.id, username: user.nama_pengguna, expiresAt });
 
-        res.json({ success: true, message: "Verifikasi berhasil!", code, expiresIn: "15:00", username: user.nama_pengguna });
+        res.json({ success: true, message: "Verifikasi berhasil!", code, expiresIn: "05:00", username: user.nama_pengguna });
     } catch (e) {
         res.status(500).json({ message: "Terjadi kesalahan pada server.", error: e.message });
+    }
+});
+
+// Endpoint: Force Reset Password to '123456'
+app.post("/api/admin/reset-user-password", authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) return res.json({ message: "Password berhasil direset ke 123456! (Demo)" });
+
+    try {
+        const { userId } = req.body;
+        if (!userId) return res.status(400).json({ message: "User ID tidak ditemukan." });
+
+        const salt = await bcrypt.genSalt(10);
+        const hash = await bcrypt.hash("123456", salt);
+
+        const { error } = await supabase.from('pengguna').update({ kata_sandi: hash }).eq('id', userId);
+        if (error) throw error;
+
+        res.json({ message: "Password berhasil direset ke 123456!" });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal reset password.", error: e.message });
     }
 });
 
@@ -756,7 +850,7 @@ app.post("/api/verify-and-generate-otp", async (req, res) => {
 app.post("/api/admin/generate-reset-code", authenticateToken, authorizeAdmin, async (req, res) => {
     if (isDemoMode) {
         const code = generateResetCode();
-        return res.json({ message: "Kode reset berhasil dibuat. (Demo)", code, expiresIn: "15:00" });
+        return res.json({ message: "Kode reset berhasil dibuat. (Demo)", code, expiresIn: "05:00" });
     }
     try {
         const { userId } = req.body;
@@ -766,9 +860,9 @@ app.post("/api/admin/generate-reset-code", authenticateToken, authorizeAdmin, as
         if (error || !user) return res.status(404).json({ message: "User tidak ditemukan." });
 
         const code = generateResetCode();
-        resetCodes.set(code, { userId: user.id, username: user.nama_pengguna, expiresAt: Date.now() + 900000 });
+        resetCodes.set(code, { userId: user.id, username: user.nama_pengguna, expiresAt: Date.now() + (5 * 60 * 1000) });
 
-        res.json({ message: "Kode reset berhasil dibuat.", code, expiresIn: "15:00", username: user.nama_pengguna });
+        res.json({ message: "Kode reset berhasil dibuat.", code, expiresIn: "05:00", username: user.nama_pengguna });
     } catch (e) {
         res.status(500).json({ message: "Gagal membuat kode reset.", error: e.message });
     }
