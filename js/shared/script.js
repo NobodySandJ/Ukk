@@ -1,5 +1,9 @@
 // Konfigurasi dasar buat path file, biar ga error pas di subfolder
-const basePath = window.appBasePath || './';
+// Menggunakan window.basePath untuk menghindari konflik saat multiple script di-load
+if (typeof window.basePath === 'undefined') {
+    window.basePath = window.appBasePath || './';
+}
+var basePath = window.basePath;
 
 // Fungsi buat nampilin notifikasi toast (popup kecil di pojok kanan atas)
 function showToast(message, type = 'info', duration = 3000) {

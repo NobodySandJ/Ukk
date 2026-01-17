@@ -1,5 +1,8 @@
 // Konfigurasi dasar buat path file
-const basePath = window.appBasePath || '../../';
+if (typeof window.basePath === 'undefined') {
+    window.basePath = window.appBasePath || '../../';
+}
+var basePath = window.basePath;
 
 document.addEventListener('DOMContentLoaded', function () {
     const token = localStorage.getItem('userToken');

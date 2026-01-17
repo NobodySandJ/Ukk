@@ -1,6 +1,9 @@
 // Logic buat halaman reset password
 // User masukin kode OTP + Password baru disini
-const basePath = window.appBasePath || '../../';
+if (typeof window.basePath === 'undefined') {
+    window.basePath = window.appBasePath || '../../';
+}
+var basePath = window.basePath;
 
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('reset-password-form');

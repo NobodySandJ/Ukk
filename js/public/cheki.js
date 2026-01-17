@@ -1,6 +1,9 @@
 // Halaman buat beli cheki
 // Disini ngatur keranjang belanja, stok, sama integrasi Midtrans
-const basePath = window.appBasePath || '../../';
+if (typeof window.basePath === 'undefined') {
+    window.basePath = window.appBasePath || '../../';
+}
+var basePath = window.basePath;
 
 document.addEventListener('DOMContentLoaded', () => {
     // Cek dulu ini beneran halaman cheki bukan

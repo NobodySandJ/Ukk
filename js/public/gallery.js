@@ -1,7 +1,10 @@
 // Logika buat halaman Galeri
 // Nampilin foto member, group, sama event
 // Datanya diambil dari file JSON terpisah biar gampang update
-const basePath = window.appBasePath || '../../';
+if (typeof window.basePath === 'undefined') {
+    window.basePath = window.appBasePath || '../../';
+}
+var basePath = window.basePath;
 
 document.addEventListener('DOMContentLoaded', async () => {
     // Cek dulu ada elemen galeri gak, biar gak error di halaman lain

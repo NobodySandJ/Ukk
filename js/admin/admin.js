@@ -5,7 +5,11 @@
 //          Gallery CRUD, Orders Management, User Management
 // ================================================================
 
-const basePath = window.appBasePath || '../../';
+// Menggunakan window.basePath untuk menghindari konflik saat multiple script di-load
+if (typeof window.basePath === 'undefined') {
+    window.basePath = window.appBasePath || '../../';
+}
+var basePath = window.basePath;
 
 document.addEventListener('DOMContentLoaded', function () {
     // ============================================================

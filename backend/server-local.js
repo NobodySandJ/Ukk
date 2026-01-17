@@ -371,6 +371,327 @@ app.get("/api/my-orders", authenticateToken, async (req, res) => {
 });
 
 // ============================================================
+// ADMIN ENDPOINTS
+// ============================================================
+
+// Endpoint: Admin Stats
+app.get("/api/admin/stats", authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) {
+        return res.json({
+            totalRevenue: 750000,
+            totalCheki: 30,
+            chekiPerMember: { 'Aca': 10, 'Sinta': 8, 'Cissi': 5, 'Cally': 4, 'Channie': 3 }
+        });
+    }
+    try {
+        const { data: orders, error } = await supabase.from('pesanan').select('total_harga, detail_item')
+            .in('status_tiket', ['berlaku', 'sudah_dipakai']);
+        if (error) throw error;
+        let totalRevenue = 0, totalCheki = 0;
+        const chekiPerMember = {};
+        orders.forEach(order => {
+            totalRevenue += order.total_harga;
+            (order.detail_item || []).forEach(item => {
+                totalCheki += item.quantity;
+                const member = item.name.replace('Cheki ', '');
+                chekiPerMember[member] = (chekiPerMember[member] || 0) + item.quantity;
+            });
+        });
+        res.json({ totalRevenue, totalCheki, chekiPerMember });
+    } catch (e) {
+        res.status(500).json({ message: 'Gagal mengambil statistik.', error: e.message });
+    }
+});
+
+// Endpoint: All Orders
+app.get("/api/admin/all-orders", authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) {
+        return res.json([
+            { id_pesanan: 'DEMO-001', nama_pelanggan: 'Demo User', total_harga: 50000, status_tiket: 'berlaku', detail_item: [{ name: 'Cheki Aca', quantity: 2 }], dibuat_pada: new Date().toISOString() }
+        ]);
+    }
+    try {
+        const { data, error } = await supabase.from('pesanan').select('*')
+            .neq('status_tiket', 'pending')
+            .order('dibuat_pada', { ascending: false });
+        if (error) throw error;
+        res.json(data);
+    } catch (e) {
+        res.status(500).json({ message: 'Gagal mengambil pesanan.', error: e.message });
+    }
+});
+
+// Endpoint: Update Ticket Status
+app.post("/api/admin/update-ticket-status", authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) return res.json({ message: 'Status tiket berhasil diubah. (Demo)' });
+    try {
+        const { order_id, new_status } = req.body;
+        if (!order_id || !new_status) return res.status(400).json({ message: "Data tidak lengkap." });
+        const { error } = await supabase.from('pesanan').update({ status_tiket: new_status }).eq('id_pesanan', order_id);
+        if (error) throw error;
+        res.json({ message: `Status tiket berhasil diubah.` });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal update status tiket.", error: e.message });
+    }
+});
+
+// Endpoint: Update Cheki Stock
+app.post('/api/admin/update-cheki-stock', authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) return res.json({ message: 'Stok berhasil diperbarui! (Demo)', newStock: 100 });
+    try {
+        const { changeValue } = req.body;
+        if (typeof changeValue !== 'number') return res.status(400).json({ message: 'Nilai tidak valid.' });
+        const { error } = await supabase.rpc('update_cheki_stock', { change_value: changeValue });
+        if (error) throw new Error(`Gagal update stok: ${error.message}`);
+        const newStock = await getChekiStock();
+        res.json({ message: 'Stok berhasil diperbarui!', newStock });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
+// Endpoint: All Users
+app.get("/api/admin/all-users", authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) {
+        return res.json([
+            { id: '1', nama_pengguna: 'demo_user', email: 'demo@example.com' },
+            { id: '2', nama_pengguna: 'test_user', email: 'test@example.com' }
+        ]);
+    }
+    try {
+        const { data, error } = await supabase.from('pengguna').select('id, nama_pengguna, email').neq('peran', 'admin');
+        if (error) throw error;
+        res.json(data);
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengambil data pengguna.", error: e.message });
+    }
+});
+
+// ============================================================
+// MEMBERS CRUD
+// ============================================================
+
+app.get("/api/admin/members", authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) {
+        return res.json([
+            { id: '1', name: 'Aca', role: 'Kapten', price: 25000, image_url: 'img/member/aca.webp', details: { sifat: 'Ceria', hobi: 'Menari', jiko: 'Halo!' }, display_order: 1 },
+            { id: '2', name: 'Sinta', role: 'Member', price: 25000, image_url: 'img/member/sinta.webp', details: { sifat: 'Ramah', hobi: 'Nyanyi', jiko: 'Hai!' }, display_order: 2 }
+        ]);
+    }
+    try {
+        const { data, error } = await supabase.from('members').select('*').order('display_order', { ascending: true });
+        if (error) throw error;
+        res.json(data || []);
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengambil data member.", error: e.message });
+    }
+});
+
+app.post("/api/admin/members", authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) return res.status(201).json({ message: "Member berhasil ditambahkan! (Demo)", member: { id: Date.now(), ...req.body } });
+    // Full implementation in server.js with file upload
+    res.status(501).json({ message: "Fitur ini memerlukan server.js dengan Supabase Storage." });
+});
+
+app.put("/api/admin/members/:id", authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) return res.json({ message: "Member berhasil diupdate! (Demo)", member: req.body });
+    res.status(501).json({ message: "Fitur ini memerlukan server.js dengan Supabase Storage." });
+});
+
+app.delete("/api/admin/members/:id", authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) return res.json({ message: "Member berhasil dihapus! (Demo)" });
+    try {
+        const { id } = req.params;
+        const { error } = await supabase.from('members').delete().eq('id', id);
+        if (error) throw error;
+        res.json({ message: "Member berhasil dihapus!" });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal menghapus member.", error: e.message });
+    }
+});
+
+// ============================================================
+// NEWS CRUD
+// ============================================================
+
+app.get("/api/admin/news", authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) {
+        return res.json([
+            { id: '1', title: 'Jadwal Theater Bulan Ini', date: '25 Oktober 2025', content: 'Yuk nonton theater kami!', is_published: true }
+        ]);
+    }
+    try {
+        const { data, error } = await supabase.from('news').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        res.json(data || []);
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengambil berita.", error: e.message });
+    }
+});
+
+app.post("/api/admin/news", authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) return res.status(201).json({ message: "Berita berhasil ditambahkan! (Demo)", news: { id: Date.now(), ...req.body } });
+    try {
+        const { title, content, date } = req.body;
+        if (!title) return res.status(400).json({ message: "Judul berita wajib diisi." });
+        const { data, error } = await supabase.from('news').insert([{ title, content, date, is_published: true }]).select().single();
+        if (error) throw error;
+        res.status(201).json({ message: "Berita berhasil ditambahkan!", news: data });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal menambahkan berita.", error: e.message });
+    }
+});
+
+app.put("/api/admin/news/:id", authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) return res.json({ message: "Berita berhasil diupdate! (Demo)", news: req.body });
+    try {
+        const { id } = req.params;
+        const { title, content, date, is_published } = req.body;
+        const { data, error } = await supabase.from('news').update({ title, content, date, is_published }).eq('id', id).select().single();
+        if (error) throw error;
+        res.json({ message: "Berita berhasil diupdate!", news: data });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengupdate berita.", error: e.message });
+    }
+});
+
+app.delete("/api/admin/news/:id", authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) return res.json({ message: "Berita berhasil dihapus! (Demo)" });
+    try {
+        const { id } = req.params;
+        const { error } = await supabase.from('news').delete().eq('id', id);
+        if (error) throw error;
+        res.json({ message: "Berita berhasil dihapus!" });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal menghapus berita.", error: e.message });
+    }
+});
+
+// ============================================================
+// GALLERY CRUD
+// ============================================================
+
+app.get("/api/public/gallery", async (req, res) => {
+    if (isDemoMode) {
+        return res.json([
+            { id: '1', image_url: 'img/gallery/sample1.webp', alt_text: 'Foto 1', display_order: 1 }
+        ]);
+    }
+    try {
+        const { data, error } = await supabase.from('gallery').select('*').order('display_order', { ascending: true });
+        if (error) throw error;
+        res.json(data || []);
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengambil galeri.", error: e.message });
+    }
+});
+
+app.post("/api/admin/gallery", authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) return res.status(201).json({ message: "Foto berhasil ditambahkan! (Demo)" });
+    res.status(501).json({ message: "Fitur ini memerlukan server.js dengan Supabase Storage." });
+});
+
+app.delete("/api/admin/gallery/:id", authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) return res.json({ message: "Foto berhasil dihapus! (Demo)" });
+    try {
+        const { id } = req.params;
+        const { error } = await supabase.from('gallery').delete().eq('id', id);
+        if (error) throw error;
+        res.json({ message: "Foto berhasil dihapus!" });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal menghapus foto.", error: e.message });
+    }
+});
+
+// ============================================================
+// RESET PASSWORD ENDPOINTS
+// ============================================================
+
+// Memory storage untuk reset codes
+const resetCodes = new Map();
+const generateResetCode = () => Math.floor(100000 + Math.random() * 900000).toString();
+
+// Self-service OTP Generation
+app.post("/api/verify-and-generate-otp", async (req, res) => {
+    if (isDemoMode) {
+        const code = generateResetCode();
+        resetCodes.set(code, { userId: 1, username: 'demo_user', expiresAt: Date.now() + 900000 });
+        return res.json({ success: true, message: "Verifikasi berhasil! (Demo)", code: code, expiresIn: "15:00", username: "demo_user" });
+    }
+    try {
+        const { whatsapp, email } = req.body;
+        if (!whatsapp || !email) return res.status(400).json({ message: "Nomor WhatsApp dan Email wajib diisi." });
+
+        const { data: user, error } = await supabase.from('pengguna')
+            .select('id, nama_pengguna, email, nomor_whatsapp')
+            .eq('nomor_whatsapp', whatsapp).eq('email', email).single();
+
+        if (error || !user) return res.status(404).json({ message: "Data tidak ditemukan. Pastikan Nomor WhatsApp dan Email sesuai." });
+
+        const code = generateResetCode();
+        const expiresAt = Date.now() + 900000;
+        resetCodes.set(code, { userId: user.id, username: user.nama_pengguna, expiresAt });
+
+        res.json({ success: true, message: "Verifikasi berhasil!", code, expiresIn: "15:00", username: user.nama_pengguna });
+    } catch (e) {
+        res.status(500).json({ message: "Terjadi kesalahan pada server.", error: e.message });
+    }
+});
+
+// Admin Generate Reset Code
+app.post("/api/admin/generate-reset-code", authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) {
+        const code = generateResetCode();
+        return res.json({ message: "Kode reset berhasil dibuat. (Demo)", code, expiresIn: "15:00" });
+    }
+    try {
+        const { userId } = req.body;
+        if (!userId) return res.status(400).json({ message: "User ID tidak ditemukan." });
+
+        const { data: user, error } = await supabase.from('pengguna').select('id, nama_pengguna').eq('id', userId).single();
+        if (error || !user) return res.status(404).json({ message: "User tidak ditemukan." });
+
+        const code = generateResetCode();
+        resetCodes.set(code, { userId: user.id, username: user.nama_pengguna, expiresAt: Date.now() + 900000 });
+
+        res.json({ message: "Kode reset berhasil dibuat.", code, expiresIn: "15:00", username: user.nama_pengguna });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal membuat kode reset.", error: e.message });
+    }
+});
+
+// Reset Password with OTP Code
+app.post("/api/reset-password-with-code", async (req, res) => {
+    try {
+        const { code, newPassword } = req.body;
+        if (!code || !newPassword) return res.status(400).json({ message: "Kode dan password baru wajib diisi." });
+        if (newPassword.length < 6) return res.status(400).json({ message: "Password minimal 6 karakter." });
+
+        const resetData = resetCodes.get(code);
+        if (!resetData) return res.status(400).json({ message: "Kode tidak valid atau sudah digunakan." });
+        if (Date.now() > resetData.expiresAt) {
+            resetCodes.delete(code);
+            return res.status(400).json({ message: "Kode sudah kadaluarsa." });
+        }
+
+        if (isDemoMode) {
+            resetCodes.delete(code);
+            return res.json({ message: "Password berhasil diubah! (Demo)", username: resetData.username });
+        }
+
+        const salt = await bcrypt.genSalt(10);
+        const password_hash = await bcrypt.hash(newPassword, salt);
+        const { error } = await supabase.from('pengguna').update({ kata_sandi: password_hash }).eq('id', resetData.userId);
+        if (error) throw error;
+
+        resetCodes.delete(code);
+        res.json({ message: "Password berhasil diubah!", username: resetData.username });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mereset password.", error: e.message });
+    }
+});
+
+// ============================================================
 // FALLBACK ROUTE - Serve index.html untuk SPA
 // ============================================================
 app.get('*', (req, res) => {
