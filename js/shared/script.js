@@ -188,8 +188,11 @@ document.addEventListener('DOMContentLoaded', function () {
             // Kartu Grup
             const groupCard = document.createElement('div');
             groupCard.className = 'member-card-detailed group-card';
+            // Handle both full URLs (Supabase) and relative paths
+            const groupImgSrc = (data.group_cheki.image || '').startsWith('http') ? data.group_cheki.image : basePath + data.group_cheki.image;
+
             groupCard.innerHTML = `
-                <img src="${basePath}${data.group_cheki.image}" alt="${data.group.name}" loading="lazy">
+                <img src="${groupImgSrc}" alt="${data.group.name}" loading="lazy" onerror="this.src='${basePath}img/placeholder.png'">
                 <div class="member-details">
                     <h3>${data.group.name}</h3>
                     <blockquote class="jiko">"${data.group.tagline}"</blockquote>
