@@ -55,6 +55,7 @@
     { "src": "/api/public/gallery", "dest": "/backend/server.js" },
     
     { "src": "/api/admin/stats", "dest": "/backend/server.js" },
+    { "src": "/api/admin/dashboard-stats", "dest": "/backend/server.js" },
     { "src": "/api/admin/all-orders", "dest": "/backend/server.js" },
     { "src": "/api/admin/all-users", "dest": "/backend/server.js" },
     { "src": "/api/admin/update-ticket-status", "dest": "/backend/server.js" },
