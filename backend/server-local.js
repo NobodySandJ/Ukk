@@ -111,7 +111,10 @@ if (!isDemoMode) {
         serverKey: process.env.MIDTRANS_SERVER_KEY,
         clientKey: process.env.MIDTRANS_CLIENT_KEY,
     });
-    supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+    const keyType = process.env.SUPABASE_SERVICE_ROLE_KEY ? 'SERVICE_ROLE (Bypass RLS)' : 'ANON (Restricted)';
+    console.log(`[INIT] Supabase Client using key: ${keyType}`);
+    supabase = createClient(process.env.SUPABASE_URL, supabaseKey);
 }
 
 // ============================================================
@@ -813,9 +816,12 @@ app.post("/api/admin/members", authenticateToken, authorizeAdmin, upload.single(
 
         let image_url = null;
         if (req.file) {
-            const fileName = `members/${Date.now()}-${req.file.originalname.replace(/\s/g, '_')}`;
+            const fileName = `member/${Date.now()}-${req.file.originalname.replace(/\s/g, '_')}`;
+            // UPLOAD KE BUCKET 'public-images' FOLDER 'member'
             const { error: uploadError } = await supabase.storage.from('public-images').upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
             if (uploadError) throw new Error(`Upload gagal: ${uploadError.message}`);
+
+            // GET PUBLIC URL
             const { data: urlData } = supabase.storage.from('public-images').getPublicUrl(fileName);
             image_url = urlData.publicUrl;
         }
@@ -848,7 +854,7 @@ app.put("/api/admin/members/:id", authenticateToken, authorizeAdmin, upload.sing
         console.log(`[DEBUG] Updating member ${id} with:`, updates); // Debug Log
 
         if (req.file) {
-            const fileName = `members/${Date.now()}-${req.file.originalname.replace(/\s/g, '_')}`;
+            const fileName = `member/${Date.now()}-${req.file.originalname.replace(/\s/g, '_')}`;
             const { error: uploadError } = await supabase.storage.from('public-images').upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
             if (uploadError) throw new Error(`Upload gagal: ${uploadError.message}`);
             const { data: urlData } = supabase.storage.from('public-images').getPublicUrl(fileName);
@@ -963,6 +969,7 @@ app.post("/api/admin/gallery", authenticateToken, authorizeAdmin, upload.single(
         if (!req.file) return res.status(400).json({ message: "File gambar wajib diupload." });
 
         const fileName = `gallery/${Date.now()}-${req.file.originalname.replace(/\s/g, '_')}`;
+        // UPLOAD KE BUCKET 'public-images' FOLDER 'gallery'
         const { error: uploadError } = await supabase.storage.from('public-images').upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
         if (uploadError) throw new Error(`Upload gagal: ${uploadError.message}`);
 

@@ -42,7 +42,8 @@ const snap = new midtransClient.Snap({
     serverKey: process.env.MIDTRANS_SERVER_KEY,
     clientKey: process.env.MIDTRANS_CLIENT_KEY,
 });
-const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+const supabase = createClient(process.env.SUPABASE_URL, supabaseKey);
 
 // --- 3. Middleware Otentikasi & Otorisasi ---
 const authenticateToken = (req, res, next) => {
@@ -884,7 +885,7 @@ app.post("/api/admin/members", authenticateToken, authorizeAdmin, upload.single(
 
         // Upload image to Supabase Storage if provided
         if (req.file) {
-            const fileName = `members/${Date.now()}-${req.file.originalname.replace(/\s/g, '_')}`;
+            const fileName = `member/${Date.now()}-${req.file.originalname.replace(/\s/g, '_')}`;
             const { data: uploadData, error: uploadError } = await supabase.storage
                 .from('public-images')
                 .upload(fileName, req.file.buffer, {
@@ -933,7 +934,7 @@ app.put("/api/admin/members/:id", authenticateToken, authorizeAdmin, upload.sing
 
         // Upload new image if provided
         if (req.file) {
-            const fileName = `members/${Date.now()}-${req.file.originalname.replace(/\s/g, '_')}`;
+            const fileName = `member/${Date.now()}-${req.file.originalname.replace(/\s/g, '_')}`;
             const { error: uploadError } = await supabase.storage
                 .from('public-images')
                 .upload(fileName, req.file.buffer, {

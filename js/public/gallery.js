@@ -12,6 +12,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
+    // List member buat filter, key-nya harus sama kayak nama file gambar
+    const members = [
+        { name: 'Aca', imgKey: 'aca' },
+        { name: 'Sinta', imgKey: 'sinta' },
+        { name: 'Cissi', imgKey: 'cissi' },
+        { name: 'Channie', imgKey: 'channie' },
+        { name: 'Cally', imgKey: 'cally' },
+        { name: 'Yanyee', imgKey: 'yanyee' },
+        { name: 'Piya', imgKey: 'piya' }
+    ];
+
     // Tempat nyimpen data galeri
     let galleryData = {
         group: [],
@@ -38,26 +49,56 @@ document.addEventListener('DOMContentLoaded', async () => {
                     title: item.alt_text || 'Foto Gallery',
                     description: item.alt_text || '',
                     date: 'Terbaru',
-                    size: 'medium'
+                    size: 'medium',
+                    category: item.category || 'unknown' // Ambil kategori dari DB
                 };
 
                 let isMember = false;
-                // Cek apakah ini foto member tertentu
-                members.forEach(m => {
-                    if (lowerSrc.includes(m.imgKey.toLowerCase()) || lowerSrc.includes(m.name.toLowerCase())) {
-                        if (!galleryData.member[m.imgKey]) galleryData.member[m.imgKey] = [];
-                        galleryData.member[m.imgKey].push(galleryItem);
-                        isMember = true;
-                    }
-                });
 
-                // Jika bukan member spesifik, cek apakah grup
-                if (!isMember) {
-                    if (lowerSrc.includes('group') || lowerSrc.includes('grup')) {
-                        galleryData.group.push(galleryItem);
-                    } else {
-                        // Masukkan ke dokumentasi/event
-                        galleryData.dokumentasi.push(galleryItem);
+                // 1. PRIORITAS UTAMA: Cek kategori dari database jika ada
+                if (galleryItem.category === 'member') {
+                    // Coba cari member mana ini
+                    let memberFound = false;
+                    members.forEach(m => {
+                        // Cek apakah image_url mengandung nama member ATAU alt_text mengandung nama member
+                        if (lowerSrc.includes(m.imgKey.toLowerCase()) ||
+                            galleryItem.title.toLowerCase().includes(m.name.toLowerCase())) {
+                            if (!galleryData.member[m.imgKey]) galleryData.member[m.imgKey] = [];
+                            galleryData.member[m.imgKey].push(galleryItem);
+                            memberFound = true;
+                            isMember = true;
+                        }
+                    });
+
+                    // Jika kategori 'member' tapi tidak ketemu member spesifik, masukkan ke 'all' atau abaikan?
+                    // Kita bisa masukkan ke member pertama atau biarkan saja (user minta spesifik)
+                } else if (galleryItem.category === 'group' || galleryItem.category === 'grup') {
+                    galleryData.group.push(galleryItem);
+                } else if (galleryItem.category === 'dokumentasi' || galleryItem.category === 'event') {
+                    galleryData.dokumentasi.push(galleryItem);
+                } else {
+                    // FALLBACK: Kategori 'carousel' atau lainnya, atau jika kategori null
+                    // Tetap gunakan logika lama sebagai cadangan jika kategori belum diset dengan benar
+
+                    // Cek apakah ini foto member tertentu
+                    members.forEach(m => {
+                        if (lowerSrc.includes(m.imgKey.toLowerCase()) || lowerSrc.includes(m.name.toLowerCase())) {
+                            if (!galleryData.member[m.imgKey]) galleryData.member[m.imgKey] = [];
+                            galleryData.member[m.imgKey].push(galleryItem);
+                            isMember = true;
+                        }
+                    });
+
+                    if (!isMember) {
+                        if (lowerSrc.includes('group') || lowerSrc.includes('grup')) {
+                            galleryData.group.push(galleryItem);
+                        } else {
+                            // Default ke dokumentasi jika tidak ada match member/grup
+                            // Kecuali carousel, biasanya tidak ditampilkan di galeri utama
+                            if (galleryItem.category !== 'carousel') {
+                                galleryData.dokumentasi.push(galleryItem);
+                            }
+                        }
                     }
                 }
             });
@@ -65,25 +106,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             throw new Error("API response not ok");
         }
     } catch (error) {
-        console.warn('Gagal memuat data dari API, mencoba fallback ke JSON...', error);
-        try {
-            const fallbackResponse = await fetch(basePath + 'data/gallery-data.json');
-            if (fallbackResponse.ok) galleryData = await fallbackResponse.json();
-        } catch (e) {
-            console.error('Gagal memuat data gallery sama sekali.');
-        }
+        console.error('Gagal memuat data dari API:', error);
+        // Fallback sudah dihapus sesuai permintaan user
     }
 
     // List member buat filter, key-nya harus sama kayak nama file gambar
-    const members = [
-        { name: 'Aca', imgKey: 'aca' },
-        { name: 'Sinta', imgKey: 'sinta' },
-        { name: 'Cissi', imgKey: 'cissi' },
-        { name: 'Channie', imgKey: 'channie' },
-        { name: 'Cally', imgKey: 'cally' },
-        { name: 'Yanyee', imgKey: 'yanyee' },
-        { name: 'Piya', imgKey: 'piya' }
-    ];
+
 
     // Ambil elemen-elemen HTML yang bakal diisi
     const groupGallery = document.getElementById('group-gallery');
