@@ -364,7 +364,7 @@ app.get("/api/leaderboard-per-member", async (req, res) => {
 });
 
 // Endpoint: Dapatkan Produk & Stok
-// UPDATED: Fetch prices from pengaturan table
+// UPDATED V2: Fetch from normalized `products` table
 app.get("/api/products-and-stock", async (req, res) => {
     try {
         let responseData = JSON.parse(JSON.stringify(productData));
@@ -372,9 +372,9 @@ app.get("/api/products-and-stock", async (req, res) => {
         if (!isDemoMode) {
             try {
                 // Fetch ALL dynamic data from Supabase in parallel
-                const [settingsRes, membersRes, newsRes, galleryRes] = await Promise.all([
+                const [productsRes, settingsRes, newsRes, galleryRes] = await Promise.all([
+                    supabase.from('products').select('*, members(name, role, image_url, details)').eq('is_active', true).order('created_at', { ascending: true }),
                     supabase.from('pengaturan').select('nama, nilai'),
-                    supabase.from('members').select('*').eq('is_active', true).order('display_order', { ascending: true }),
                     supabase.from('news').select('title, content, date').eq('is_published', true).order('created_at', { ascending: false }).limit(3),
                     supabase.from('gallery').select('image_url, alt_text, category').eq('is_active', true).order('display_order', { ascending: true })
                 ]);
@@ -383,33 +383,31 @@ app.get("/api/products-and-stock", async (req, res) => {
                 const settings = {};
                 (settingsRes.data || []).forEach(s => { settings[s.nama] = s.nilai; });
 
-                // Get prices from settings
-                const hargaMember = parseInt(settings.harga_cheki_member) || 25000;
-                const hargaGrup = parseInt(settings.harga_cheki_grup) || 30000;
+                // Process Products from new table
+                const allProducts = productsRes.data || [];
+                const groupProduct = allProducts.find(p => p.category === 'cheki_group');
+                const memberProducts = allProducts.filter(p => p.category === 'cheki_member');
 
-                // Separate group and individual members
-                const allMembers = membersRes.data || [];
-                const groupMember = allMembers.find(m => m.member_type === 'group');
-                const individualMembers = allMembers.filter(m => m.member_type !== 'group');
-
-                // Transform Group Cheki (price from pengaturan)
-                if (groupMember) {
+                // Transform Group Cheki
+                if (groupProduct) {
                     responseData.group_cheki = {
-                        id: 'grup',
-                        name: groupMember.name || 'Grup',
-                        image: groupMember.image_url || 'img/member/group.webp',
-                        price: hargaGrup
+                        id: groupProduct.id,
+                        name: groupProduct.name || 'Cheki Grup',
+                        image: groupProduct.image_url || 'img/member/group.webp',
+                        price: groupProduct.price,
+                        stock: groupProduct.stock
                     };
                 }
 
-                // Transform Individual Members (price from pengaturan)
-                const dbMembers = individualMembers.map(m => ({
-                    id: m.name,
-                    name: m.name,
-                    role: m.role,
-                    image: m.image_url || `img/member/placeholder.webp`,
-                    price: hargaMember,
-                    details: m.details || {}
+                // Transform Individual Members (now from products table)
+                const dbMembers = memberProducts.map(p => ({
+                    id: p.id,
+                    name: p.name.replace('Cheki ', ''), // Remove prefix for display
+                    role: p.members?.role || 'Member',
+                    image: p.image_url || p.members?.image_url || `img/member/placeholder.webp`,
+                    price: p.price,
+                    stock: p.stock,
+                    details: p.members?.details || {}
                 }));
 
                 // Transform News
@@ -435,8 +433,8 @@ app.get("/api/products-and-stock", async (req, res) => {
                     lineup: settings.event_lineup || null
                 };
 
-                // Stock from settings
-                responseData.cheki_stock = parseInt(settings.stok_cheki) || 0;
+                // Total stock (sum of all active products)
+                responseData.cheki_stock = allProducts.reduce((sum, p) => sum + (p.stock || 0), 0);
             } catch (dbError) {
                 console.error("DB Fetch Error (using JSON fallback):", dbError.message);
                 responseData.cheki_stock = await getChekiStock();
@@ -456,6 +454,7 @@ app.get("/api/products-and-stock", async (req, res) => {
 // ============================================================
 
 // Endpoint: Dapatkan Snap Token untuk pembayaran
+// UPDATED V2: Juga insert ke order_items
 app.post("/get-snap-token", authenticateToken, async (req, res) => {
     if (isDemoMode) return res.json({ token: 'demo_snap_token_' + Date.now() });
 
@@ -472,18 +471,31 @@ app.post("/get-snap-token", authenticateToken, async (req, res) => {
         };
 
         const token = await snap.createTransactionToken(parameter);
+        const orderId = transaction_details.order_id;
 
-        // Simpan pesanan pending ke database
-        const { error } = await supabase.from("pesanan").insert([{
-            id_pesanan: transaction_details.order_id,
+        // 1. Simpan pesanan kepala (header) ke tabel pesanan
+        const { error: orderError } = await supabase.from("pesanan").insert([{
+            id_pesanan: orderId,
             id_pengguna: req.user.userId,
             nama_pelanggan: req.user.username,
             total_harga: transaction_details.gross_amount,
             status_tiket: 'pending',
-            detail_item: item_details
+            detail_item: item_details // Keep JSON for backward compatibility
         }]);
+        if (orderError) throw new Error(`Order DB Error: ${orderError.message}`);
 
-        if (error) throw new Error(`DB Error: ${error.message}`);
+        // 2. Simpan rincian belanja ke tabel order_items (NORMALISASI!)
+        const orderItemsToInsert = item_details.map(item => ({
+            order_id: orderId,
+            product_id: item.id, // ID produk dari tabel products
+            quantity: item.quantity,
+            price_at_purchase: item.price,
+            subtotal: item.quantity * item.price
+        }));
+
+        const { error: itemsError } = await supabase.from("order_items").insert(orderItemsToInsert);
+        if (itemsError) console.warn("Order Items Insert Warning:", itemsError.message); // Non-blocking
+
         res.json({ token });
     } catch (error) {
         res.status(500).json({ message: "Gagal membuat token pembayaran.", error: error.message });
@@ -491,6 +503,7 @@ app.post("/get-snap-token", authenticateToken, async (req, res) => {
 });
 
 // Endpoint: Update Status Pesanan (Callback Midtrans)
+// UPDATED V2: Decrement stock in products table
 app.post("/update-order-status", async (req, res) => {
     if (isDemoMode) return res.status(200).json({ message: "OK (Demo Mode)" });
 
@@ -500,16 +513,25 @@ app.post("/update-order-status", async (req, res) => {
 
         // Update status ke 'berlaku' jika pembayaran sukses
         if (transaction_status === "settlement" || transaction_status === "capture") {
-            const { data: updatedOrder, error } = await supabase
+            const { error: updateError } = await supabase
                 .from("pesanan").update({ status_tiket: "berlaku" })
-                .eq("id_pesanan", order_id).select().single();
+                .eq("id_pesanan", order_id);
 
-            if (error || !updatedOrder) throw new Error("Update failed");
+            if (updateError) throw new Error("Update failed");
 
-            // Kurangi stok
-            const totalItems = (updatedOrder.detail_item || []).reduce((sum, item) => sum + item.quantity, 0);
-            if (totalItems > 0) {
-                await supabase.rpc('update_cheki_stock', { change_value: -totalItems });
+            // Kurangi stok per produk di tabel products
+            const { data: orderItems } = await supabase
+                .from("order_items")
+                .select("product_id, quantity")
+                .eq("order_id", order_id);
+
+            if (orderItems && orderItems.length > 0) {
+                for (const item of orderItems) {
+                    await supabase.rpc('decrement_product_stock', {
+                        p_product_id: item.product_id,
+                        p_quantity: item.quantity
+                    });
+                }
             }
         }
         res.status(200).json({ message: "Status updated" });
@@ -582,8 +604,8 @@ app.get("/api/my-orders", authenticateToken, async (req, res) => {
 // ADMIN ENDPOINTS
 // ============================================================
 
-// Endpoint: Admin Stats
 // Endpoint: Admin Stats (Detailed for Chart)
+// UPDATED V2: Use order_items table for proper SQL aggregation
 app.get("/api/admin/stats", authenticateToken, authorizeAdmin, async (req, res) => {
     if (isDemoMode) {
         return res.json({
@@ -593,19 +615,26 @@ app.get("/api/admin/stats", authenticateToken, authorizeAdmin, async (req, res) 
         });
     }
     try {
-        const { data: orders, error } = await supabase.from('pesanan').select('total_harga, detail_item')
+        // 1. Total Revenue
+        const { data: revenueData } = await supabase
+            .from('pesanan')
+            .select('total_harga')
             .in('status_tiket', ['berlaku', 'sudah_dipakai']);
-        if (error) throw error;
-        let totalRevenue = 0, totalCheki = 0;
+        const totalRevenue = (revenueData || []).reduce((sum, o) => sum + o.total_harga, 0);
+
+        // 2. Aggregasi per Produk dari order_items (NORMALIZED!)
+        const { data: itemStats } = await supabase
+            .from('order_items')
+            .select('quantity, products(name)');
+
+        let totalCheki = 0;
         const chekiPerMember = {};
-        orders.forEach(order => {
-            totalRevenue += order.total_harga;
-            (order.detail_item || []).forEach(item => {
-                totalCheki += item.quantity;
-                const member = item.name.replace('Cheki ', '');
-                chekiPerMember[member] = (chekiPerMember[member] || 0) + item.quantity;
-            });
+        (itemStats || []).forEach(item => {
+            totalCheki += item.quantity;
+            const productName = item.products?.name?.replace('Cheki ', '') || 'Unknown';
+            chekiPerMember[productName] = (chekiPerMember[productName] || 0) + item.quantity;
         });
+
         res.json({ totalRevenue, totalCheki, chekiPerMember });
     } catch (e) {
         res.status(500).json({ message: 'Gagal mengambil statistik.', error: e.message });
