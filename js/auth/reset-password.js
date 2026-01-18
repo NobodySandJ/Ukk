@@ -30,6 +30,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     };
 
+    // Activate toggles
+    togglePassword('toggle-new-pass', 'new-password');
+    togglePassword('toggle-confirm-pass', 'confirm-password');
+
     // Auto-format OTP input (Hanya Alphanumeric & Uppercase)
     otpInput.addEventListener('input', (e) => {
         e.target.value = e.target.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 6);

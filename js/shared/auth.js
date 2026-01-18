@@ -30,10 +30,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     <i class="fas fa-times"></i>
                 </button>
                 <ul class="mobile-nav-links">
-                    <li><a href="${paths.home}" data-page="index">Beranda</a></li>
-                    <li><a href="${paths.members}" data-page="index">Member</a></li>
+                    <li><a href="${paths.home}#hero" data-page="index">About Us</a></li>
+                    <li><a href="${paths.home}#members" data-page="index">Member</a></li>
+                    <li><a href="${paths.home}#news" data-page="index">News</a></li>
                     <li><a href="${paths.cheki}" data-page="cheki">Cheki</a></li>
-                    <li><a href="${paths.gallery}" data-page="gallery">Galeri</a></li>
                 </ul>
                 <div class="mobile-auth-buttons">
             `;
@@ -86,18 +86,26 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
             }
 
+            // Helper function to close mobile menu properly
+            const closeMobileMenu = () => {
+                navMenu.classList.remove('active');
+                // Also hide overlay if it exists (created by script.js)
+                const overlay = document.getElementById('nav-overlay');
+                if (overlay) {
+                    overlay.style.opacity = '0';
+                    overlay.style.visibility = 'hidden';
+                }
+                document.body.style.overflow = ''; // Restore scroll
+            };
+
             // Tombol tutup menu mobile
             const mobileCloseBtn = document.getElementById('mobile-menu-close');
             if (mobileCloseBtn) {
-                mobileCloseBtn.addEventListener('click', () => {
-                    navMenu.classList.remove('active');
-                });
+                mobileCloseBtn.addEventListener('click', closeMobileMenu);
             }
 
             navMenu.querySelectorAll('a').forEach(link => {
-                link.addEventListener('click', () => {
-                    navMenu.classList.remove('active');
-                });
+                link.addEventListener('click', closeMobileMenu);
             });
         }
 
@@ -178,7 +186,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         <!-- Input Password dengan Toggle Visibility -->
                         <div style="position: relative; width: 100%;">
                             <input type="password" id="login-password" placeholder="Password" required style="width: 100%; padding-right: 40px;">
-                            <i id="toggle-login-pass" class="fas fa-eye" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888;"></i>
+                            <i id="toggle-login-pass" class="fas fa-eye" role="button" aria-label="Tampilkan password" tabindex="0" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888;"></i>
                         </div>
 
                         <a href="${paths.forgotPassword}" style="display:block; text-align: right; font-size: 0.9em; margin-top: 0.5rem; color: #666;">Lupa Sandi?</a>
@@ -231,11 +239,11 @@ document.addEventListener('DOMContentLoaded', function () {
                         <div class="form-step" data-step="3" style="display: none;">
                             <div class="input-group">
                                 <input type="password" id="register-password" placeholder="Password (Min. 6 Karakter)" required>
-                                <i id="toggle-register-pass" class="fas fa-eye toggle-pass"></i>
+                                <i id="toggle-register-pass" class="fas fa-eye toggle-pass" role="button" aria-label="Tampilkan password" tabindex="0"></i>
                             </div>
                             <div class="input-group">
                                 <input type="password" id="register-confirm-password" placeholder="Konfirmasi Password" required>
-                                <i id="toggle-register-confirm-pass" class="fas fa-eye toggle-pass"></i>
+                                <i id="toggle-register-confirm-pass" class="fas fa-eye toggle-pass" role="button" aria-label="Tampilkan konfirmasi password" tabindex="0"></i>
                             </div>
                             
                             <!-- Dropdown Pilih Oshi - Edit opsi di sini -->

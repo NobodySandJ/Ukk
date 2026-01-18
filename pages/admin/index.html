@@ -13,6 +13,7 @@
     
     <!-- Styles -->
     <link rel="stylesheet" href="../../css/admin.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
 
@@ -42,6 +43,9 @@
                 <i class="fas fa-images"></i> Galeri
             </a>
             <div style="margin: 1rem 1rem 0.5rem; font-size: 0.75rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;">Sistem</div>
+            <a href="#" class="nav-link" data-view="event">
+                <i class="fas fa-calendar-alt"></i> Event
+            </a>
             <a href="#" class="nav-link" data-view="users">
                 <i class="fas fa-user-shield"></i> User
             </a>
@@ -95,21 +99,13 @@
                     </div>
                 </div>
 
-                <!-- Stock Management -->
-                <div class="card">
+                <!-- Dashboard Chart -->
+                <div class="card" style="margin-bottom: 2rem;">
                     <div class="card-header">
-                        <div class="card-title">Manajemen Stok Tiket</div>
+                        <div class="card-title">Statistik Penjualan & Cheki</div>
                     </div>
-                    <div style="display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
-                        <div>
-                            <div style="font-size: 0.85rem; color: #64748b;">Stok Saat Ini</div>
-                            <div style="font-size: 2.5rem; font-weight: 800; color: #334155;" id="current-stock">0</div>
-                        </div>
-                        <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <input type="number" id="stock-change-value" class="form-control" value="10" min="1" style="width: 100px;">
-                            <button id="add-stock-btn" class="btn btn-primary"><i class="fas fa-plus"></i> Tambah</button>
-                            <!-- remove decrease if not needed, or simplify -->
-                        </div>
+                    <div style="height: 350px;">
+                        <canvas id="dashboard-chart"></canvas>
                     </div>
                 </div>
 
@@ -168,8 +164,77 @@
                     <div class="page-title">Galeri Foto</div>
                     <button class="btn btn-primary" id="add-gallery-btn"><i class="fas fa-plus"></i> Upload Foto</button>
                 </div>
-                <div id="gallery-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem;">
+                <!-- Filter Tabs -->
+                <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                    <button class="btn btn-outline gallery-filter-btn active" data-filter="all">Semua</button>
+                    <button class="btn btn-outline gallery-filter-btn" data-filter="carousel">Carousel</button>
+                    <button class="btn btn-outline gallery-filter-btn" data-filter="dokumentasi">Dokumentasi</button>
+                    <button class="btn btn-outline gallery-filter-btn" data-filter="member">Member</button>
+                </div>
+                <div id="gallery-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem;">
                     <!-- JS Populated -->
+                </div>
+            </section>
+
+            <!-- VIEW: EVENT SETTINGS -->
+            <section id="view-event" class="view-section">
+                <div class="section-header">
+                    <div class="page-title">Pengaturan Event</div>
+                    <button class="btn btn-primary" id="save-settings-btn"><i class="fas fa-save"></i> Simpan Perubahan</button>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
+                    
+                    <!-- Tiket & Harga -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Tiket & Harga</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Stok Tiket Cheki</label>
+                            <input type="number" id="setting-stok" class="form-control" min="0">
+                            <small style="color:#64748b">Sisa stok yang tersedia untuk dibeli user.</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Harga Cheki Member (Default)</label>
+                            <div style="position:relative;">
+                                <span style="position:absolute; left:10px; top:10px; color:#64748b;">Rp</span>
+                                <input type="number" id="setting-harga-member" class="form-control" style="padding-left: 35px;" min="0">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Harga Cheki Grup</label>
+                            <div style="position:relative;">
+                                <span style="position:absolute; left:10px; top:10px; color:#64748b;">Rp</span>
+                                <input type="number" id="setting-harga-grup" class="form-control" style="padding-left: 35px;" min="0">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detail Event -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="card-title">Detail Event Berikutnya</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Tanggal Event</label>
+                            <input type="date" id="setting-event-date" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Lokasi</label>
+                            <input type="text" id="setting-event-loc" class="form-control" placeholder="Contoh: Theater JKT48">
+                        </div>
+                        <div class="form-group">
+                        <div class="form-group">
+                            <label class="form-label">Lineup Member</label>
+                            <div id="lineup-selection-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; max-height: 200px; overflow-y: auto; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.5rem;">
+                                <!-- Checkboxes generated by JS -->
+                                <div style="color:#64748b; font-style:italic;">Loading members...</div>
+                            </div>
+                            <small style="color:#64748b">Pilih member yang akan tampil.</small>
+                        </div>
+                    </div>
+
                 </div>
             </section>
 
@@ -294,21 +359,37 @@
     <div class="modal-overlay" id="gallery-modal">
          <div class="modal-content">
              <div class="modal-header">
-                 <h3 class="modal-title">Upload Foto</h3>
+                 <h3 class="modal-title" id="gallery-modal-title">Upload Foto</h3>
                  <button class="btn-icon-only" data-close="gallery-modal"><i class="fas fa-times"></i></button>
              </div>
              <form id="gallery-form">
+                 <input type="hidden" id="edit-gallery-id">
                  <div class="form-group">
-                     <label class="form-label">Pilih Foto (Max 2MB)</label>
+                     <label class="form-label">Pilih Foto (Max 5MB)</label>
                      <input type="file" id="gallery-image" class="form-control" accept="image/*" required>
+                     <small style="color:#64748b;">Kosongkan jika tidak ingin mengganti foto</small>
                  </div>
                  <div class="form-group">
                      <label class="form-label">Caption / Alt Text</label>
                      <input type="text" id="gallery-alt" class="form-control" placeholder="Contoh: Konser Anniversary 10th">
                  </div>
+                 <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                     <div>
+                         <label class="form-label">Kategori</label>
+                         <select id="gallery-category" class="form-control">
+                             <option value="carousel">Carousel (Homepage)</option>
+                             <option value="dokumentasi">Dokumentasi Event</option>
+                             <option value="member">Foto Member</option>
+                         </select>
+                     </div>
+                     <div>
+                         <label class="form-label">Urutan Tampil</label>
+                         <input type="number" id="gallery-order" class="form-control" value="99" min="1">
+                     </div>
+                 </div>
                  <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
                      <button type="button" class="btn btn-outline" data-close="gallery-modal">Batal</button>
-                     <button type="submit" class="btn btn-primary">Upload</button>
+                     <button type="submit" class="btn btn-primary">Simpan</button>
                  </div>
              </form>
          </div>

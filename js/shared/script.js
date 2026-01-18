@@ -301,12 +301,68 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ============================================================
-    // TOGGLE MENU MOBILE (HAMBURGER)
+    // TOGGLE MENU MOBILE (HAMBURGER) - Enhanced for Android/iOS
     // ============================================================
     const hamburger = document.getElementById('hamburger-menu');
     const navMenu = document.getElementById('nav-menu');
+
     if (hamburger && navMenu) {
-        hamburger.addEventListener('click', () => navMenu.classList.toggle('active'));
+        // Create overlay element for closing menu when tapping outside (invisible, just for tap detection)
+        let overlay = document.getElementById('nav-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.id = 'nav-overlay';
+            overlay.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: transparent;
+                z-index: 1000;
+                opacity: 0;
+                visibility: hidden;
+                transition: opacity 0.3s ease, visibility 0.3s ease;
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        // Toggle menu function
+        const toggleMenu = (show) => {
+            if (show) {
+                navMenu.classList.add('active');
+                overlay.style.opacity = '1';
+                overlay.style.visibility = 'visible';
+                document.body.style.overflow = 'hidden'; // Prevent scroll when menu open
+            } else {
+                navMenu.classList.remove('active');
+                overlay.style.opacity = '0';
+                overlay.style.visibility = 'hidden';
+                document.body.style.overflow = ''; // Restore scroll
+            }
+        };
+
+        // Hamburger click opens menu
+        hamburger.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isOpen = navMenu.classList.contains('active');
+            toggleMenu(!isOpen);
+        });
+
+        // Clicking overlay closes menu
+        overlay.addEventListener('click', () => toggleMenu(false));
+
+        // Close button inside menu
+        navMenu.addEventListener('click', (e) => {
+            if (e.target.closest('#mobile-menu-close')) {
+                toggleMenu(false);
+            }
+        });
+
+        // Close menu when any link is clicked
+        navMenu.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', () => toggleMenu(false));
+        });
     }
 
     // ============================================================

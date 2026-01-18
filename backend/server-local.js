@@ -12,6 +12,27 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 require("dotenv").config({ path: require('path').join(__dirname, '..', '.env') });
 const multer = require("multer");
+const helmet = require("helmet");
+const compression = require("compression");
+const rateLimit = require("express-rate-limit");
+const winston = require("winston");
+const morgan = require("morgan");
+
+// ============================================================
+// CONFIG: LOGGER (Winston)
+// ============================================================
+const logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+        winston.format.timestamp(),
+        winston.format.json()
+    ),
+    transports: [
+        new winston.transports.File({ filename: 'error.log', level: 'error' }),
+        new winston.transports.File({ filename: 'combined.log' }),
+        new winston.transports.Console({ format: winston.format.simple() })
+    ],
+});
 
 // Multer config for Supabase uploads
 const upload = multer({
@@ -27,7 +48,39 @@ const upload = multer({
 });
 
 const app = express();
-app.use(cors());
+
+// ============================================================
+// MIDDLEWARE: SECURITY & PERFORMANCE
+// ============================================================
+
+// 1. Security Headers (Helmet)
+app.use(helmet({
+    contentSecurityPolicy: false, // Matikan CSP sementara agar script inline tidak pecah
+}));
+
+// 2. Compression (Gzip)
+app.use(compression());
+
+// 3. Rate Limiting (100 request per 15 min)
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Terlalu banyak request, silakan coba lagi nanti." }
+});
+app.use('/api/', limiter); // Terapkan limit hanya ke API
+
+// 4. Logging (Morgan connected to Winston)
+app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
+
+// 5. CORS (Strict)
+app.use(cors({
+    origin: '*', // TODO: Ubah ke domain spesifik saat production
+    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    allowedHeaders: ['Content-Type', 'Authorization']
+}));
+
 app.use(express.json());
 
 // Data produk dari data.json
@@ -308,48 +361,87 @@ app.get("/api/leaderboard-per-member", async (req, res) => {
 });
 
 // Endpoint: Dapatkan Produk & Stok
+// UPDATED: Fetch prices from pengaturan table
 app.get("/api/products-and-stock", async (req, res) => {
     try {
         let responseData = JSON.parse(JSON.stringify(productData));
 
         if (!isDemoMode) {
             try {
-                // Fetch dynamic data from Supabase in parallel
-                const [membersRes, newsRes, galleryRes] = await Promise.all([
+                // Fetch ALL dynamic data from Supabase in parallel
+                const [settingsRes, membersRes, newsRes, galleryRes] = await Promise.all([
+                    supabase.from('pengaturan').select('nama, nilai'),
                     supabase.from('members').select('*').eq('is_active', true).order('display_order', { ascending: true }),
                     supabase.from('news').select('title, content, date').eq('is_published', true).order('created_at', { ascending: false }).limit(3),
-                    supabase.from('gallery').select('image_url, alt_text').order('display_order', { ascending: true })
+                    supabase.from('gallery').select('image_url, alt_text, category').eq('is_active', true).order('display_order', { ascending: true })
                 ]);
 
-                // Transform Members
-                const dbMembers = (membersRes.data || []).map(m => ({
+                // Parse settings into object
+                const settings = {};
+                (settingsRes.data || []).forEach(s => { settings[s.nama] = s.nilai; });
+
+                // Get prices from settings
+                const hargaMember = parseInt(settings.harga_cheki_member) || 25000;
+                const hargaGrup = parseInt(settings.harga_cheki_grup) || 30000;
+
+                // Separate group and individual members
+                const allMembers = membersRes.data || [];
+                const groupMember = allMembers.find(m => m.member_type === 'group');
+                const individualMembers = allMembers.filter(m => m.member_type !== 'group');
+
+                // Transform Group Cheki (price from pengaturan)
+                if (groupMember) {
+                    responseData.group_cheki = {
+                        id: 'grup',
+                        name: groupMember.name || 'Grup',
+                        image: groupMember.image_url || 'img/member/group.webp',
+                        price: hargaGrup
+                    };
+                }
+
+                // Transform Individual Members (price from pengaturan)
+                const dbMembers = individualMembers.map(m => ({
                     id: m.name,
                     name: m.name,
                     role: m.role,
                     image: m.image_url || `img/member/placeholder.webp`,
-                    price: m.price || 25000,
+                    price: hargaMember,
                     details: m.details || {}
                 }));
 
                 // Transform News
                 const dbNews = newsRes.data || [];
 
-                // Transform Gallery
-                const dbGallery = (galleryRes.data || []).map(g => ({
-                    src: g.image_url,
-                    alt: g.alt_text
-                }));
+                // Transform Gallery - filter carousel images
+                const dbGallery = (galleryRes.data || [])
+                    .filter(g => !g.category || g.category === 'carousel')
+                    .map(g => ({
+                        src: g.image_url,
+                        alt: g.alt_text
+                    }));
 
                 // Override JSON data if DB has data
                 if (dbMembers.length > 0) responseData.members = dbMembers;
                 if (dbNews.length > 0) responseData.news = dbNews;
                 if (dbGallery.length > 0) responseData.gallery = dbGallery;
+
+                // Add event info from settings
+                responseData.event = {
+                    tanggal: settings.event_tanggal || null,
+                    lokasi: settings.event_lokasi || null,
+                    lineup: settings.event_lineup || null
+                };
+
+                // Stock from settings
+                responseData.cheki_stock = parseInt(settings.stok_cheki) || 0;
             } catch (dbError) {
                 console.error("DB Fetch Error (using JSON fallback):", dbError.message);
+                responseData.cheki_stock = await getChekiStock();
             }
+        } else {
+            responseData.cheki_stock = await getChekiStock();
         }
 
-        responseData.cheki_stock = await getChekiStock();
         res.json(responseData);
     } catch (e) {
         res.status(500).json({ message: "Tidak dapat memuat data produk." });
@@ -488,7 +580,36 @@ app.get("/api/my-orders", authenticateToken, async (req, res) => {
 // ============================================================
 
 // Endpoint: Admin Stats
-// Endpoint: Admin Dashboard Stats
+// Endpoint: Admin Stats (Detailed for Chart)
+app.get("/api/admin/stats", authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) {
+        return res.json({
+            totalRevenue: 1500000,
+            totalCheki: 50,
+            chekiPerMember: { 'Aca': 20, 'Sinta': 15, 'Cissi': 15 }
+        });
+    }
+    try {
+        const { data: orders, error } = await supabase.from('pesanan').select('total_harga, detail_item')
+            .in('status_tiket', ['berlaku', 'sudah_dipakai']);
+        if (error) throw error;
+        let totalRevenue = 0, totalCheki = 0;
+        const chekiPerMember = {};
+        orders.forEach(order => {
+            totalRevenue += order.total_harga;
+            (order.detail_item || []).forEach(item => {
+                totalCheki += item.quantity;
+                const member = item.name.replace('Cheki ', '');
+                chekiPerMember[member] = (chekiPerMember[member] || 0) + item.quantity;
+            });
+        });
+        res.json({ totalRevenue, totalCheki, chekiPerMember });
+    } catch (e) {
+        res.status(500).json({ message: 'Gagal mengambil statistik.', error: e.message });
+    }
+});
+
+// Endpoint: Admin Dashboard Stats (Summary)
 app.get("/api/admin/dashboard-stats", authenticateToken, authorizeAdmin, async (req, res) => {
     if (isDemoMode) {
         return res.json({
@@ -595,6 +716,75 @@ app.get("/api/admin/all-users", authenticateToken, authorizeAdmin, async (req, r
 });
 
 // ============================================================
+// SETTINGS/PENGATURAN CRUD
+// ============================================================
+
+// GET: All Settings
+app.get("/api/admin/settings", authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) {
+        return res.json([
+            { nama: 'stok_cheki', nilai: '100' },
+            { nama: 'harga_cheki_member', nilai: '25000' },
+            { nama: 'harga_cheki_grup', nilai: '30000' },
+            { nama: 'event_tanggal', nilai: '2026-02-14' },
+            { nama: 'event_lokasi', nilai: 'Jakarta' },
+            { nama: 'event_lineup', nilai: 'Aca,Sinta,Cissi' }
+        ]);
+    }
+    try {
+        const { data, error } = await supabase.from('pengaturan').select('*');
+        if (error) throw error;
+        res.json(data || []);
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengambil pengaturan.", error: e.message });
+    }
+});
+
+// PUT: Update Setting (upsert)
+app.put("/api/admin/settings", authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) return res.json({ message: "Pengaturan berhasil diupdate! (Demo)" });
+
+    try {
+        const { nama, nilai } = req.body;
+        if (!nama) return res.status(400).json({ message: "Nama setting wajib diisi." });
+
+        // Upsert: insert if not exists, update if exists
+        const { data, error } = await supabase
+            .from('pengaturan')
+            .upsert({ nama, nilai }, { onConflict: 'nama' })
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.json({ message: "Pengaturan berhasil diupdate!", setting: data });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengupdate pengaturan.", error: e.message });
+    }
+});
+
+// PUT: Bulk Update Settings
+app.put("/api/admin/settings/bulk", authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) return res.json({ message: "Pengaturan berhasil diupdate! (Demo)" });
+
+    try {
+        const { settings } = req.body; // Array of { nama, nilai }
+        if (!settings || !Array.isArray(settings)) {
+            return res.status(400).json({ message: "Format data tidak valid." });
+        }
+
+        // Upsert all settings
+        const { error } = await supabase
+            .from('pengaturan')
+            .upsert(settings, { onConflict: 'nama' });
+
+        if (error) throw error;
+        res.json({ message: "Semua pengaturan berhasil diupdate!" });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengupdate pengaturan.", error: e.message });
+    }
+});
+
+// ============================================================
 // MEMBERS CRUD
 // ============================================================
 
@@ -631,7 +821,7 @@ app.post("/api/admin/members", authenticateToken, authorizeAdmin, upload.single(
         }
 
         const { data, error } = await supabase.from('members').insert([{
-            name, role: role || 'Member', price: parseInt(price) || 25000,
+            name, role: role || 'Member',
             image_url, details: { sifat, hobi, jiko }, display_order: parseInt(display_order) || 99, is_active: true
         }]).select().single();
 
@@ -649,7 +839,14 @@ app.put("/api/admin/members/:id", authenticateToken, authorizeAdmin, upload.sing
         const { id } = req.params;
         const { name, role, price, sifat, hobi, jiko, display_order } = req.body;
 
-        const updates = { name, role, price: parseInt(price), details: { sifat, hobi, jiko }, display_order: parseInt(display_order) };
+        const updates = {
+            name,
+            role,
+            details: { sifat: sifat || '', hobi: hobi || '', jiko: jiko || '' },
+            display_order: parseInt(display_order) || 0
+        };
+        console.log(`[DEBUG] Updating member ${id} with:`, updates); // Debug Log
+
         if (req.file) {
             const fileName = `members/${Date.now()}-${req.file.originalname.replace(/\s/g, '_')}`;
             const { error: uploadError } = await supabase.storage.from('public-images').upload(fileName, req.file.buffer, { contentType: req.file.mimetype });
@@ -659,9 +856,13 @@ app.put("/api/admin/members/:id", authenticateToken, authorizeAdmin, upload.sing
         }
 
         const { data, error } = await supabase.from('members').update(updates).eq('id', id).select().single();
-        if (error) throw error;
+        if (error) {
+            console.error("[SUPABASE ERROR] Member update:", error); // Debug Log
+            throw error;
+        }
         res.json({ message: "Member berhasil diupdate!", member: data });
     } catch (e) {
+        console.error("[SERVER ERROR] Gagal update member:", e); // Debug Log
         res.status(500).json({ message: "Gagal update member.", error: e.message });
     }
 });
@@ -758,7 +959,7 @@ app.post("/api/admin/gallery", authenticateToken, authorizeAdmin, upload.single(
     if (isDemoMode) return res.status(201).json({ message: "Foto berhasil ditambahkan! (Demo)" });
 
     try {
-        const { alt_text, display_order } = req.body;
+        const { alt_text, display_order, category } = req.body;
         if (!req.file) return res.status(400).json({ message: "File gambar wajib diupload." });
 
         const fileName = `gallery/${Date.now()}-${req.file.originalname.replace(/\s/g, '_')}`;
@@ -770,13 +971,42 @@ app.post("/api/admin/gallery", authenticateToken, authorizeAdmin, upload.single(
         const { data, error } = await supabase.from('gallery').insert([{
             image_url: urlData.publicUrl,
             alt_text: alt_text || 'Gallery Image',
-            display_order: parseInt(display_order) || 99
+            display_order: parseInt(display_order) || 99,
+            category: category || 'carousel',  // carousel, dokumentasi, member
+            is_active: true
         }]).select().single();
 
         if (error) throw error;
         res.status(201).json({ message: "Foto berhasil ditambahkan!", gallery: data });
     } catch (e) {
         res.status(500).json({ message: "Gagal menambah foto.", error: e.message });
+    }
+});
+
+// PUT: Update Gallery Item (edit category, alt_text, display_order)
+app.put("/api/admin/gallery/:id", authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) return res.json({ message: "Foto berhasil diupdate! (Demo)", gallery: req.body });
+
+    try {
+        const { id } = req.params;
+        const { alt_text, display_order, category, is_active } = req.body;
+
+        const updateData = {};
+        if (alt_text !== undefined) updateData.alt_text = alt_text;
+        if (display_order !== undefined) updateData.display_order = parseInt(display_order);
+        if (category !== undefined) updateData.category = category;
+        if (is_active !== undefined) updateData.is_active = is_active;
+
+        const { data, error } = await supabase.from('gallery')
+            .update(updateData)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.json({ message: "Foto berhasil diupdate!", gallery: data });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengupdate foto.", error: e.message });
     }
 });
 
@@ -945,15 +1175,25 @@ app.post("/api/reset-password-with-code", async (req, res) => {
 });
 
 // ============================================================
-// FALLBACK ROUTE - Serve index.html untuk SPA
+// FALLBACK ROUTE & 404 HANDLER
 // ============================================================
+
+// 1. Handle 404 for API specifically (Return JSON)
+app.use('/api', (req, res) => {
+    res.status(404).json({ message: "Endpoint API tidak ditemukan." });
+});
+
+// 2. Serve index.html untuk Frontend SPA (React-like behavior)
 app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api')) {
-        const filePath = path.join(__dirname, '..', req.path);
-        res.sendFile(filePath, (err) => {
-            if (err) res.sendFile(path.join(__dirname, '..', 'index.html'));
-        });
-    }
+    const filePath = path.join(__dirname, '..', req.path);
+
+    // Coba kirim file statis dulu
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            // Jika file tidak ada, kirim index.html
+            res.sendFile(path.join(__dirname, '..', 'index.html'));
+        }
+    });
 });
 
 // ============================================================
@@ -962,8 +1202,16 @@ app.get('*', (req, res) => {
 // ============================================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`\n🚀 Server running at http://localhost:${PORT}`);
-    console.log(`ℹ️  Mode: ${isDemoMode ? 'DEMO (No Backend)' : 'FULL (Supabase Connected)'}\n`);
+    console.log(`
+    =============================================
+    🚀 REFRESH BREEZE SERVER
+    =============================================
+    🌐 URL       : http://localhost:${PORT}
+    🛠️  Mode      : ${isDemoMode ? 'DEMO (mock data)' : 'PRODUCTION (Supabase Connected)'}
+    📅 Waktu     : ${new Date().toLocaleString()}
+    =============================================
+    ✅ Server Backend Siap!
+    `);
 });
 
 module.exports = app;

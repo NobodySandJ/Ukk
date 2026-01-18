@@ -254,51 +254,86 @@ app.get("/api/leaderboard-per-member", async (req, res) => {
 });
 
 // --- Produk & Pembayaran ---
-// UPDATED: Fetch members from Supabase database instead of data.json
+// UPDATED: Fetch prices from pengaturan table
 app.get("/api/products-and-stock", async (req, res) => {
     try {
-        // Fetch dynamic data from Supabase in parallel
-        const [membersRes, newsRes, galleryRes] = await Promise.all([
+        // Fetch ALL dynamic data from Supabase in parallel
+        const [settingsRes, membersRes, newsRes, galleryRes] = await Promise.all([
+            supabase.from('pengaturan').select('nama, nilai'),
             supabase.from('members').select('*').eq('is_active', true).order('display_order', { ascending: true }),
             supabase.from('news').select('title, content, date').eq('is_published', true).order('created_at', { ascending: false }).limit(3),
-            supabase.from('gallery').select('image_url, alt_text').order('display_order', { ascending: true })
+            supabase.from('gallery').select('image_url, alt_text, category').eq('is_active', true).order('display_order', { ascending: true })
         ]);
 
+        // Log errors for debugging
         if (membersRes.error) console.error("Members fetch error:", membersRes.error);
 
-        // Transform Members
-        const members = (membersRes.data || []).map(m => ({
+        // Parse settings into object
+        const settings = {};
+        (settingsRes.data || []).forEach(s => { settings[s.nama] = s.nilai; });
+
+        // Get prices from settings
+        const hargaMember = parseInt(settings.harga_cheki_member) || 25000;
+        const hargaGrup = parseInt(settings.harga_cheki_grup) || 30000;
+
+        // Separate group and individual members
+        const allMembers = membersRes.data || [];
+        const groupMember = allMembers.find(m => m.member_type === 'group');
+        const individualMembers = allMembers.filter(m => m.member_type !== 'group');
+
+        // Transform Group Cheki (price from pengaturan)
+        const groupCheki = groupMember ? {
+            id: 'grup',
+            name: groupMember.name || 'Grup',
+            image: groupMember.image_url || 'img/member/group.webp',
+            price: hargaGrup
+        } : productData.group_cheki || {};
+
+        // Transform Individual Members (price from pengaturan)
+        const members = individualMembers.map(m => ({
             id: m.name,
             name: m.name,
             role: m.role,
             image: m.image_url || `img/member/placeholder.webp`,
-            price: m.price || 25000,
+            price: hargaMember,
             details: m.details || {}
         }));
 
         // Transform News
         const news = newsRes.data || [];
 
-        // Transform Gallery
-        const gallery = (galleryRes.data || []).map(g => ({
-            src: g.image_url,
-            alt: g.alt_text
-        }));
+        // Transform Gallery - filter carousel images
+        const galleryData = galleryRes.data || [];
+        const gallery = galleryData
+            .filter(g => !g.category || g.category === 'carousel')
+            .map(g => ({
+                src: g.image_url,
+                alt: g.alt_text
+            }));
 
-        // Keep group cheki and other static data from data.json
+        // Build response with database data, fallback to data.json if empty
         const responseData = {
+            // Dynamic from Database
             group: productData.group || {},
-            group_cheki: productData.group_cheki || {},
-            how_to_order: productData.how_to_order || [],
-            images: productData.images || {},
-            faq: productData.faq || [],
-
-            // Dynamic Data with JSON Fallback
+            group_cheki: groupCheki,
             members: members.length > 0 ? members : productData.members || [],
             news: news.length > 0 ? news : productData.news || [],
             gallery: gallery.length > 0 ? gallery : productData.gallery || [],
 
-            cheki_stock: await getChekiStock()
+            // Static from data.json (rarely changes)
+            how_to_order: productData.how_to_order || [],
+            faq: productData.faq || [],
+            images: productData.images || {},
+
+            // Event info from settings
+            event: {
+                tanggal: settings.event_tanggal || null,
+                lokasi: settings.event_lokasi || null,
+                lineup: settings.event_lineup || null
+            },
+
+            // Stock
+            cheki_stock: parseInt(settings.stok_cheki) || 0
         };
 
         res.json(responseData);
@@ -710,6 +745,59 @@ app.post("/api/reset-password-with-code", async (req, res) => {
 });
 
 // ===================================
+// --- SETTINGS/PENGATURAN CRUD API ---
+// ===================================
+
+// GET: All Settings
+app.get("/api/admin/settings", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { data, error } = await supabase.from('pengaturan').select('*');
+        if (error) throw error;
+        res.json(data || []);
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengambil pengaturan.", error: e.message });
+    }
+});
+
+// PUT: Update Setting (upsert)
+app.put("/api/admin/settings", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { nama, nilai } = req.body;
+        if (!nama) return res.status(400).json({ message: "Nama setting wajib diisi." });
+
+        const { data, error } = await supabase
+            .from('pengaturan')
+            .upsert({ nama, nilai }, { onConflict: 'nama' })
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.json({ message: "Pengaturan berhasil diupdate!", setting: data });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengupdate pengaturan.", error: e.message });
+    }
+});
+
+// PUT: Bulk Update Settings
+app.put("/api/admin/settings/bulk", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { settings } = req.body;
+        if (!settings || !Array.isArray(settings)) {
+            return res.status(400).json({ message: "Format data tidak valid." });
+        }
+
+        const { error } = await supabase
+            .from('pengaturan')
+            .upsert(settings, { onConflict: 'nama' });
+
+        if (error) throw error;
+        res.json({ message: "Semua pengaturan berhasil diupdate!" });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengupdate pengaturan.", error: e.message });
+    }
+});
+
+// ===================================
 // --- MEMBERS CRUD API ---
 // ===================================
 
@@ -776,7 +864,6 @@ app.post("/api/admin/members", authenticateToken, authorizeAdmin, upload.single(
         const { data, error } = await supabase.from('members').insert([{
             name,
             role: role || 'Member',
-            price: parseInt(price) || 25000,
             image_url,
             details: { sifat: sifat || '', hobi: hobi || '', jiko: jiko || '' },
             display_order: parseInt(display_order) || 0,
@@ -799,7 +886,6 @@ app.put("/api/admin/members/:id", authenticateToken, authorizeAdmin, upload.sing
         const updateData = {
             name,
             role,
-            price: parseInt(price) || 25000,
             details: { sifat: sifat || '', hobi: hobi || '', jiko: jiko || '' },
             display_order: parseInt(display_order) || 0,
             is_active: is_active === 'true' || is_active === true,
@@ -949,7 +1035,7 @@ app.get("/api/public/gallery", async (req, res) => {
 
 app.post("/api/admin/gallery", authenticateToken, authorizeAdmin, upload.single('image'), async (req, res) => {
     try {
-        const { alt_text, display_order } = req.body;
+        const { alt_text, display_order, category } = req.body;
 
         if (!req.file) {
             return res.status(400).json({ message: "File gambar wajib diupload." });
@@ -968,14 +1054,41 @@ app.post("/api/admin/gallery", authenticateToken, authorizeAdmin, upload.single(
 
         const { data, error } = await supabase.from('gallery').insert([{
             image_url: urlData.publicUrl,
-            alt_text: alt_text || '',
-            display_order: parseInt(display_order) || 0
+            alt_text: alt_text || 'Gallery Image',
+            display_order: parseInt(display_order) || 99,
+            category: category || 'carousel',  // carousel, dokumentasi, member
+            is_active: true
         }]).select().single();
 
         if (error) throw error;
         res.status(201).json({ message: "Foto berhasil ditambahkan!", gallery: data });
     } catch (e) {
         res.status(500).json({ message: "Gagal menambahkan foto.", error: e.message });
+    }
+});
+
+// PUT: Update Gallery Item (edit category, alt_text, display_order)
+app.put("/api/admin/gallery/:id", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { alt_text, display_order, category, is_active } = req.body;
+
+        const updateData = {};
+        if (alt_text !== undefined) updateData.alt_text = alt_text;
+        if (display_order !== undefined) updateData.display_order = parseInt(display_order);
+        if (category !== undefined) updateData.category = category;
+        if (is_active !== undefined) updateData.is_active = is_active;
+
+        const { data, error } = await supabase.from('gallery')
+            .update(updateData)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.json({ message: "Foto berhasil diupdate!", gallery: data });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengupdate foto.", error: e.message });
     }
 });
 

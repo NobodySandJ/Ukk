@@ -12,8 +12,13 @@
     <!-- Meta Description untuk SEO -->
     <meta name="description" content="Refresh Breeze Official Website - Dapatkan tiket Cheki eksklusif bersama member favorit Anda. Beli tiket, lihat leaderboard, dan ikuti berita terbaru.">
     
+    <!-- Font Import (Explicit) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
     <!-- CSS Utama -->
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=2.0">
     
     <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
@@ -42,10 +47,10 @@
 
             <!-- Link Navigasi Desktop -->
             <ul class="nav-links" id="nav-links">
-                <li><a href="#hero">Beranda</a></li>
+                <li><a href="#hero">About Us</a></li>
                 <li><a href="#members">Member</a></li>
+                <li><a href="#news">News</a></li>
                 <li><a href="pages/public/cheki.html">Cheki</a></li>
-                <li><a href="pages/public/gallery.html">Galeri</a></li>
             </ul>
 
             <!-- Tombol Login/Register (diisi oleh auth.js) -->
@@ -110,11 +115,11 @@
                 <p style="text-align: center;">Memuat data leaderboard...</p>
             </div>
             <div style="text-align: center; margin-top: 2rem;">
-                <a href="cheki.html" class="cta-button">
+                <a href="pages/public/cheki.html" class="cta-button">
                     <i class="fas fa-shopping-cart"></i> Beli Cheki & Jadi Sultan!
                 </a>
                 <p style="margin-top: 1rem; color: var(--secondary-text-color); font-size: 0.9rem;">
-                    <a href="leaderboard.html" style="color: var(--primary-color); font-weight: 500;">Lihat Leaderboard Lengkap →</a>
+                    <a href="pages/public/leaderboard.html" style="color: var(--primary-color); font-weight: 500;">Lihat Leaderboard Lengkap →</a>
                 </p>
             </div>
         </div>
@@ -130,7 +135,7 @@
             <p style="text-align:center; width:100%;">Memuat data member...</p>
         </div>
         <div style="text-align: center; margin-top: 2.5rem;">
-            <a href="cheki.html" class="cta-button">
+            <a href="pages/public/cheki.html" class="cta-button">
                 <i class="fas fa-ticket-alt"></i> Beli Tiket Cheki Sekarang
             </a>
         </div>
@@ -162,7 +167,7 @@
                 <!-- Diisi oleh JavaScript -->
             </div>
             <div style="text-align: center; margin-top: 2rem;">
-                <a href="gallery.html" class="cta-button">
+                <a href="pages/public/gallery.html" class="cta-button">
                     <i class="fas fa-images"></i> Buka Galeri Lengkap
                 </a>
             </div>

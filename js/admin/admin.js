@@ -64,6 +64,7 @@ document.addEventListener('DOMContentLoaded', function () {
             'members': 'Manajemen Member',
             'news': 'Berita & Pengumuman',
             'gallery': 'Galeri Foto',
+            'event': 'Pengaturan Event',
             'users': 'Manajemen User'
         };
         pageTitle.textContent = titles[viewName] || 'Admin Panel';
@@ -77,6 +78,7 @@ document.addEventListener('DOMContentLoaded', function () {
         else if (viewName === 'members') loadMembers();
         else if (viewName === 'news') loadNews();
         else if (viewName === 'gallery') loadGallery();
+        else if (viewName === 'event') loadSettings();
         else if (viewName === 'users') loadUsers();
     }
 
@@ -158,8 +160,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 data = await response.text();
             }
 
-            if (!response.ok) throw new Error(data.message || 'Request failed');
-            return data;
+            if (!response.ok) {
+                let errorMessage = 'Request failed';
+                if (typeof data === 'object') {
+                    errorMessage = data.message || errorMessage;
+                    if (data.error) errorMessage += ` (${data.error})`;
+                } else {
+                    errorMessage = data || errorMessage;
+                }
+
+                if (response.status === 401) {
+                    localStorage.removeItem('userToken');
+                    window.location.reload();
+                }
+                throw new Error(errorMessage);
+            } return data;
         } catch (error) {
             console.error('API Error:', error);
             showToast(error.message, 'error');
@@ -168,6 +183,8 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // --- DASHBOARD ---
+    let dashboardChart = null;
+
     async function loadDashboard() {
         try {
             // Stats
@@ -175,12 +192,49 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('stat-total-users').textContent = d.users;
             document.getElementById('stat-active-orders').textContent = d.active_orders;
             document.getElementById('stat-revenue').textContent = 'Rp ' + (d.revenue || 0).toLocaleString('id-ID');
-            document.getElementById('current-stock').textContent = d.stock;
+
+            // Chart Data
+            const stats = await apiRequest('/api/admin/stats');
+            initDashboardChart(stats.chekiPerMember || {});
 
             // Recent Orders
             const orders = await apiRequest('/api/admin/all-orders');
             renderOrders(orders.slice(0, 10)); // Top 10 recent
         } catch (e) { /* handled by apiRequest */ }
+    }
+
+    function initDashboardChart(dataObj) {
+        const ctx = document.getElementById('dashboard-chart');
+        if (!ctx) return;
+
+        const labels = Object.keys(dataObj);
+        const data = Object.values(dataObj);
+
+        if (dashboardChart) dashboardChart.destroy();
+
+        dashboardChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Total Cheki Terjual',
+                    data: data,
+                    backgroundColor: '#3b82f6',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#f1f5f9' } },
+                    x: { grid: { display: false } }
+                }
+            }
+        });
     }
 
     function renderOrders(orders) {
@@ -224,18 +278,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // Stock
-    document.getElementById('add-stock-btn')?.addEventListener('click', async () => {
-        const amount = document.getElementById('stock-change-value').value;
-        try {
-            await apiRequest('/api/admin/update-stock', {
-                method: 'POST',
-                body: JSON.stringify({ change: parseInt(amount) })
-            });
-            showToast(`Stok ditambah ${amount}`, 'success');
-            const d = await apiRequest('/api/admin/dashboard-stats');
-            document.getElementById('current-stock').textContent = d.stock;
-        } catch (e) { }
-    });
+    // Stock management removed from dashboard
 
     document.getElementById('search-input')?.addEventListener('input', async (e) => {
         // Simple client search for now or fetch
@@ -341,7 +384,7 @@ document.addEventListener('DOMContentLoaded', function () {
             isFormData = true;
         } else {
             bodyPayload = JSON.stringify({
-                id, name, role, details: { jiko }, socials: { showroom }
+                id, name, role, jiko, showroom // Flattened for server processing
             });
         }
 
@@ -405,46 +448,187 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     // --- GALLERY ---
+    let currentGalleryFilter = 'all';
+
     async function loadGallery() {
         const grid = document.getElementById('gallery-grid');
-        const list = await apiRequest('/api/admin/gallery');
-        grid.innerHTML = list.map(g => `
-            <div style="position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden;">
-                <img src="${g.image_url ? (g.image_url.startsWith('http') ? g.image_url : '../../' + g.image_url) : ''}" style="width:100%; height:100%; object-fit:cover;">
-                <button class="btn-icon-only btn-danger btn-delete-gallery" data-id="${g.id}" data-src="${g.image_url || ''}" style="position:absolute; bottom:5px; right:5px;">
-                    <i class="fas fa-trash"></i>
-                </button>
-            </div>
-        `).join('');
+        grid.innerHTML = '<div style="grid-column:1/-1; text-align:center;">Loading...</div>';
 
-        document.querySelectorAll('.btn-delete-gallery').forEach(btn => {
-            btn.addEventListener('click', () => {
-                showConfirm('Hapus foto ini?', async () => {
-                    await apiRequest(`/api/admin/gallery/${btn.dataset.id}`, { method: 'DELETE' });
-                    showToast('Foto dihapus', 'success');
-                    loadGallery();
+        try {
+            const list = await apiRequest('/api/admin/gallery');
+
+            // Filter by category
+            const filtered = currentGalleryFilter === 'all'
+                ? list
+                : list.filter(g => g.category === currentGalleryFilter);
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:2rem; color:#94a3b8;">Tidak ada foto dalam kategori ini</div>';
+                return;
+            }
+
+            grid.innerHTML = filtered.map(g => `
+                <div class="gallery-card" style="position:relative; aspect-ratio:1; border-radius:8px; overflow:hidden; background:#f1f5f9;">
+                    <img src="${g.image_url ? (g.image_url.startsWith('http') ? g.image_url : '../../' + g.image_url) : ''}" style="width:100%; height:100%; object-fit:cover;">
+                    <div style="position:absolute; top:5px; left:5px; background:#1e293b; color:white; padding:2px 8px; border-radius:4px; font-size:0.7rem;">
+                        ${g.category || 'carousel'}
+                    </div>
+                    <div style="position:absolute; bottom:0; left:0; right:0; background:linear-gradient(transparent, rgba(0,0,0,0.8)); padding:8px; display:flex; justify-content:space-between; align-items:center;">
+                        <small style="color:white; font-size:0.75rem;">${g.alt_text || '-'}</small>
+                        <div style="display:flex; gap:4px;">
+                            <button class="btn-icon-only btn-outline btn-edit-gallery" data-id="${g.id}" data-json='${JSON.stringify(g).replace(/'/g, "&apos;")}' style="background:white; width:28px; height:28px;">
+                                <i class="fas fa-edit" style="font-size:0.7rem;"></i>
+                            </button>
+                            <button class="btn-icon-only btn-danger btn-delete-gallery" data-id="${g.id}" style="width:28px; height:28px;">
+                                <i class="fas fa-trash" style="font-size:0.7rem;"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Edit Gallery
+            document.querySelectorAll('.btn-edit-gallery').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const data = JSON.parse(btn.dataset.json);
+                    document.getElementById('edit-gallery-id').value = data.id;
+                    document.getElementById('gallery-alt').value = data.alt_text || '';
+                    document.getElementById('gallery-category').value = data.category || 'carousel';
+                    document.getElementById('gallery-order').value = data.display_order || 99;
+                    document.getElementById('gallery-image').required = false;
+                    document.getElementById('gallery-modal-title').textContent = 'Edit Foto';
+                    openModal('gallery-modal');
                 });
             });
-        });
+
+            // Delete Gallery
+            document.querySelectorAll('.btn-delete-gallery').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    showConfirm('Hapus foto ini?', async () => {
+                        await apiRequest(`/api/admin/gallery/${btn.dataset.id}`, { method: 'DELETE' });
+                        showToast('Foto dihapus', 'success');
+                        loadGallery();
+                    });
+                });
+            });
+        } catch (e) {
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; color:#ef4444;">Error loading gallery</div>';
+        }
     }
 
-    document.getElementById('add-gallery-btn').addEventListener('click', () => openModal('gallery-modal'));
-    document.getElementById('gallery-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const img = document.getElementById('gallery-image').files[0];
-        const alt = document.getElementById('gallery-alt').value;
-        if (!img) return;
-
-        const fd = new FormData();
-        fd.append('image', img);
-        fd.append('title', alt);
-
-        await apiRequest('/api/admin/gallery', { method: 'POST', body: fd });
-        showToast('Foto diupload (tersimpan ke server)', 'success');
-        closeModal('gallery-modal');
-        loadGallery();
+    // Gallery Filter Tabs
+    document.querySelectorAll('.gallery-filter-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.gallery-filter-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentGalleryFilter = btn.dataset.filter;
+            loadGallery();
+        });
     });
 
+    document.getElementById('add-gallery-btn').addEventListener('click', () => {
+        document.getElementById('gallery-form').reset();
+        document.getElementById('edit-gallery-id').value = '';
+        document.getElementById('gallery-image').required = true;
+        document.getElementById('gallery-modal-title').textContent = 'Tambah Foto Baru';
+        openModal('gallery-modal');
+    });
+
+    document.getElementById('gallery-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-gallery-id').value;
+        const img = document.getElementById('gallery-image').files[0];
+        const alt = document.getElementById('gallery-alt').value;
+        const category = document.getElementById('gallery-category').value;
+        const order = document.getElementById('gallery-order').value;
+
+        try {
+            if (id && !img) {
+                // Edit tanpa ganti gambar
+                await apiRequest(`/api/admin/gallery/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ alt_text: alt, category, display_order: order })
+                });
+            } else {
+                // Add new atau Edit dengan gambar baru
+                if (!img) {
+                    showToast('Pilih file gambar', 'error');
+                    return;
+                }
+                const fd = new FormData();
+                fd.append('image', img);
+                fd.append('alt_text', alt);
+                fd.append('category', category);
+                fd.append('display_order', order);
+
+                await apiRequest('/api/admin/gallery', { method: 'POST', body: fd });
+            }
+            showToast('Foto berhasil disimpan', 'success');
+            closeModal('gallery-modal');
+            loadGallery();
+        } catch (err) { }
+    });
+
+
+    // --- SETTINGS (EVENT) ---
+    async function loadSettings() {
+        try {
+            const [list, members] = await Promise.all([
+                apiRequest('/api/admin/settings'),
+                apiRequest('/api/admin/members')
+            ]);
+
+            const settings = {};
+            list.forEach(item => { settings[item.nama] = item.nilai; });
+
+            document.getElementById('setting-stok').value = settings.stok_cheki || 0;
+            document.getElementById('setting-harga-member').value = settings.harga_cheki_member || 25000;
+            document.getElementById('setting-harga-grup').value = settings.harga_cheki_grup || 30000;
+            document.getElementById('setting-event-date').value = settings.event_tanggal || '';
+            document.getElementById('setting-event-loc').value = settings.event_lokasi || '';
+
+            // Populate Lineup Checkboxes
+            const container = document.getElementById('lineup-selection-container');
+            const currentLineup = (settings.event_lineup || '').split(',').map(s => s.trim().toLowerCase());
+
+            container.innerHTML = members
+                .filter(m => m.member_type !== 'group')
+                .map(m => `
+                    <label style="display:flex; gap:0.5rem; align-items:center; cursor:pointer; font-size:0.9rem; padding:0.25rem;">
+                        <input type="checkbox" value="${m.name}" class="lineup-checkbox" ${currentLineup.includes(m.name.toLowerCase()) ? 'checked' : ''}>
+                        ${m.name}
+                    </label>
+                `).join('');
+
+        } catch (e) {
+            showToast('Gagal memuat pengaturan', 'error');
+        }
+    }
+
+    document.getElementById('save-settings-btn')?.addEventListener('click', async () => {
+        const selectedLineup = Array.from(document.querySelectorAll('.lineup-checkbox:checked'))
+            .map(cb => cb.value)
+            .join(', ');
+
+        const settings = [
+            { nama: 'stok_cheki', nilai: document.getElementById('setting-stok').value },
+            { nama: 'harga_cheki_member', nilai: document.getElementById('setting-harga-member').value },
+            { nama: 'harga_cheki_grup', nilai: document.getElementById('setting-harga-grup').value },
+            { nama: 'event_tanggal', nilai: document.getElementById('setting-event-date').value },
+            { nama: 'event_lokasi', nilai: document.getElementById('setting-event-loc').value },
+            { nama: 'event_lineup', nilai: selectedLineup }
+        ];
+
+        try {
+            await apiRequest('/api/admin/settings/bulk', {
+                method: 'PUT',
+                body: JSON.stringify({ settings })
+            });
+            showToast('Pengaturan berhasil disimpan', 'success');
+        } catch (e) {
+            showToast('Gagal menyimpan pengaturan', 'error');
+        }
+    });
 
     // --- USERS ---
     async function loadUsers() {
