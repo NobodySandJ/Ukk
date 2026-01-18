@@ -526,6 +526,45 @@ app.get("/api/admin/stats", authenticateToken, authorizeAdmin, async (req, res) 
     }
 });
 
+// Endpoint: Admin Dashboard Stats (Summary)
+app.get("/api/admin/dashboard-stats", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        // 1. Total Users (Non-Admin)
+        const { count: users, error: errUsers } = await supabase
+            .from('pengguna')
+            .select('*', { count: 'exact', head: true })
+            .neq('peran', 'admin');
+
+        // 2. Active Orders
+        const { count: active_orders, error: errOrders } = await supabase
+            .from('pesanan')
+            .select('*', { count: 'exact', head: true })
+            .eq('status_tiket', 'berlaku');
+
+        // 3. Total Revenue
+        const { data: revenueData, error: errRevenue } = await supabase
+            .from('pesanan')
+            .select('total_harga')
+            .in('status_tiket', ['berlaku', 'sudah_dipakai']);
+
+        const revenue = (revenueData || []).reduce((acc, curr) => acc + curr.total_harga, 0);
+
+        // 4. Stock (Not used in chart but legacy support)
+        const stock = await getChekiStock();
+
+        if (errUsers || errOrders || errRevenue) throw new Error("Database error");
+
+        res.json({
+            users: users || 0,
+            active_orders: active_orders || 0,
+            revenue: revenue || 0,
+            stock: stock
+        });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal memuat statistik dashboard.", error: e.message });
+    }
+});
+
 app.get("/api/admin/all-orders", authenticateToken, authorizeAdmin, async (req, res) => {
     try {
         const { data, error } = await supabase.from('pesanan').select('*')
@@ -1033,6 +1072,21 @@ app.get("/api/public/gallery", async (req, res) => {
     }
 });
 
+// GET: All Gallery (Admin) - Mirror of Public but authenticated
+app.get("/api/admin/gallery", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('gallery')
+            .select('*')
+            .order('display_order', { ascending: true });
+
+        if (error) throw error;
+        res.json(data || []);
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengambil galeri.", error: e.message });
+    }
+});
+
 app.post("/api/admin/gallery", authenticateToken, authorizeAdmin, upload.single('image'), async (req, res) => {
     try {
         const { alt_text, display_order, category } = req.body;
@@ -1105,6 +1159,16 @@ app.delete("/api/admin/gallery/:id", authenticateToken, authorizeAdmin, async (r
 
 // --- Server Listener ---
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server berjalan di http://localhost:${PORT}`));
+app.listen(PORT, () => {
+    console.log(`
+    =============================================
+    🚀 REFRESH BREEZE SERVER (PRODUCTION)
+    =============================================
+    🌐 URL       : http://localhost:${PORT}
+    📅 Waktu     : ${new Date().toLocaleString()}
+    =============================================
+    ✅ Server Backend Siap!
+    `);
+});
 
 module.exports = app;
