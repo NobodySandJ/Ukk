@@ -289,24 +289,7 @@ section.bg-gray::after {
     display: inline-block;
 }
 
-@media (max-width: 768px) {
-
-    /* Mobile nav-menu inherits styles from 992px breakpoint */
-    /* Just adjust size for smaller screens */
-    .nav-menu {
-        width: 280px;
-    }
-
-    .hamburger {
-        display: block;
-    }
-
-    ul.nav-links {
-        flex-direction: column;
-        gap: 1rem;
-        width: 100%;
-    }
-}
+/* Misplaced Mobile Nav Styles Removed - Moved to End of File */
 
 @media (max-width: 576px) {
     .homepage-leaderboard-grid {
@@ -3733,5 +3716,57 @@ img {
     .container {
         max-width: 100% !important;
         padding: 0 !important;
+    }
+}
+
+/* ================================================================
+   MOBILE NAVBAR FIX (APPENDED) - Memperbaiki Bug Tombol Tidak Bisa Dipencet
+   ================================================================ */
+@media (max-width: 768px) {
+
+    /* 1. Pastikan Hamburger Muncul */
+    .hamburger {
+        display: block !important;
+        position: relative;
+        z-index: 1100;
+        /* Paling atas agar bisa diklik */
+    }
+
+    /* 2. Style Menu Sidebar Mobile */
+    .nav-menu {
+        display: flex !important;
+        /* Paksa tampil (flex) */
+        flex-direction: column;
+        position: fixed;
+        top: 0;
+        right: -100%;
+        /* Sembunyi di kanan */
+        width: 280px;
+        height: 100vh;
+        background: rgba(255, 255, 255, 0.98);
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        z-index: 1050;
+        /* Di atas segalanya kecuali hamburger/overlay */
+        transition: right 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+        padding: 2rem;
+        padding-top: 5rem;
+        box-shadow: -10px 0 30px rgba(0, 0, 0, 0.15);
+    }
+
+    /* 3. Kelas Aktif (Animasi Masuk) */
+    .nav-menu.active {
+        right: 0;
+    }
+
+    /* 4. Sembunyikan Elemen Desktop */
+    ul.nav-links,
+    .nav-auth-buttons {
+        display: none !important;
+    }
+
+    /* 5. Overlay Styling (Override JS) */
+    #nav-overlay {
+        z-index: 1040 !important;
     }
 }
