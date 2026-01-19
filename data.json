@@ -19,12 +19,7 @@
       "description": "Lanjut bayar pakai metode yang tersedia. Begitu sukses, tiketmu langsung muncul di dashboard!"
     }
   ],
-  "group_cheki": {
-    "id": "grup",
-    "name": "Grup",
-    "image": "img/member/group.webp",
-    "price": 30000
-  },
+
   "images": {
     "hero_background": "img/member/grup2.webp"
   },

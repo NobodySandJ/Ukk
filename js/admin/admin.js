@@ -1,6 +1,6 @@
 // ================================================================
-// ADMIN PANEL LOGIC v2.0
-// Modern UI, No Native Alerts, Full Responsiveness
+// LOGIKA PANEL ADMIN Versi 2.0
+// Antarmuka Modern, Tanpa Alert Bawaan, Responsif Penuh
 // ================================================================
 
 if (typeof window.basePath === 'undefined') {
@@ -10,7 +10,7 @@ var basePath = window.basePath;
 
 document.addEventListener('DOMContentLoaded', function () {
     // ============================================================
-    // 1. AUTH & INIT
+    // 1. OTENTIKASI & INISIALISASI
     // ============================================================
     const token = localStorage.getItem('userToken');
     const userData = localStorage.getItem('userData') ? JSON.parse(localStorage.getItem('userData')) : null;
@@ -20,14 +20,14 @@ document.addEventListener('DOMContentLoaded', function () {
         return;
     }
 
-    // Set Welcome
+    // Mengatur pesan selamat datang
     document.getElementById('admin-welcome').textContent = userData.nama_pengguna || 'Admin';
 
     // ============================================================
-    // 2. UI INTERACTIONS (Sidebar, Tabs, Modals)
+    // 2. INTERAKSI ANTARMUKA (Bilah Sisi, Tab, Modal)
     // ============================================================
 
-    // Sidebar Toggle
+    // Sidebar Toggle (Alih Bilah Sisi)
     const sidebar = document.getElementById('sidebar');
     const sidebarOverlay = document.getElementById('sidebar-overlay');
     const sidebarToggle = document.getElementById('sidebar-toggle');
@@ -40,13 +40,13 @@ document.addEventListener('DOMContentLoaded', function () {
     if (sidebarToggle) sidebarToggle.addEventListener('click', toggleSidebar);
     if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleSidebar);
 
-    // Navigation / Views
+    // Navigasi / Tampilan (Views)
     const navLinks = document.querySelectorAll('.sidebar-nav .nav-link[data-view]');
     const views = document.querySelectorAll('.view-section');
     const pageTitle = document.getElementById('page-title');
 
     function switchView(viewName) {
-        // Update Nav
+        // Perbarui Navigasi
         navLinks.forEach(link => {
             if (link.dataset.view === viewName) link.classList.add('active');
             else link.classList.remove('active');
@@ -570,53 +570,251 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
 
-    // --- SETTINGS (EVENT) ---
-    async function loadSettings() {
+    // --- EVENTS MANAGEMENT ---
+    let allMembersCache = [];
+
+    async function loadEvents() {
+        const container = document.getElementById('events-list');
+        if (container) {
+            container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #64748b;">Loading...</div>';
+        }
+
+        // Load settings, members, and REAL stock from products
         try {
-            const [list, members] = await Promise.all([
+            const [settingsList, members, productData] = await Promise.all([
                 apiRequest('/api/admin/settings'),
-                apiRequest('/api/admin/members')
+                apiRequest('/api/admin/members'),
+                fetch('/api/products-and-stock').then(r => r.ok ? r.json() : null).catch(() => null)
             ]);
 
+            allMembersCache = members || [];
+
             const settings = {};
-            list.forEach(item => { settings[item.nama] = item.nilai; });
+            (settingsList || []).forEach(item => { settings[item.nama] = item.nilai; });
 
-            document.getElementById('setting-stok').value = settings.stok_cheki || 0;
-            document.getElementById('setting-harga-member').value = settings.harga_cheki_member || 25000;
-            document.getElementById('setting-harga-grup').value = settings.harga_cheki_grup || 30000;
-            document.getElementById('setting-event-date').value = settings.event_tanggal || '';
-            document.getElementById('setting-event-loc').value = settings.event_lokasi || '';
+            const stokEl = document.getElementById('setting-stok');
+            const hargaMemberEl = document.getElementById('setting-harga-member');
+            const hargaGrupEl = document.getElementById('setting-harga-grup');
 
-            // Populate Lineup Checkboxes
-            const container = document.getElementById('lineup-selection-container');
-            const currentLineup = (settings.event_lineup || '').split(',').map(s => s.trim().toLowerCase());
+            // Use REAL stock from products table (same as cheki.js)
+            const realStock = productData?.cheki_stock ?? settings.stok_cheki ?? 0;
+            if (stokEl) stokEl.value = realStock;
+            if (hargaMemberEl) hargaMemberEl.value = settings.harga_cheki_member || 25000;
+            if (hargaGrupEl) hargaGrupEl.value = settings.harga_cheki_grup || 30000;
+        } catch (e) {
+            console.warn('Failed to load settings:', e);
+        }
 
-            container.innerHTML = members
-                .filter(m => m.member_type !== 'group')
-                .map(m => `
-                    <label style="display:flex; gap:0.5rem; align-items:center; cursor:pointer; font-size:0.9rem; padding:0.25rem;">
-                        <input type="checkbox" value="${m.name}" class="lineup-checkbox" ${currentLineup.includes(m.name.toLowerCase()) ? 'checked' : ''}>
-                        ${m.name}
-                    </label>
-                `).join('');
+        // Then load events (separate try-catch so settings still work if events fail)
+        if (!container) return;
+
+        try {
+            const events = await apiRequest('/api/admin/events');
+
+            if (!events || events.length === 0) {
+                container.innerHTML = `
+                    <div class="card" style="text-align: center; padding: 3rem; margin: 0;">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📅</div>
+                        <div style="color: #64748b; margin-bottom: 1rem;">Belum ada event</div>
+                        <button class="btn btn-primary" onclick="document.getElementById('add-event-btn').click()">
+                            <i class="fas fa-plus"></i> Tambah Event Pertama
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            // Render events list
+            container.innerHTML = events.map(ev => {
+                const eventDate = new Date(ev.tanggal);
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const isPast = eventDate < today;
+                const dateStr = eventDate.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+
+                return `
+                    <div class="card" style="margin: 0; ${isPast ? 'opacity: 0.6;' : ''}">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 200px;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                    <span style="font-size: 1.25rem;">🎉</span>
+                                    <h4 style="margin: 0; font-weight: 600;">${ev.nama}</h4>
+                                    ${isPast ? '<span style="background: #fee2e2; color: #dc2626; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">SELESAI</span>' : ''}
+                                    ${!isPast ? '<span style="background: #dcfce7; color: #16a34a; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem; font-weight: 600;">UPCOMING</span>' : ''}
+                                </div>
+                                <div style="color: #64748b; font-size: 0.9rem; display: flex; flex-wrap: wrap; gap: 1rem;">
+                                    <span><i class="fas fa-calendar-alt" style="margin-right: 0.25rem;"></i> ${dateStr}</span>
+                                    ${ev.lokasi ? `<span><i class="fas fa-map-marker-alt" style="margin-right: 0.25rem;"></i> ${ev.lokasi}</span>` : ''}
+                                </div>
+                                ${ev.lineup ? `<div style="margin-top: 0.5rem; color: #64748b; font-size: 0.85rem;"><i class="fas fa-microphone-alt" style="margin-right: 0.25rem;"></i> ${ev.lineup}</div>` : ''}
+                            </div>
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="btn btn-outline btn-edit-event" data-id="${ev.id}" data-json='${JSON.stringify(ev).replace(/'/g, "&apos;")}'>
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <button class="btn btn-danger btn-delete-event" data-id="${ev.id}">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Attach event listeners
+            document.querySelectorAll('.btn-edit-event').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const data = JSON.parse(btn.dataset.json);
+                    document.getElementById('edit-event-id').value = data.id;
+                    document.getElementById('event-nama').value = data.nama;
+                    document.getElementById('event-tanggal').value = data.tanggal;
+                    document.getElementById('event-lokasi').value = data.lokasi || '';
+                    document.getElementById('event-deskripsi').value = data.deskripsi || '';
+                    document.getElementById('event-modal-title').textContent = 'Edit Event';
+
+                    loadEventLineupCheckboxes(data.lineup || '');
+                    openModal('event-modal');
+                });
+            });
+
+            document.querySelectorAll('.btn-delete-event').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    showConfirm('Hapus event ini? Tindakan ini tidak dapat dibatalkan.', async () => {
+                        await apiRequest(`/api/admin/events/${btn.dataset.id}`, { method: 'DELETE' });
+                        showToast('Event berhasil dihapus', 'success');
+                        loadEvents();
+                    });
+                });
+            });
 
         } catch (e) {
-            showToast('Gagal memuat pengaturan', 'error');
+            console.warn('Failed to load events:', e);
+            container.innerHTML = `
+                <div class="card" style="text-align: center; padding: 2rem; margin: 0; background: #fef2f2; border-color: #fecaca;">
+                    <div style="color: #dc2626; margin-bottom: 0.5rem;"><i class="fas fa-exclamation-triangle"></i> Gagal memuat events</div>
+                    <div style="color: #64748b; font-size: 0.85rem;">Pastikan tabel 'events' sudah dibuat di database.</div>
+                </div>
+            `;
         }
     }
 
-    document.getElementById('save-settings-btn')?.addEventListener('click', async () => {
-        const selectedLineup = Array.from(document.querySelectorAll('.lineup-checkbox:checked'))
+    function loadEventLineupCheckboxes(currentLineup = '') {
+        const container = document.getElementById('event-lineup-container');
+        const selectedNames = currentLineup.split(',').map(s => s.trim().toLowerCase());
+
+        if (allMembersCache.length === 0) {
+            container.innerHTML = '<div style="color:#64748b; font-style:italic; grid-column: 1/-1;">Tidak ada member</div>';
+            return;
+        }
+
+        container.innerHTML = allMembersCache
+            .filter(m => m.member_type !== 'group')
+            .map(m => `
+                <label style="display:flex; gap:0.5rem; align-items:center; cursor:pointer; font-size:0.85rem; padding:0.25rem; background:white; border-radius:4px;">
+                    <input type="checkbox" value="${m.name}" class="event-lineup-checkbox" ${selectedNames.includes(m.name.toLowerCase()) ? 'checked' : ''}>
+                    ${m.name}
+                </label>
+            `).join('');
+    }
+
+    // Add Event Button
+    document.getElementById('add-event-btn')?.addEventListener('click', () => {
+        document.getElementById('event-form').reset();
+        document.getElementById('edit-event-id').value = '';
+        document.getElementById('event-modal-title').textContent = 'Tambah Event Baru';
+        loadEventLineupCheckboxes('');
+        openModal('event-modal');
+    });
+
+    // Event Form Submit
+    document.getElementById('event-form')?.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const id = document.getElementById('edit-event-id').value;
+        const nama = document.getElementById('event-nama').value;
+        const tanggal = document.getElementById('event-tanggal').value;
+        const lokasi = document.getElementById('event-lokasi').value;
+        const deskripsi = document.getElementById('event-deskripsi').value;
+        const lineup = Array.from(document.querySelectorAll('.event-lineup-checkbox:checked'))
             .map(cb => cb.value)
             .join(', ');
 
+        try {
+            if (id) {
+                // Update existing
+                await apiRequest(`/api/admin/events/${id}`, {
+                    method: 'PUT',
+                    body: JSON.stringify({ nama, tanggal, lokasi, lineup, deskripsi })
+                });
+                showToast('Event berhasil diupdate', 'success');
+            } else {
+                // Create new
+                await apiRequest('/api/admin/events', {
+                    method: 'POST',
+                    body: JSON.stringify({ nama, tanggal, lokasi, lineup, deskripsi })
+                });
+                showToast('Event berhasil ditambahkan', 'success');
+            }
+            closeModal('event-modal');
+            loadEvents();
+        } catch (err) {
+            // Error handled by apiRequest
+        }
+    });
+
+
+    // --- STOCK MANAGEMENT ---
+
+    async function updateStock(delta) {
+        try {
+            const result = await apiRequest('/api/admin/update-cheki-stock', {
+                method: 'POST',
+                body: JSON.stringify({ changeValue: delta })
+            });
+            showToast(`Stok diperbarui: ${result.newStock}`, 'success');
+            return result.newStock;
+        } catch (e) {
+            showToast('Gagal memperbarui stok', 'error');
+            return null;
+        }
+    }
+
+    // Simple auto-save stock on input change (debounced)
+    let stockTimeout = null;
+    let previousStockValue = 0;
+
+    const stockInput = document.getElementById('setting-stok');
+    if (stockInput) {
+        // Store initial value when loaded
+        stockInput.addEventListener('focus', function () {
+            previousStockValue = parseInt(this.value, 10) || 0;
+        });
+
+        stockInput.addEventListener('input', function () {
+            clearTimeout(stockTimeout);
+            stockTimeout = setTimeout(async () => {
+                const newValue = parseInt(this.value, 10);
+                if (isNaN(newValue) || newValue < 0) {
+                    showToast('Masukkan nilai stok yang valid', 'error');
+                    return;
+                }
+
+                const delta = newValue - previousStockValue;
+                if (delta === 0) return;
+
+                const resultStock = await updateStock(delta);
+                if (resultStock !== null) {
+                    previousStockValue = resultStock;
+                    this.value = resultStock;
+                }
+            }, 500); // Wait 500ms after typing stops
+        });
+    }
+
+    // Settings Save (Price only - stock handled separately)
+    document.getElementById('save-settings-btn')?.addEventListener('click', async () => {
         const settings = [
-            { nama: 'stok_cheki', nilai: document.getElementById('setting-stok').value },
             { nama: 'harga_cheki_member', nilai: document.getElementById('setting-harga-member').value },
-            { nama: 'harga_cheki_grup', nilai: document.getElementById('setting-harga-grup').value },
-            { nama: 'event_tanggal', nilai: document.getElementById('setting-event-date').value },
-            { nama: 'event_lokasi', nilai: document.getElementById('setting-event-loc').value },
-            { nama: 'event_lineup', nilai: selectedLineup }
+            { nama: 'harga_cheki_grup', nilai: document.getElementById('setting-harga-grup').value }
         ];
 
         try {
@@ -624,11 +822,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 method: 'PUT',
                 body: JSON.stringify({ settings })
             });
-            showToast('Pengaturan berhasil disimpan', 'success');
+            showToast('Harga berhasil disimpan', 'success');
         } catch (e) {
-            showToast('Gagal menyimpan pengaturan', 'error');
+            showToast('Gagal menyimpan harga', 'error');
         }
     });
+
+    // Keep loadSettings for backward compatibility but redirect to loadEvents
+    async function loadSettings() {
+        loadEvents();
+    }
 
     // --- USERS ---
     async function loadUsers() {

@@ -70,6 +70,13 @@
     { "src": "/api/admin/news/(.*)", "dest": "/backend/server.js" },
     { "src": "/api/admin/gallery", "dest": "/backend/server.js" },
     { "src": "/api/admin/gallery/(.*)", "dest": "/backend/server.js" },
+    { "src": "/api/admin/settings", "dest": "/backend/server.js" },
+    { "src": "/api/admin/settings/(.*)", "dest": "/backend/server.js" },
+    
+    { "src": "/api/public/events", "dest": "/backend/server.js" },
+    { "src": "/api/public/next-event", "dest": "/backend/server.js" },
+    { "src": "/api/admin/events", "dest": "/backend/server.js" },
+    { "src": "/api/admin/events/(.*)", "dest": "/backend/server.js" },
     
     { "src": "/(.*)", "dest": "/$1" }
   ]

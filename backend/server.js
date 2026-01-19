@@ -282,7 +282,7 @@ app.get("/api/products-and-stock", async (req, res) => {
             image: groupProduct.image_url || 'img/member/group.webp',
             price: groupProduct.price,
             stock: groupProduct.stock
-        } : productData.group_cheki || {};
+        } : {};
 
         // Transform Individual Members (now from products table)
         const members = memberProducts.map(p => ({
@@ -318,6 +318,7 @@ app.get("/api/products-and-stock", async (req, res) => {
             faq: productData.faq || [],
             images: productData.images || {},
             event: {
+                nama: settings.event_nama || null,
                 tanggal: settings.event_tanggal || null,
                 lokasi: settings.event_lokasi || null,
                 lineup: settings.event_lineup || null
@@ -337,6 +338,28 @@ app.get("/api/products-and-stock", async (req, res) => {
 app.post("/get-snap-token", authenticateToken, async (req, res) => {
     try {
         const { transaction_details, item_details, customer_details } = req.body;
+
+        // --- CRITICAL: CEK STOK SEBELUM TRANSAKSI ---
+        // Mencegah overselling saat user memborong
+        for (const item of item_details) {
+            const { data: product, error } = await supabase
+                .from('products')
+                .select('stock, name')
+                .eq('id', item.id) // item.id harus match dengan ID produk
+                .single();
+
+            if (error || !product) {
+                return res.status(400).json({ message: `Produk tidak ditemukan: ${item.name}` });
+            }
+
+            if (product.stock < item.quantity) {
+                return res.status(400).json({
+                    message: `Stok tidak cukup untuk ${product.name}. Tersisa: ${product.stock}, diminta: ${item.quantity}`
+                });
+            }
+        }
+        // ---------------------------------------------
+
         const enhanced_customer_details = { ...customer_details, first_name: req.user.username, email: req.user.email };
 
         // PENTING: Enable payment methods termasuk QRIS
@@ -603,9 +626,43 @@ app.post('/api/admin/update-cheki-stock', authenticateToken, authorizeAdmin, asy
     try {
         const { changeValue } = req.body;
         if (typeof changeValue !== 'number') return res.status(400).json({ message: 'Nilai tidak valid.' });
-        const { error } = await supabase.rpc('update_cheki_stock', { change_value: changeValue });
-        if (error) throw new Error(`Gagal update stok: ${error.message}`);
-        const newStock = await getChekiStock();
+
+        // Get all active products
+        const { data: products, error: fetchError } = await supabase
+            .from('products')
+            .select('id, stock')
+            .eq('is_active', true);
+
+        if (fetchError) throw new Error(`Gagal ambil produk: ${fetchError.message}`);
+        if (!products || products.length === 0) {
+            return res.status(400).json({ message: 'Tidak ada produk aktif.' });
+        }
+
+        // Distribute change evenly across all products, apply remainder to first product
+        const perProductChange = Math.floor(changeValue / products.length);
+        const remainder = changeValue % products.length;
+
+        // Update each product
+        for (let i = 0; i < products.length; i++) {
+            const product = products[i];
+            const additionalChange = i === 0 ? remainder : 0;
+            const newStock = Math.max(0, (product.stock || 0) + perProductChange + additionalChange);
+
+            const { error: updateError } = await supabase
+                .from('products')
+                .update({ stock: newStock })
+                .eq('id', product.id);
+
+            if (updateError) throw new Error(`Gagal update stok produk: ${updateError.message}`);
+        }
+
+        // Calculate new total stock
+        const { data: updatedProducts } = await supabase
+            .from('products')
+            .select('stock')
+            .eq('is_active', true);
+
+        const newStock = (updatedProducts || []).reduce((sum, p) => sum + (p.stock || 0), 0);
         res.json({ message: 'Stok berhasil diperbarui!', newStock });
     } catch (e) {
         res.status(500).json({ message: e.message });
@@ -843,6 +900,141 @@ app.put("/api/admin/settings/bulk", authenticateToken, authorizeAdmin, async (re
         res.json({ message: "Semua pengaturan berhasil diupdate!" });
     } catch (e) {
         res.status(500).json({ message: "Gagal mengupdate pengaturan.", error: e.message });
+    }
+});
+
+// ===================================
+// --- EVENTS CRUD API ---
+// ===================================
+
+// GET: All Events (Admin)
+app.get("/api/admin/events", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('events')
+            .select('*')
+            .order('tanggal', { ascending: true });
+
+        if (error) throw error;
+        res.json(data || []);
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengambil data events.", error: e.message });
+    }
+});
+
+// GET: Active Events (Public)
+app.get("/api/public/events", async (req, res) => {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const { data, error } = await supabase
+            .from('events')
+            .select('*')
+            .eq('is_active', true)
+            .gte('tanggal', today)
+            .order('tanggal', { ascending: true });
+
+        if (error) throw error;
+        res.json(data || []);
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengambil data events.", error: e.message });
+    }
+});
+
+// GET: Next Upcoming Event (Public) - for homepage
+app.get("/api/public/next-event", async (req, res) => {
+    try {
+        const today = new Date().toISOString().split('T')[0];
+        const { data, error } = await supabase
+            .from('events')
+            .select('*')
+            .eq('is_active', true)
+            .gte('tanggal', today)
+            .order('tanggal', { ascending: true })
+            .limit(1)
+            .single();
+
+        if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows
+        res.json(data || null);
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengambil next event.", error: e.message });
+    }
+});
+
+// POST: Create Event (Admin)
+app.post("/api/admin/events", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { nama, tanggal, lokasi, lineup, deskripsi } = req.body;
+
+        if (!nama || !tanggal) {
+            return res.status(400).json({ message: "Nama dan tanggal event wajib diisi." });
+        }
+
+        const { data, error } = await supabase
+            .from('events')
+            .insert([{
+                nama,
+                tanggal,
+                lokasi: lokasi || null,
+                lineup: lineup || null,
+                deskripsi: deskripsi || null,
+                is_active: true
+            }])
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.status(201).json({ message: "Event berhasil ditambahkan!", event: data });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal menambahkan event.", error: e.message });
+    }
+});
+
+// PUT: Update Event (Admin)
+app.put("/api/admin/events/:id", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nama, tanggal, lokasi, lineup, deskripsi, is_active } = req.body;
+
+        if (!nama || !tanggal) {
+            return res.status(400).json({ message: "Nama dan tanggal event wajib diisi." });
+        }
+
+        const { data, error } = await supabase
+            .from('events')
+            .update({
+                nama,
+                tanggal,
+                lokasi: lokasi || null,
+                lineup: lineup || null,
+                deskripsi: deskripsi || null,
+                is_active: is_active !== undefined ? is_active : true,
+                updated_at: new Date().toISOString()
+            })
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        res.json({ message: "Event berhasil diupdate!", event: data });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengupdate event.", error: e.message });
+    }
+});
+
+// DELETE: Delete Event (Admin)
+app.delete("/api/admin/events/:id", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const { error } = await supabase
+            .from('events')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+        res.json({ message: "Event berhasil dihapus!" });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal menghapus event.", error: e.message });
     }
 });
 
@@ -1169,6 +1361,45 @@ app.delete("/api/admin/gallery/:id", authenticateToken, authorizeAdmin, async (r
 
 // --- Server Listener ---
 const PORT = process.env.PORT || 3000;
+// PUT: Bulk Update Settings (Syncs with Products Table)
+app.put("/api/admin/settings/bulk", authenticateToken, authorizeAdmin, async (req, res) => {
+    try {
+        const { settings } = req.body;
+        if (!settings || !Array.isArray(settings)) {
+            return res.status(400).json({ message: "Format settings tidak valid." });
+        }
+
+        // Process all updates in parallel
+        await Promise.all(settings.map(async (item) => {
+            const { nama, nilai } = item;
+            if (nama) {
+                // 1. Update Settings Table
+                const { error } = await supabase
+                    .from('pengaturan')
+                    .upsert({ nama, nilai }, { onConflict: 'nama' });
+                if (error) throw error;
+
+                // 2. Sync Price to Products Table if related to price
+                if (nama === 'harga_cheki_member') {
+                    await supabase
+                        .from('products')
+                        .update({ price: parseInt(nilai, 10) })
+                        .eq('category', 'cheki_member');
+                } else if (nama === 'harga_cheki_grup') {
+                    await supabase
+                        .from('products')
+                        .update({ price: parseInt(nilai, 10) })
+                        .eq('category', 'cheki_group');
+                }
+            }
+        }));
+
+        res.json({ message: "Pengaturan berhasil diperbarui." });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal memperbarui pengaturan.", error: e.message });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`
     =============================================

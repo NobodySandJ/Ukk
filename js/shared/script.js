@@ -113,10 +113,20 @@ document.addEventListener('DOMContentLoaded', function () {
         try {
             // Try fetching from API first (supports dynamic members from Supabase)
             let data;
+            let nextEvent = null;
+
             try {
-                const response = await fetch('/api/products-and-stock');
-                if (response.ok) {
-                    data = await response.json();
+                const [productsRes, eventRes] = await Promise.all([
+                    fetch('/api/products-and-stock'),
+                    fetch('/api/public/next-event')
+                ]);
+
+                if (productsRes.ok) {
+                    data = await productsRes.json();
+                }
+
+                if (eventRes.ok) {
+                    nextEvent = await eventRes.json();
                 }
             } catch (apiError) {
                 console.log('API not available, falling back to data.json');
@@ -130,6 +140,11 @@ document.addEventListener('DOMContentLoaded', function () {
             }
 
             if (!data || !data.group) throw new Error("Invalid data format");
+
+            // Add next event to data object
+            if (nextEvent) {
+                data.nextEvent = nextEvent;
+            }
 
             populatePage(data);
 
@@ -222,9 +237,80 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
 
+        // --- Section: Next Event Card ---
+        const eventContainer = document.getElementById('next-event-container');
+        if (eventContainer) {
+            // Use nextEvent from events table API
+            const event = data.nextEvent;
+
+            // Only show if event exists with name and date
+            if (event && event.nama && event.tanggal) {
+                // Format date to Indonesian
+                const eventDate = new Date(event.tanggal);
+                const days = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+                const months = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                const formattedDate = `${days[eventDate.getDay()]}, ${eventDate.getDate()} ${months[eventDate.getMonth()]} ${eventDate.getFullYear()}`;
+
+                // Parse lineup - match with members data
+                const lineupNames = (event.lineup || '').split(',').map(s => s.trim()).filter(s => s);
+                const lineupMembers = lineupNames.map(name => {
+                    const member = (data.members || []).find(m =>
+                        m.name.toLowerCase() === name.toLowerCase()
+                    );
+                    return {
+                        name: name,
+                        image: member ? (member.image.startsWith('http') ? member.image : basePath + member.image) : `${basePath}img/member/placeholder.webp`
+                    };
+                });
+
+                let lineupHTML = '';
+                if (lineupMembers.length > 0) {
+                    lineupHTML = `
+                        <div class="event-lineup-section">
+                            <div class="event-lineup-label"><i class="fas fa-microphone-alt"></i> Lineup Member</div>
+                            <div class="event-lineup-grid">
+                                ${lineupMembers.map(m => `
+                                    <div class="lineup-member">
+                                        <img src="${m.image}" alt="${m.name}" class="lineup-member-avatar" onerror="this.src='${basePath}img/member/placeholder.webp'">
+                                        <span class="lineup-member-name">${m.name}</span>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                eventContainer.innerHTML = `
+                    <div class="next-event-card">
+                        <span class="event-badge">Event Mendatang</span>
+                        <h3 class="event-title">${event.nama}</h3>
+                        <div class="event-details">
+                            <div class="event-detail-item">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>${formattedDate}</span>
+                            </div>
+                            ${event.lokasi ? `
+                            <div class="event-detail-item">
+                                <i class="fas fa-map-marker-alt"></i>
+                                <span>${event.lokasi}</span>
+                            </div>
+                            ` : ''}
+                        </div>
+                        ${lineupHTML}
+                        <a href="${basePath}pages/public/cheki.html" class="event-cta">
+                            <i class="fas fa-ticket-alt"></i> Beli Tiket Cheki
+                        </a>
+                    </div>
+                `;
+            } else {
+                eventContainer.innerHTML = '';
+            }
+        }
+
         // --- Section: Berita ---
         const newsContainer = document.getElementById('news-container');
-        if (newsContainer) {
+        if (newsContainer && data.news) {
             newsContainer.innerHTML = data.news.map(item => `
                 <div class="news-item">
                     <h3>${item.title}</h3>
