@@ -97,7 +97,7 @@ button {
 
 .sidebar-nav {
     flex: 1;
-    padding: 1.5rem 1rem;
+    padding: 1.5rem 0.75rem;
     overflow-y: auto;
 }
 
@@ -105,7 +105,7 @@ button {
     display: flex;
     align-items: center;
     gap: 1rem;
-    padding: 0.8rem 1rem;
+    padding: 0.8rem 0.75rem;
     color: var(--slate-500);
     border-radius: 8px;
     margin-bottom: 0.5rem;
@@ -124,7 +124,7 @@ button {
 }
 
 .sidebar-footer {
-    padding: 1rem;
+    padding: 1rem 1.5rem;
     border-top: 1px solid var(--slate-100);
 }
 

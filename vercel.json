@@ -56,11 +56,15 @@
     
     { "src": "/api/admin/stats", "dest": "/backend/server.js" },
     { "src": "/api/admin/dashboard-stats", "dest": "/backend/server.js" },
+    { "src": "/api/admin/monthly-stats", "dest": "/backend/server.js" },
     { "src": "/api/admin/all-orders", "dest": "/backend/server.js" },
     { "src": "/api/admin/all-users", "dest": "/backend/server.js" },
     { "src": "/api/admin/update-ticket-status", "dest": "/backend/server.js" },
+    { "src": "/api/admin/undo-ticket-status", "dest": "/backend/server.js" },
+    { "src": "/api/admin/orders/(.*)", "dest": "/backend/server.js" },
     { "src": "/api/admin/delete-order/(.*)", "dest": "/backend/server.js" },
     { "src": "/api/admin/update-cheki-stock", "dest": "/backend/server.js" },
+    { "src": "/api/admin/set-cheki-stock", "dest": "/backend/server.js" },
     { "src": "/api/admin/generate-reset-code", "dest": "/backend/server.js" },
     { "src": "/api/admin/reset-user-password", "dest": "/backend/server.js" },
     

@@ -237,13 +237,16 @@ document.addEventListener('DOMContentLoaded', function () {
 
                         <!-- Step 3: Keamanan & Oshi -->
                         <div class="form-step" data-step="3" style="display: none;">
-                            <div class="input-group">
-                                <input type="password" id="register-password" placeholder="Password (Min. 6 Karakter)" required>
-                                <i id="toggle-register-pass" class="fas fa-eye toggle-pass" role="button" aria-label="Tampilkan password" tabindex="0"></i>
+                            <!-- Password Field -->
+                            <div style="position: relative; width: 100%; margin-bottom: 1rem;">
+                                <input type="password" id="register-password" placeholder="Password (Min. 6 Karakter)" required style="width: 100%; padding-right: 40px;">
+                                <i id="toggle-register-pass" class="fas fa-eye" role="button" aria-label="Tampilkan password" tabindex="0" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888;"></i>
                             </div>
-                            <div class="input-group">
-                                <input type="password" id="register-confirm-password" placeholder="Konfirmasi Password" required>
-                                <i id="toggle-register-confirm-pass" class="fas fa-eye toggle-pass" role="button" aria-label="Tampilkan konfirmasi password" tabindex="0"></i>
+
+                            <!-- Confirm Password Field -->
+                            <div style="position: relative; width: 100%; margin-bottom: 1rem;">
+                                <input type="password" id="register-confirm-password" placeholder="Konfirmasi Password" required style="width: 100%; padding-right: 40px;">
+                                <i id="toggle-register-confirm-pass" class="fas fa-eye" role="button" aria-label="Tampilkan konfirmasi password" tabindex="0" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #888;"></i>
                             </div>
                             
                             <!-- Dropdown Pilih Oshi - Edit opsi di sini -->

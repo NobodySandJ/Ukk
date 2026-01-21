@@ -193,13 +193,27 @@ document.addEventListener('DOMContentLoaded', function () {
             document.getElementById('stat-active-orders').textContent = d.active_orders;
             document.getElementById('stat-revenue').textContent = 'Rp ' + (d.revenue || 0).toLocaleString('id-ID');
 
+            // Monthly Stats
+            try {
+                const monthly = await apiRequest('/api/admin/monthly-stats');
+                const monthlyEl = document.getElementById('stat-monthly-revenue');
+                const diffEl = document.getElementById('stat-revenue-diff');
+                if (monthlyEl) monthlyEl.textContent = 'Rp ' + (monthly.revenue || 0).toLocaleString('id-ID');
+                if (diffEl) {
+                    const diff = monthly.percentChange || 0;
+                    diffEl.textContent = (diff >= 0 ? '+' : '') + diff + '%';
+                    diffEl.style.color = diff >= 0 ? '#10b981' : '#ef4444';
+                }
+            } catch (e) { console.warn('Monthly stats not available'); }
+
             // Chart Data
             const stats = await apiRequest('/api/admin/stats');
             initDashboardChart(stats.chekiPerMember || {});
 
             // Recent Orders
             const orders = await apiRequest('/api/admin/all-orders');
-            renderOrders(orders.slice(0, 10)); // Top 10 recent
+            allOrders = orders; // Store for filtering
+            renderOrders(orders.slice(0, 20)); // Top 20 recent
         } catch (e) { /* handled by apiRequest */ }
     }
 
@@ -239,9 +253,52 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function renderOrders(orders) {
         const tbody = document.getElementById('orders-tbody');
-        tbody.innerHTML = orders.map(o => `
+        const now = new Date();
+
+        tbody.innerHTML = orders.map(o => {
+            // Check if undo is available (within 5 minutes of being marked as used)
+            // QUANTITY CHECK & UNDO LOGIC
+            let canUndo = false;
+            let diffMinutes = null; // Declare in outer scope for tooltip access
+            if (o.status_tiket === 'sudah_dipakai') {
+                if (o.dipakai_pada) {
+                    // Fix Timezone: If string doesn't specify timezone, assume UTC (server stores UTC)
+                    let timeStr = o.dipakai_pada;
+                    if (!timeStr.endsWith('Z') && !timeStr.match(/[+-]\d{2}:?\d{2}$/)) {
+                        timeStr += 'Z';
+                    }
+
+                    const usedAt = new Date(timeStr);
+                    const now = new Date(); // Browser local time (compatible with UTC date obj)
+                    diffMinutes = (now - usedAt) / (1000 * 60);
+
+                    console.log(`[DEBUG] Order ${o.id_pesanan}: Raw=${o.dipakai_pada}, ParsedUTC=${usedAt.toISOString()}, Now=${now.toISOString()}, Diff=${diffMinutes.toFixed(2)}m`);
+                    canUndo = diffMinutes <= 5;
+                } else {
+                    console.warn(`[DEBUG] Order ${o.id_pesanan} is 'sudah_dipakai' but has NO dipakai_pada timestamp.`);
+                }
+            }
+
+            // Format date
+            const orderDate = o.dibuat_pada ? new Date(o.dibuat_pada).toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' }) : '-';
+
+            // Status badge color
+            let statusBg = '#f1f5f9';
+            let statusColor = '#64748b';
+            if (o.status_tiket === 'berlaku') {
+                statusBg = '#dcfce7';
+                statusColor = '#16a34a';
+            } else if (o.status_tiket === 'sudah_dipakai') {
+                statusBg = '#fee2e2';
+                statusColor = '#dc2626';
+            }
+
+            return `
             <tr>
-                <td><strong>${o.id_pesanan}</strong></td>
+                <td>
+                    <strong>${o.id_pesanan}</strong><br>
+                    <small style="color:#94a3b8">${orderDate}</small>
+                </td>
                 <td>
                     ${o.nama_pelanggan}<br>
                     <small style="color:#64748b">${o.nomor_whatsapp || '-'}</small>
@@ -250,41 +307,116 @@ document.addEventListener('DOMContentLoaded', function () {
                     ${(o.detail_item || []).map(i => `${i.quantity}x ${i.name}`).join('<br>')}
                 </td>
                 <td>
-                    <span style="padding:4px 8px; border-radius:4px; font-size:0.75rem; font-weight:600; background: ${o.status_tiket === 'berlaku' ? '#dcfce7' : '#f1f5f9'}; color: ${o.status_tiket === 'berlaku' ? '#16a34a' : '#64748b'};">
+                    <span style="padding:4px 8px; border-radius:4px; font-size:0.75rem; font-weight:600; background: ${statusBg}; color: ${statusColor};">
                         ${o.status_tiket.toUpperCase()}
                     </span>
                 </td>
-                <td>
+                <td style="white-space: nowrap;">
                     ${o.status_tiket === 'berlaku' ?
-                `<button class="btn btn-icon-only btn-danger btn-mark-used" data-id="${o.id_pesanan}" title="Tandai Terpakai"><i class="fas fa-check"></i></button>` :
-                '-'
-            }
+                    `<button class="btn btn-icon-only btn-primary btn-mark-used" data-id="${o.id_pesanan}" title="Tandai Terpakai" style="width:32px;height:32px;"><i class="fas fa-check"></i></button>` : ''}
+                    ${canUndo ?
+                    `<button class="btn btn-icon-only btn-warning btn-undo-ticket" data-id="${o.id_pesanan}" title="Undo (Sisa: ${5 - Math.floor(diffMinutes)}m)" style="width:32px;height:32px;background:#f59e0b;"><i class="fas fa-undo"></i></button>` :
+                    (o.status_tiket === 'sudah_dipakai' ?
+                        `<button class="btn btn-icon-only" disabled 
+                            title="Undo tidak tersedia. Diff: ${diffMinutes ? diffMinutes.toFixed(1) + 'm' : 'N/A'}. (Maks 5m)" 
+                            style="width:32px;height:32px;background:#cbd5e1;cursor:not-allowed;">
+                            <i class="fas fa-undo" style="color:#94a3b8;"></i>
+                        </button>` : '')}
+                    <button class="btn btn-icon-only btn-danger btn-delete-order" data-id="${o.id_pesanan}" title="Hapus Pesanan" style="width:32px;height:32px;"><i class="fas fa-trash"></i></button>
                 </td>
             </tr>
-        `).join('') || '<tr><td colspan="5" style="text-align:center; padding:2rem; color:#94a3b8;">Belum ada pesanan</td></tr>';
+        `;
+        }).join('') || '<tr><td colspan="5" style="text-align:center; padding:2rem; color:#94a3b8;">Belum ada pesanan</td></tr>';
 
-        // Add Listeners
+        // Event Listeners - Mark as Used
         document.querySelectorAll('.btn-mark-used').forEach(btn => {
             btn.addEventListener('click', () => {
                 showConfirm(`Tandai pesanan ${btn.dataset.id} sebagai SUDAH DIPAKAI?`, async () => {
-                    await apiRequest('/api/admin/redeem-ticket', {
-                        method: 'POST', body: JSON.stringify({ orderId: btn.dataset.id })
+                    await apiRequest('/api/admin/update-ticket-status', {
+                        method: 'POST', body: JSON.stringify({ order_id: btn.dataset.id, new_status: 'sudah_dipakai' })
                     });
                     showToast('Status berhasil diupdate', 'success');
                     loadDashboard();
                 });
             });
         });
+
+        // Event Listeners - Undo
+        document.querySelectorAll('.btn-undo-ticket').forEach(btn => {
+            btn.addEventListener('click', () => {
+                showConfirm(`Undo status tiket ${btn.dataset.id}? (Kembalikan ke BERLAKU)`, async () => {
+                    await apiRequest('/api/admin/undo-ticket-status', {
+                        method: 'POST', body: JSON.stringify({ order_id: btn.dataset.id })
+                    });
+                    showToast('Status tiket berhasil di-undo', 'success');
+                    loadDashboard();
+                });
+            });
+        });
+
+        // Event Listeners - Delete
+        document.querySelectorAll('.btn-delete-order').forEach(btn => {
+            btn.addEventListener('click', () => {
+                showConfirm(`HAPUS pesanan ${btn.dataset.id}? Stok akan dikembalikan.`, async () => {
+                    await apiRequest(`/api/admin/orders/${btn.dataset.id}`, { method: 'DELETE' });
+                    showToast('Pesanan berhasil dihapus', 'success');
+                    loadDashboard();
+                });
+            });
+        });
     }
 
-    // Stock
-    // Stock management removed from dashboard
+    // --- FILTER & SEARCH ---
+    let allOrders = [];
 
-    document.getElementById('search-input')?.addEventListener('input', async (e) => {
-        // Simple client search for now or fetch
-        // For simplicity: reload
-        // In real app: filter array
+    // Initialize year dropdown
+    function initOrderFilters() {
+        const yearSelect = document.getElementById('filter-year');
+        if (yearSelect) {
+            const currentYear = new Date().getFullYear();
+            for (let y = currentYear; y >= currentYear - 5; y--) {
+                const option = document.createElement('option');
+                option.value = y;
+                option.textContent = y;
+                yearSelect.appendChild(option);
+            }
+        }
+    }
+    initOrderFilters();
+
+    // Filter button
+    document.getElementById('btn-filter-orders')?.addEventListener('click', async () => {
+        const month = document.getElementById('filter-month').value;
+        const year = document.getElementById('filter-year').value;
+
+        let url = '/api/admin/all-orders';
+        const params = [];
+        if (month) params.push(`month=${month}`);
+        if (year) params.push(`year=${year}`);
+        if (params.length > 0) url += '?' + params.join('&');
+
+        try {
+            const orders = await apiRequest(url);
+            allOrders = orders;
+            renderOrders(orders.slice(0, 50));
+            showToast(`Menampilkan ${orders.length} pesanan`, 'success');
+        } catch (e) { /* handled */ }
     });
+
+    // Search input
+    document.getElementById('search-input')?.addEventListener('input', (e) => {
+        const query = e.target.value.toLowerCase();
+        if (!query) {
+            renderOrders(allOrders.slice(0, 50));
+            return;
+        }
+        const filtered = allOrders.filter(o =>
+            o.id_pesanan?.toLowerCase().includes(query) ||
+            o.nama_pelanggan?.toLowerCase().includes(query)
+        );
+        renderOrders(filtered.slice(0, 50));
+    });
+
 
     // --- MEMBERS ---
     let allMembers = [];
@@ -593,12 +725,14 @@ document.addEventListener('DOMContentLoaded', function () {
             (settingsList || []).forEach(item => { settings[item.nama] = item.nilai; });
 
             const stokEl = document.getElementById('setting-stok');
+            const stockDisplayEl = document.getElementById('stock-display');
             const hargaMemberEl = document.getElementById('setting-harga-member');
             const hargaGrupEl = document.getElementById('setting-harga-grup');
 
             // Use REAL stock from products table (same as cheki.js)
             const realStock = productData?.cheki_stock ?? settings.stok_cheki ?? 0;
             if (stokEl) stokEl.value = realStock;
+            if (stockDisplayEl) stockDisplayEl.textContent = realStock;
             if (hargaMemberEl) hargaMemberEl.value = settings.harga_cheki_member || 25000;
             if (hargaGrupEl) hargaGrupEl.value = settings.harga_cheki_grup || 30000;
         } catch (e) {
@@ -778,37 +912,33 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Simple auto-save stock on input change (debounced)
-    let stockTimeout = null;
-    let previousStockValue = 0;
-
+    // --- STOCK MANAGEMENT (Redesigned UI) ---
     const stockInput = document.getElementById('setting-stok');
-    if (stockInput) {
-        // Store initial value when loaded
-        stockInput.addEventListener('focus', function () {
-            previousStockValue = parseInt(this.value, 10) || 0;
-        });
+    const stockDisplay = document.getElementById('stock-display');
 
-        stockInput.addEventListener('input', function () {
-            clearTimeout(stockTimeout);
-            stockTimeout = setTimeout(async () => {
-                const newValue = parseInt(this.value, 10);
-                if (isNaN(newValue) || newValue < 0) {
-                    showToast('Masukkan nilai stok yang valid', 'error');
-                    return;
-                }
+    // Stock Increase Button
 
-                const delta = newValue - previousStockValue;
-                if (delta === 0) return;
 
-                const resultStock = await updateStock(delta);
-                if (resultStock !== null) {
-                    previousStockValue = resultStock;
-                    this.value = resultStock;
-                }
-            }, 500); // Wait 500ms after typing stops
-        });
-    }
+    // Set Stock Button - applies the value directly
+    document.getElementById('set-stock-btn')?.addEventListener('click', async () => {
+        const newValue = parseInt(stockInput?.value, 10);
+        if (isNaN(newValue) || newValue < 0) {
+            showToast('Masukkan nilai stok yang valid', 'error');
+            return;
+        }
+
+        try {
+            const result = await apiRequest('/api/admin/set-cheki-stock', {
+                method: 'POST',
+                body: JSON.stringify({ stockValue: newValue })
+            });
+            showToast(`Stok berhasil diset: ${result.newStock}`, 'success');
+            if (stockDisplay) stockDisplay.textContent = result.newStock;
+            if (stockInput) stockInput.value = result.newStock;
+        } catch (e) {
+            showToast('Gagal menyimpan stok', 'error');
+        }
+    });
 
     // Settings Save (Price only - stock handled separately)
     document.getElementById('save-settings-btn')?.addEventListener('click', async () => {

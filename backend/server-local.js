@@ -29,8 +29,8 @@ const logger = winston.createLogger({
     ),
     transports: [
         new winston.transports.File({ filename: 'error.log', level: 'error' }),
-        new winston.transports.File({ filename: 'combined.log' }),
-        new winston.transports.Console({ format: winston.format.simple() })
+        new winston.transports.File({ filename: 'combined.log' })
+        // Console transport removed to keep terminal clean as per user request
     ],
 });
 
@@ -433,8 +433,8 @@ app.get("/api/products-and-stock", async (req, res) => {
                     lineup: settings.event_lineup || null
                 };
 
-                // Total stock (sum of all active products)
-                responseData.cheki_stock = allProducts.reduce((sum, p) => sum + (p.stock || 0), 0);
+                // GLOBAL STOCK: Use pengaturan table instead of products.stock
+                responseData.cheki_stock = parseInt(settings.stok_cheki || '0', 10);
             } catch (dbError) {
                 console.error("DB Fetch Error (using JSON fallback):", dbError.message);
                 responseData.cheki_stock = await getChekiStock();
@@ -461,25 +461,15 @@ app.post("/get-snap-token", authenticateToken, async (req, res) => {
     try {
         const { transaction_details, item_details, customer_details } = req.body;
 
-        // --- KRUSIAL: VERIFIKASI KETERSEDIAAN STOK ---
-        // Mencegah penjualan melebihi stok yang tersedia (overselling)
-        // ketika terjadi permintaan tinggi secara bersamaan (Race Condition).
-        for (const item of item_details) {
-            const { data: product, error } = await supabase
-                .from('products')
-                .select('stock, name')
-                .eq('id', item.id) // ID item harus sesuai dengan ID produk di database
-                .single();
+        // --- KRUSIAL: VERIFIKASI KETERSEDIAAN STOK GLOBAL ---
+        // Menggunakan stok global dari tabel pengaturan (bukan per-produk)
+        const totalQuantity = item_details.reduce((sum, item) => sum + item.quantity, 0);
+        const globalStock = await getChekiStock();
 
-            if (error || !product) {
-                return res.status(400).json({ message: `Produk tidak ditemukan: ${item.name}` });
-            }
-
-            if (product.stock < item.quantity) {
-                return res.status(400).json({
-                    message: `Stok tidak cukup untuk ${product.name}. Tersisa: ${product.stock}, diminta: ${item.quantity}`
-                });
-            }
+        if (globalStock < totalQuantity) {
+            return res.status(400).json({
+                message: `Stok tidak cukup. Tersisa: ${globalStock} tiket, diminta: ${totalQuantity} tiket`
+            });
         }
         // ---------------------------------------------
 
@@ -525,7 +515,7 @@ app.post("/get-snap-token", authenticateToken, async (req, res) => {
 });
 
 // Titik Akhir: Memperbarui Status Pesanan (Webhook/Callback)
-// Versi 2: Mengurangi stok produk secara permanen setelah pembayaran berhasil
+// Versi 3: Mengurangi stok produk langsung di tabel products (tanpa RPC)
 app.post("/update-order-status", async (req, res) => {
     if (isDemoMode) return res.status(200).json({ message: "OK (Mode Demo)" });
 
@@ -535,29 +525,46 @@ app.post("/update-order-status", async (req, res) => {
 
         // Memperbarui status tiket menjadi 'berlaku' jika pembayaran berhasil
         if (transaction_status === "settlement" || transaction_status === "capture") {
+            // Cek apakah pesanan sudah diproses sebelumnya untuk menghindari double stock reduction
+            const { data: existingOrder } = await supabase
+                .from("pesanan")
+                .select("status_tiket")
+                .eq("id_pesanan", order_id)
+                .single();
+
+            if (existingOrder && existingOrder.status_tiket === 'berlaku') {
+                return res.status(200).json({ message: "Pesanan sudah diproses sebelumnya." });
+            }
+
             const { error: updateError } = await supabase
                 .from("pesanan").update({ status_tiket: "berlaku" })
                 .eq("id_pesanan", order_id);
 
-            if (updateError) throw new Error("Update failed");
+            if (updateError) throw new Error("Update failed: " + updateError.message);
 
-            // Kurangi stok per produk di tabel products
-            const { data: orderItems } = await supabase
-                .from("order_items")
-                .select("product_id, quantity")
-                .eq("order_id", order_id);
+            // GLOBAL STOCK: Kurangi stok di tabel pengaturan (bukan per-produk)
+            const { data: pesanan } = await supabase
+                .from("pesanan")
+                .select("detail_item")
+                .eq("id_pesanan", order_id)
+                .single();
 
-            if (orderItems && orderItems.length > 0) {
-                for (const item of orderItems) {
-                    await supabase.rpc('decrement_product_stock', {
-                        p_product_id: item.product_id,
-                        p_quantity: item.quantity
-                    });
-                }
+            if (pesanan?.detail_item) {
+                const totalQuantity = pesanan.detail_item.reduce((sum, item) => sum + (item.quantity || 0), 0);
+                const currentStock = await getChekiStock();
+                const newStock = Math.max(0, currentStock - totalQuantity);
+
+                await supabase
+                    .from('pengaturan')
+                    .update({ nilai: newStock.toString() })
+                    .eq('nama', 'stok_cheki');
+
+                console.log(`[STOCK] Global stock reduced: ${currentStock} -> ${newStock} for order ${order_id}`);
             }
         }
         res.status(200).json({ message: "Status updated" });
     } catch (e) {
+        console.error('[ERROR] update-order-status:', e.message);
         res.status(500).json({ message: "Error processing notification", error: e.message });
     }
 });
@@ -705,7 +712,7 @@ app.get("/api/admin/dashboard-stats", authenticateToken, authorizeAdmin, async (
     }
 });
 
-// Endpoint: All Orders
+// Endpoint: All Orders (dengan filter bulan/tahun)
 app.get("/api/admin/all-orders", authenticateToken, authorizeAdmin, async (req, res) => {
     if (isDemoMode) {
         return res.json([
@@ -713,9 +720,23 @@ app.get("/api/admin/all-orders", authenticateToken, authorizeAdmin, async (req, 
         ]);
     }
     try {
-        const { data, error } = await supabase.from('pesanan').select('*')
+        const { month, year } = req.query;
+        let query = supabase.from('pesanan').select('*')
             .neq('status_tiket', 'pending')
             .order('dibuat_pada', { ascending: false });
+
+        // Filter berdasarkan bulan dan tahun jika disediakan
+        if (month && year) {
+            const startDate = new Date(year, month - 1, 1).toISOString();
+            const endDate = new Date(year, month, 0, 23, 59, 59).toISOString();
+            query = query.gte('dibuat_pada', startDate).lte('dibuat_pada', endDate);
+        } else if (year) {
+            const startDate = new Date(year, 0, 1).toISOString();
+            const endDate = new Date(year, 11, 31, 23, 59, 59).toISOString();
+            query = query.gte('dibuat_pada', startDate).lte('dibuat_pada', endDate);
+        }
+
+        const { data, error } = await query;
         if (error) throw error;
         res.json(data);
     } catch (e) {
@@ -724,12 +745,21 @@ app.get("/api/admin/all-orders", authenticateToken, authorizeAdmin, async (req, 
 });
 
 // Endpoint: Update Ticket Status
+// Menambahkan timestamp dipakai_pada untuk fitur undo
 app.post("/api/admin/update-ticket-status", authenticateToken, authorizeAdmin, async (req, res) => {
     if (isDemoMode) return res.json({ message: 'Status tiket berhasil diubah. (Demo)' });
     try {
         const { order_id, new_status } = req.body;
         if (!order_id || !new_status) return res.status(400).json({ message: "Data tidak lengkap." });
-        const { error } = await supabase.from('pesanan').update({ status_tiket: new_status }).eq('id_pesanan', order_id);
+
+        const updateData = { status_tiket: new_status };
+
+        // Jika ditandai sebagai sudah_dipakai, simpan timestamp
+        if (new_status === 'sudah_dipakai') {
+            updateData.dipakai_pada = new Date().toISOString();
+        }
+
+        const { error } = await supabase.from('pesanan').update(updateData).eq('id_pesanan', order_id);
         if (error) throw error;
         res.json({ message: `Status tiket berhasil diubah.` });
     } catch (e) {
@@ -737,54 +767,170 @@ app.post("/api/admin/update-ticket-status", authenticateToken, authorizeAdmin, a
     }
 });
 
-// Endpoint: Update Cheki Stock (updates products table directly)
-app.post('/api/admin/update-cheki-stock', authenticateToken, authorizeAdmin, async (req, res) => {
-    if (isDemoMode) return res.json({ message: 'Stok berhasil diperbarui! (Demo)', newStock: 100 });
+// (Old update-cheki-stock removed - using global stock version at line 1155)
+
+// Endpoint: Undo Ticket Status (dalam 5 menit)
+app.post('/api/admin/undo-ticket-status', authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) return res.json({ message: 'Status tiket berhasil di-undo. (Demo)' });
     try {
-        const { changeValue } = req.body;
-        if (typeof changeValue !== 'number') return res.status(400).json({ message: 'Nilai tidak valid.' });
+        const { order_id } = req.body;
+        if (!order_id) return res.status(400).json({ message: "ID pesanan diperlukan." });
 
-        // Get all active products
-        const { data: products, error: fetchError } = await supabase
-            .from('products')
-            .select('id, stock')
-            .eq('is_active', true);
+        // Ambil data pesanan
+        const { data: order, error: fetchError } = await supabase
+            .from('pesanan')
+            .select('status_tiket, dipakai_pada')
+            .eq('id_pesanan', order_id)
+            .single();
 
-        if (fetchError) throw new Error(`Gagal ambil produk: ${fetchError.message}`);
-        if (!products || products.length === 0) {
-            return res.status(400).json({ message: 'Tidak ada produk aktif.' });
+        if (fetchError || !order) {
+            return res.status(404).json({ message: "Pesanan tidak ditemukan." });
         }
 
-        // Distribute change evenly across all products, apply remainder to first product
-        const perProductChange = Math.floor(changeValue / products.length);
-        const remainder = changeValue % products.length;
-
-        // Update each product
-        for (let i = 0; i < products.length; i++) {
-            const product = products[i];
-            const additionalChange = i === 0 ? remainder : 0;
-            const newStock = Math.max(0, (product.stock || 0) + perProductChange + additionalChange);
-
-            const { error: updateError } = await supabase
-                .from('products')
-                .update({ stock: newStock })
-                .eq('id', product.id);
-
-            if (updateError) throw new Error(`Gagal update stok produk: ${updateError.message}`);
+        // Cek apakah status sudah_dipakai dan dalam 5 menit
+        if (order.status_tiket !== 'sudah_dipakai') {
+            return res.status(400).json({ message: "Hanya tiket dengan status 'sudah_dipakai' yang bisa di-undo." });
         }
 
-        // Calculate new total stock
-        const { data: updatedProducts } = await supabase
-            .from('products')
-            .select('stock')
-            .eq('is_active', true);
+        if (order.dipakai_pada) {
+            const usedAt = new Date(order.dipakai_pada);
+            const now = new Date();
+            const diffMinutes = (now - usedAt) / (1000 * 60);
 
-        const newStock = (updatedProducts || []).reduce((sum, p) => sum + (p.stock || 0), 0);
-        res.json({ message: 'Stok berhasil diperbarui!', newStock });
+            if (diffMinutes > 5) {
+                return res.status(400).json({ message: "Waktu undo sudah lewat (maksimal 5 menit)." });
+            }
+        }
+
+        // Kembalikan status ke berlaku
+        const { error: updateError } = await supabase
+            .from('pesanan')
+            .update({ status_tiket: 'berlaku', dipakai_pada: null })
+            .eq('id_pesanan', order_id);
+
+        if (updateError) throw updateError;
+        res.json({ message: "Status tiket berhasil dikembalikan ke 'berlaku'." });
     } catch (e) {
-        res.status(500).json({ message: e.message });
+        res.status(500).json({ message: "Gagal undo status tiket.", error: e.message });
     }
 });
+
+// Endpoint: Delete Order (hapus pesanan)
+app.delete('/api/admin/orders/:id', authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) return res.json({ message: 'Pesanan berhasil dihapus. (Demo)' });
+    try {
+        const { id } = req.params;
+
+        // Ambil data pesanan untuk restore stok
+        const { data: order, error: fetchError } = await supabase
+            .from('pesanan')
+            .select('detail_item, status_tiket')
+            .eq('id_pesanan', id)
+            .single();
+
+        if (fetchError || !order) {
+            return res.status(404).json({ message: "Pesanan tidak ditemukan." });
+        }
+
+        // Kembalikan stok jika pesanan sudah berlaku/sudah_dipakai
+        if (order.status_tiket === 'berlaku' || order.status_tiket === 'sudah_dipakai') {
+            if (order.detail_item && Array.isArray(order.detail_item)) {
+                for (const item of order.detail_item) {
+                    const { data: product } = await supabase
+                        .from('products')
+                        .select('stock')
+                        .eq('id', item.id)
+                        .single();
+
+                    if (product) {
+                        const newStock = (product.stock || 0) + item.quantity;
+                        await supabase
+                            .from('products')
+                            .update({ stock: newStock })
+                            .eq('id', item.id);
+                    }
+                }
+            }
+        }
+
+        // Hapus order_items terlebih dahulu
+        await supabase.from('order_items').delete().eq('order_id', id);
+
+        // Hapus pesanan
+        const { error: deleteError } = await supabase
+            .from('pesanan')
+            .delete()
+            .eq('id_pesanan', id);
+
+        if (deleteError) throw deleteError;
+        res.json({ message: "Pesanan berhasil dihapus dan stok dikembalikan." });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal menghapus pesanan.", error: e.message });
+    }
+});
+
+// Endpoint: Monthly Stats (statistik bulanan)
+app.get('/api/admin/monthly-stats', authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) {
+        return res.json({
+            revenue: 1500000,
+            orderCount: 25,
+            percentChange: 15.5,
+            prevMonthRevenue: 1300000
+        });
+    }
+    try {
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
+
+        // Bulan ini
+        const startCurrent = new Date(currentYear, currentMonth, 1).toISOString();
+        const endCurrent = new Date(currentYear, currentMonth + 1, 0, 23, 59, 59).toISOString();
+
+        // Bulan lalu
+        const startPrev = new Date(currentYear, currentMonth - 1, 1).toISOString();
+        const endPrev = new Date(currentYear, currentMonth, 0, 23, 59, 59).toISOString();
+
+        // Data bulan ini
+        const { data: currentData } = await supabase
+            .from('pesanan')
+            .select('total_harga')
+            .in('status_tiket', ['berlaku', 'sudah_dipakai'])
+            .gte('dibuat_pada', startCurrent)
+            .lte('dibuat_pada', endCurrent);
+
+        // Data bulan lalu
+        const { data: prevData } = await supabase
+            .from('pesanan')
+            .select('total_harga')
+            .in('status_tiket', ['berlaku', 'sudah_dipakai'])
+            .gte('dibuat_pada', startPrev)
+            .lte('dibuat_pada', endPrev);
+
+        const revenue = (currentData || []).reduce((sum, o) => sum + (o.total_harga || 0), 0);
+        const orderCount = (currentData || []).length;
+        const prevMonthRevenue = (prevData || []).reduce((sum, o) => sum + (o.total_harga || 0), 0);
+
+        let percentChange = 0;
+        if (prevMonthRevenue > 0) {
+            percentChange = Math.round(((revenue - prevMonthRevenue) / prevMonthRevenue) * 100 * 10) / 10;
+        } else if (revenue > 0) {
+            percentChange = 100;
+        }
+
+        res.json({
+            revenue,
+            orderCount,
+            percentChange,
+            prevMonthRevenue
+        });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengambil statistik bulanan.", error: e.message });
+    }
+});
+
+// (Old set-cheki-stock removed - using global stock version at line 1081)
 
 // Endpoint: All Users
 app.get("/api/admin/all-users", authenticateToken, authorizeAdmin, async (req, res) => {
@@ -892,6 +1038,57 @@ app.put("/api/admin/settings/bulk", authenticateToken, authorizeAdmin, async (re
     }
 });
 
+// POST: Set Absolute Cheki Stock (GLOBAL STOCK from pengaturan table)
+app.post('/api/admin/set-cheki-stock', authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) return res.json({ message: 'Stok berhasil diset! (Demo)', newStock: req.body.stockValue || 10 });
+
+    try {
+        const { stockValue } = req.body;
+        if (typeof stockValue !== 'number' || stockValue < 0) {
+            return res.status(400).json({ message: 'Nilai stok tidak valid.' });
+        }
+
+        // Update stok global di tabel pengaturan
+        const { error } = await supabase
+            .from('pengaturan')
+            .update({ nilai: stockValue.toString() })
+            .eq('nama', 'stok_cheki');
+
+        if (error) throw new Error(`Gagal update stok: ${error.message}`);
+
+        console.log(`[INFO] Global stock set to: ${stockValue}`);
+        res.json({ message: 'Stok berhasil disimpan!', newStock: stockValue });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
+
+// POST: Update Cheki Stock (Change by delta)
+app.post('/api/admin/update-cheki-stock', authenticateToken, authorizeAdmin, async (req, res) => {
+    if (isDemoMode) return res.json({ message: 'Stok diperbarui! (Demo)', newStock: 10 });
+
+    try {
+        const { changeValue } = req.body;
+        if (typeof changeValue !== 'number') return res.status(400).json({ message: 'Nilai tidak valid.' });
+
+        // GLOBAL STOCK: Ambil stok dari tabel pengaturan
+        const currentStock = await getChekiStock();
+        const newStock = Math.max(0, currentStock + changeValue);
+
+        // Update stok global di tabel pengaturan
+        const { error } = await supabase
+            .from('pengaturan')
+            .update({ nilai: newStock.toString() })
+            .eq('nama', 'stok_cheki');
+
+        if (error) throw new Error(`Gagal update stok: ${error.message}`);
+
+        console.log(`[INFO] Global stock updated: ${currentStock} -> ${newStock} (change: ${changeValue})`);
+        res.json({ message: 'Stok berhasil diperbarui!', newStock });
+    } catch (e) {
+        res.status(500).json({ message: e.message });
+    }
+});
 
 
 // ===================================

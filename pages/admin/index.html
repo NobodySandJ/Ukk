@@ -83,7 +83,7 @@
             
             <!-- VIEW: DASHBOARD -->
             <section id="view-dashboard" class="view-section active">
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
                     <!-- Stats Cards -->
                     <div class="card" style="margin-bottom: 0;">
                         <div style="color: #64748b; font-size: 0.9rem; font-weight: 500;">Total User</div>
@@ -96,6 +96,11 @@
                     <div class="card" style="margin-bottom: 0;">
                         <div style="color: #64748b; font-size: 0.9rem; font-weight: 500;">Total Pendapatan</div>
                         <div style="font-size: 2rem; font-weight: 700; color: #10b981; margin-top: 0.5rem;" id="stat-revenue">Rp 0</div>
+                    </div>
+                    <div class="card" style="margin-bottom: 0;">
+                        <div style="color: #64748b; font-size: 0.9rem; font-weight: 500;">Pendapatan Bulan Ini</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: #3b82f6; margin-top: 0.5rem;" id="stat-monthly-revenue">Rp 0</div>
+                        <small style="color: #64748b;">vs bulan lalu: <span id="stat-revenue-diff" style="font-weight: 600;">+0%</span></small>
                     </div>
                 </div>
 
@@ -111,10 +116,29 @@
 
                 <!-- Orders Table -->
                 <div class="card">
-                    <div class="card-header">
+                    <div class="card-header" style="flex-wrap: wrap; gap: 1rem;">
                         <div class="card-title">Pesanan Terbaru</div>
-                        <div style="display: flex; gap: 0.5rem;">
-                             <input type="text" id="search-input" class="form-control" placeholder="Cari pesanan..." style="width: 200px; padding: 0.5rem;">
+                        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center;">
+                            <select id="filter-month" class="form-control" style="width: auto; padding: 0.5rem;">
+                                <option value="">Semua Bulan</option>
+                                <option value="1">Januari</option>
+                                <option value="2">Februari</option>
+                                <option value="3">Maret</option>
+                                <option value="4">April</option>
+                                <option value="5">Mei</option>
+                                <option value="6">Juni</option>
+                                <option value="7">Juli</option>
+                                <option value="8">Agustus</option>
+                                <option value="9">September</option>
+                                <option value="10">Oktober</option>
+                                <option value="11">November</option>
+                                <option value="12">Desember</option>
+                            </select>
+                            <select id="filter-year" class="form-control" style="width: auto; padding: 0.5rem;">
+                                <option value="">Semua Tahun</option>
+                            </select>
+                            <button class="btn btn-outline" id="btn-filter-orders" style="padding: 0.5rem 1rem;"><i class="fas fa-filter"></i> Filter</button>
+                            <input type="text" id="search-input" class="form-control" placeholder="Cari..." style="width: 150px; padding: 0.5rem;">
                         </div>
                     </div>
                     <div class="table-responsive">
@@ -194,12 +218,21 @@
                         <div class="card-title">Pengaturan Stok & Harga</div>
                     </div>
                     
-                    <!-- Stock Management - Simple Input -->
-                    <div style="background: #f8fafc; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
-                        <div class="form-group" style="margin-bottom: 0;">
-                            <label class="form-label" style="font-weight: 600;">Stok Tiket Cheki</label>
-                            <input type="number" id="setting-stok" class="form-control" min="0" placeholder="Masukkan jumlah stok..." style="font-size: 1.25rem; padding: 0.75rem;">
-                            <small style="color: #64748b; margin-top: 0.5rem; display: block;">Stok akan otomatis tersimpan saat diubah</small>
+                    <!-- Stock Management - Redesigned: Left display, Right input -->
+                    <!-- Stock Management - Simplified -->
+                    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                            <!-- Left: Stock Display -->
+                            <div>
+                                <div style="font-size: 0.85rem; color: #64748b; margin-bottom: 0.25rem;">Stok Tiket Tersedia</div>
+                                <div style="font-size: 2.5rem; font-weight: 700; color: #0f172a;" id="stock-display">0</div>
+                                <div style="font-size: 0.75rem; color: #94a3b8;">tiket</div>
+                            </div>
+                            <!-- Right: Stock Input -->
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="number" id="setting-stok" class="form-control" min="0" value="0" style="width: 100px; text-align: center; font-size: 1.25rem; font-weight: 600; padding: 0.5rem;">
+                                <button class="btn btn-primary" id="set-stock-btn" style="padding: 0.5rem 1.5rem;"><i class="fas fa-save"></i> Simpan</button>
+                            </div>
                         </div>
                     </div>
                     

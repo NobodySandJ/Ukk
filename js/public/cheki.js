@@ -297,13 +297,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         resetCart();
                         showToast('Pembayaran berhasil! Mengalihkan ke dashboard...', 'success', 1000);
-                        // Pengalihan instan ke dashboard
-                        window.location.href = `/dashboard.html?payment_success=true&order_id=${midtransResult.order_id}`;
+                        // Pengalihan ke halaman dashboard user untuk menampilkan tiket
+                        window.location.href = `${basePath}pages/user/dashboard.html?payment_success=true&order_id=${midtransResult.order_id}`;
                     } catch (error) {
                         console.error('Error updating order status:', error);
                         showToast('Pembayaran berhasil, tapi ada kendala teknis. Silakan segarkan halaman.', 'warning', 5000);
                         setTimeout(() => {
-                            window.location.href = `/dashboard.html`;
+                            window.location.href = `${basePath}pages/user/dashboard.html`;
                         }, 5000);
                     }
                 },
@@ -361,7 +361,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const urlParams = new URLSearchParams(window.location.search);
         const status = urlParams.get('transaction_status');
         if (status === 'settlement' || status === 'capture') {
-            window.location.href = `/dashboard.html?payment_success=true`;
+            window.location.href = `${basePath}pages/user/dashboard.html?payment_success=true`;
         }
     };
 
