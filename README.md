@@ -85,7 +85,9 @@ Jalankan script SQL `migration_v2_complex.sql` di Supabase SQL Editor untuk memb
 
 ```bash
 # Mode Development
-node backend/server-local.js
+npm run dev
+# atau
+node backend/server.js
 
 # Akses di browser: http://localhost:3000
 ```

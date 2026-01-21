@@ -1,16 +1,16 @@
 {
   "name": "refresh-breeze",
   "version": "1.0.0",
-  "description": "Refresh Breeze - Backend Server",
+  "description": "Refresh Breeze - JKT48 Fanbase Web App Backend",
   "main": "server.js",
   "scripts": {
-    "start": "node server-local.js",
-    "dev": "node server-local.js",
+    "start": "node server.js",
+    "dev": "node server.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "keywords": ["node", "express", "supabase", "midtrans", "jkt48"],
+  "author": "Refresh Breeze Team",
+  "license": "MIT",
   "dependencies": {
     "@supabase/supabase-js": "^2.38.4",
     "bcryptjs": "^2.4.3",

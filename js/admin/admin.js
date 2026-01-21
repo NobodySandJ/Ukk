@@ -3,10 +3,8 @@
 // Antarmuka Modern, Tanpa Alert Bawaan, Responsif Penuh
 // ================================================================
 
-if (typeof window.basePath === 'undefined') {
-    window.basePath = window.appBasePath || '../../';
-}
-var basePath = window.basePath;
+// Menggunakan basePath global dari script.js
+var basePath = window.basePath || '../../';
 
 document.addEventListener('DOMContentLoaded', function () {
     // ============================================================
@@ -272,10 +270,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     const now = new Date(); // Browser local time (compatible with UTC date obj)
                     diffMinutes = (now - usedAt) / (1000 * 60);
 
-                    console.log(`[DEBUG] Order ${o.id_pesanan}: Raw=${o.dipakai_pada}, ParsedUTC=${usedAt.toISOString()}, Now=${now.toISOString()}, Diff=${diffMinutes.toFixed(2)}m`);
                     canUndo = diffMinutes <= 5;
-                } else {
-                    console.warn(`[DEBUG] Order ${o.id_pesanan} is 'sudah_dipakai' but has NO dipakai_pada timestamp.`);
                 }
             }
 

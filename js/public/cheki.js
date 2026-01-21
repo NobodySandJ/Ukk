@@ -1,9 +1,7 @@
 // Halaman Pembelian Tiket Cheki
 // Mengelola keranjang belanja, ketersediaan stok, dan integrasi pembayaran Midtrans
-if (typeof window.basePath === 'undefined') {
-    window.basePath = window.appBasePath || '../../';
-}
-var basePath = window.basePath;
+// Menggunakan basePath global dari script.js
+var basePath = window.basePath || '../../';
 
 document.addEventListener('DOMContentLoaded', () => {
     // Memastikan skrip hanya berjalan di halaman Cheki
