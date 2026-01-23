@@ -240,6 +240,73 @@ const deleteOrder = async (req, res) => {
     }
 };
 
+const getMonthlyStats = async (req, res) => {
+    if (isDemoMode) {
+        return res.json({ revenue: 1500000, percentChange: 12.5 });
+    }
+
+    try {
+        const now = new Date();
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+        const startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+        const endOfLastMonth = new Date(now.getFullYear(), now.getMonth(), 0).toISOString();
+
+        // Current Month Revenue
+        const { data: currentData } = await supabase
+            .from('pesanan')
+            .select('total_harga')
+            .gte('dibuat_pada', startOfMonth)
+            .in('status_tiket', ['berlaku', 'sudah_dipakai']);
+
+        const currentRevenue = (currentData || []).reduce((sum, o) => sum + (o.total_harga || 0), 0);
+
+        // Last Month Revenue
+        const { data: lastData } = await supabase
+            .from('pesanan')
+            .select('total_harga')
+            .gte('dibuat_pada', startOfLastMonth)
+            .lte('dibuat_pada', endOfLastMonth)
+            .in('status_tiket', ['berlaku', 'sudah_dipakai']);
+
+        const lastRevenue = (lastData || []).reduce((sum, o) => sum + (o.total_harga || 0), 0);
+
+        // Calculate Percentage Change
+        let percentChange = 0;
+        if (lastRevenue === 0) {
+            percentChange = currentRevenue > 0 ? 100 : 0;
+        } else {
+            percentChange = ((currentRevenue - lastRevenue) / lastRevenue) * 100;
+        }
+
+        res.json({
+            revenue: currentRevenue,
+            percentChange: parseFloat(percentChange.toFixed(1))
+        });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengambil statistik bulanan.", error: e.message });
+    }
+};
+
+const getAllOrders = async (req, res) => {
+    if (isDemoMode) {
+        return res.json([
+            { id_pesanan: 'ORDER-123', nama_pelanggan: 'Demo User', total_harga: 50000, status_tiket: 'berlaku' }
+        ]);
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from('pesanan')
+            .select('*')
+            .order('dibuat_pada', { ascending: false });
+
+        if (error) throw error;
+        res.json(data || []);
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengambil data pesanan.", error: e.message });
+    }
+};
+
 module.exports = {
     getAdminStats,
     getDashboardStats,
@@ -250,5 +317,7 @@ module.exports = {
     setChekiStock,
     updateChekiStock,
     undoTicketStatus,
-    deleteOrder
+    deleteOrder,
+    getAllOrders,
+    getMonthlyStats
 };

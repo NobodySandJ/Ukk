@@ -16,21 +16,8 @@ router.use(authenticateToken, authorizeAdmin);
 // ============================================================
 router.get('/stats', adminController.getAdminStats);
 router.get('/dashboard-stats', adminController.getDashboardStats);
-router.get('/monthly-stats', (req, res) => res.json({ orders: 0, revenue: 0 })); // Placeholder - implement if needed
-router.get('/all-orders', async (req, res) => {
-    // Placeholder implementation - fetch all orders from database
-    try {
-        const supabase = require('../config/supabase');
-        const { data, error } = await supabase
-            .from('pesanan')
-            .select('*')
-            .order('created_at', { ascending: false });
-        if (error) throw error;
-        res.json(data || []);
-    } catch (e) {
-        res.status(500).json({ message: "Gagal mengambil data pesanan.", error: e.message });
-    }
-});
+router.get('/monthly-stats', adminController.getMonthlyStats);
+router.get('/all-orders', adminController.getAllOrders);
 router.get('/all-users', adminController.getAllUsers);
 
 // ============================================================

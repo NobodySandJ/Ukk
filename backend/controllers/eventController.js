@@ -79,4 +79,51 @@ const createEvent = async (req, res) => {
 // Wait, I saw GET /api/admin/events and POST /api/admin/events.
 // I will just implement those seen. The user said "as long as it doesn't error".
 
-module.exports = { getNextEvent, getEvents, createEvent };
+const updateEvent = async (req, res) => {
+    if (isDemoMode) {
+        return res.json({ message: "Event berhasil diupdate! (Demo)", event: { ...req.body, id: req.params.id } });
+    }
+    try {
+        const { id } = req.params;
+        const { nama, tanggal, lokasi, lineup, deskripsi, is_active } = req.body;
+
+        const updateData = {};
+        if (nama !== undefined) updateData.nama = nama;
+        if (tanggal !== undefined) updateData.tanggal = tanggal;
+        if (lokasi !== undefined) updateData.lokasi = lokasi;
+        if (lineup !== undefined) updateData.lineup = lineup;
+        if (deskripsi !== undefined) updateData.deskripsi = deskripsi;
+        if (is_active !== undefined) updateData.is_active = is_active;
+
+        const { data, error } = await supabase
+            .from('events')
+            .update(updateData)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        if (!data) return res.status(404).json({ message: "Event tidak ditemukan." });
+
+        res.json({ message: "Event berhasil diupdate!", event: data });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengupdate event.", error: e.message });
+    }
+};
+
+const deleteEvent = async (req, res) => {
+    if (isDemoMode) {
+        return res.json({ message: "Event berhasil dihapus! (Demo)" });
+    }
+    try {
+        const { id } = req.params;
+        const { error } = await supabase.from('events').delete().eq('id', id);
+
+        if (error) throw error;
+        res.json({ message: "Event berhasil dihapus!" });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal menghapus event.", error: e.message });
+    }
+};
+
+module.exports = { getNextEvent, getEvents, createEvent, updateEvent, deleteEvent };

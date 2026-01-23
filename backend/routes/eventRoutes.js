@@ -16,5 +16,7 @@ router.get('/public/next-event', eventController.getNextEvent);
 // Admin
 router.get('/admin/events', authenticateToken, authorizeAdmin, eventController.getEvents);
 router.post('/admin/events', authenticateToken, authorizeAdmin, eventController.createEvent);
+router.put('/admin/events/:id', authenticateToken, authorizeAdmin, eventController.updateEvent);
+router.delete('/admin/events/:id', authenticateToken, authorizeAdmin, eventController.deleteEvent);
 
 module.exports = router;
