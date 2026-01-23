@@ -41,11 +41,17 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 app.use(morgan('combined', { stream: { write: message => logger.info(message.trim()) } }));
-app.use(cors({
-    origin: '*',
+
+// CORS Configuration - Environment-based for better security
+const corsOptions = {
+    origin: process.env.NODE_ENV === 'production'
+        ? (process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*')
+        : '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    allowedHeaders: ['Content-Type', 'Authorization']
-}));
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
+};
+app.use(cors(corsOptions));
 
 app.use(express.json());
 
@@ -56,7 +62,7 @@ app.use(express.json());
 // Mount Routes
 app.use('/api', authRoutes);      // /api/register, /api/login
 app.use('/api', productRoutes);   // /api/products-and-stock, /api/leaderboard
-app.use('/api', adminRoutes);     // /api/admin/*
+app.use('/api/admin', adminRoutes); // /api/admin/* (UPDATED - all admin routes now centralized)
 app.use('/api', eventRoutes);     // /api/public/next-event, /api/admin/events
 app.use('/api/user', userRoutes); // /api/user/profile
 
@@ -73,10 +79,21 @@ app.use(express.static(path.join(__dirname, '..')));
 // Fallback untuk SPA (Opsional, jika menggunakan router frontend seperti React)
 // app.get('*', (req, res) => res.sendFile(path.join(__dirname, '..', 'index.html')));
 
-// Global Error Handler (Optional but good practice)
+// ============================================================
+// ENHANCED ERROR HANDLER - Now with proper logging!
+// ============================================================
 app.use((err, req, res, next) => {
-    logger.error(err.stack);
-    res.status(500).json({ message: "Terjadi kesalahan pada server." });
+    // Log full error details including stack trace
+    logger.error(`ERROR: ${err.message}`);
+    logger.error(`Stack: ${err.stack}`);
+    logger.error(`URL: ${req.method} ${req.url}`);
+    logger.error(`Body: ${JSON.stringify(req.body)}`);
+
+    // Send generic error to client (don't expose stack trace)
+    res.status(err.status || 500).json({
+        message: err.message || "Terjadi kesalahan pada server.",
+        error: process.env.NODE_ENV === 'development' ? err.stack : undefined
+    });
 });
 
 // ============================================================
@@ -86,4 +103,5 @@ const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`\n🚀 Server berjalan di http://localhost:${PORT}`);
     console.log(`📝 Log tersimpan di backend/combined.log`);
+    console.log(`🔒 CORS: ${process.env.NODE_ENV === 'production' ? 'Production Mode' : 'Development Mode (Allow All)'}`);
 });

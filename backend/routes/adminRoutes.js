@@ -1,27 +1,82 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/adminController');
+const memberController = require('../controllers/memberController');
+const newsController = require('../controllers/newsController');
+const galleryController = require('../controllers/galleryController');
 const { authenticateToken, authorizeAdmin } = require('../middleware/authMiddleware');
 
-// Middleware for all admin routes?
-// server.js put authenticateToken, authorizeAdmin on each.
-// I can use router.use(authenticateToken, authorizeAdmin) to apply to all in this file if I am sure.
-// Yes, all endpoints extracted to adminController were protected.
-
+// ============================================================
+// MIDDLEWARE: Apply authentication to all admin routes
+// ============================================================
 router.use(authenticateToken, authorizeAdmin);
 
+// ============================================================
+// ADMIN STATISTICS & DASHBOARD
+// ============================================================
 router.get('/stats', adminController.getAdminStats);
 router.get('/dashboard-stats', adminController.getDashboardStats);
+router.get('/monthly-stats', (req, res) => res.json({ orders: 0, revenue: 0 })); // Placeholder - implement if needed
+router.get('/all-orders', async (req, res) => {
+    // Placeholder implementation - fetch all orders from database
+    try {
+        const supabase = require('../config/supabase');
+        const { data, error } = await supabase
+            .from('pesanan')
+            .select('*')
+            .order('created_at', { ascending: false });
+        if (error) throw error;
+        res.json(data || []);
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengambil data pesanan.", error: e.message });
+    }
+});
 router.get('/all-users', adminController.getAllUsers);
 
+// ============================================================
+// SETTINGS MANAGEMENT
+// ============================================================
 router.get('/settings', adminController.getSettings);
 router.put('/settings', adminController.updateSetting);
 router.put('/settings/bulk', adminController.bulkUpdateSettings);
 
+// ============================================================
+// STOCK MANAGEMENT
+// ============================================================
 router.post('/set-cheki-stock', adminController.setChekiStock);
 router.post('/update-cheki-stock', adminController.updateChekiStock);
 
+// ============================================================
+// ORDER MANAGEMENT
+// ============================================================
 router.post('/undo-ticket-status', adminController.undoTicketStatus);
 router.delete('/orders/:id', adminController.deleteOrder);
+
+// ============================================================
+// MEMBERS MANAGEMENT (CRUD)
+// ============================================================
+router.get('/members', memberController.getAllMembers);
+router.get('/members/:id', memberController.getMemberById);
+router.post('/members', memberController.createMember);
+router.put('/members/:id', memberController.updateMember);
+router.delete('/members/:id', memberController.deleteMember);
+
+// ============================================================
+// NEWS MANAGEMENT (CRUD)
+// ============================================================
+router.get('/news', newsController.getAllNews);
+router.get('/news/:id', newsController.getNewsById);
+router.post('/news', newsController.createNews);
+router.put('/news/:id', newsController.updateNews);
+router.delete('/news/:id', newsController.deleteNews);
+
+// ============================================================
+// GALLERY MANAGEMENT (CRUD)
+// ============================================================
+router.get('/gallery', galleryController.getAllGallery);
+router.get('/gallery/:id', galleryController.getGalleryById);
+router.post('/gallery', galleryController.createGallery);
+router.put('/gallery/:id', galleryController.updateGallery);
+router.delete('/gallery/:id', galleryController.deleteGallery);
 
 module.exports = router;
