@@ -10,5 +10,6 @@ const productController = require('../controllers/productController');
 router.get('/products-and-stock', productController.getProductsAndStock);
 router.get('/leaderboard', productController.getGlobalLeaderboard);
 router.get('/leaderboard-per-member', productController.getMemberLeaderboard);
+router.get('/public/gallery', productController.getGalleryImages);
 
 module.exports = router;

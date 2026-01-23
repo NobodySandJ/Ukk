@@ -1,10 +1,6 @@
 const supabase = require("../config/supabase");
 const { getChekiStock } = require("../utils/stockUtils");
-const productData = require("../../data.json"); // Assuming backend is root, data.json is in parent of backend??
-// Wait, server.js was in c:\Githab\Ukk\backend\server.js and required '../data.json'.
-// So data.json is in c:\Githab\Ukk\data.json.
-// Controller is in c:\Githab\Ukk\backend\controllers\.
-// So it should be require('../../data.json'). Correct.
+const productData = require("../../data.json");
 
 const isDemoMode = !process.env.JWT_SECRET;
 
@@ -186,4 +182,34 @@ const getMemberLeaderboard = async (req, res) => {
     }
 };
 
-module.exports = { getProductsAndStock, getGlobalLeaderboard, getMemberLeaderboard };
+const getGalleryImages = async (req, res) => {
+    if (isDemoMode) {
+        // Demo data with actual images
+        return res.json([
+            { image_url: 'img/member/group.webp', alt_text: 'Group Photo', category: 'group' },
+            { image_url: 'img/member/aca.webp', alt_text: 'Aca', category: 'member' },
+            { image_url: 'img/member/cally.webp', alt_text: 'Cally', category: 'member' },
+            { image_url: 'img/member/cissi.webp', alt_text: 'Cissi', category: 'member' },
+            { image_url: 'img/member/piya.webp', alt_text: 'Piya', category: 'member' },
+            { image_url: 'img/member/sinta.webp', alt_text: 'Sinta', category: 'member' },
+            { image_url: 'img/member/yanyee.webp', alt_text: 'Yanyee', category: 'member' }
+        ]);
+    }
+
+    try {
+        const { data, error } = await supabase
+            .from('gallery')
+            .select('image_url, alt_text, category')
+            .eq('is_active', true)
+            .order('display_order', { ascending: true });
+
+        if (error) throw error;
+
+        res.json(data || []);
+    } catch (e) {
+        console.error("Gallery API Error:", e);
+        res.status(500).json({ message: "Gagal memuat galeri.", error: e.message });
+    }
+};
+
+module.exports = { getProductsAndStock, getGlobalLeaderboard, getMemberLeaderboard, getGalleryImages };

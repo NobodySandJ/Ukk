@@ -1,6 +1,6 @@
 // Logika buat halaman Galeri
 // Nampilin foto member, group, sama event
-// Datanya diambil dari file JSON terpisah biar gampang update
+// Datanya diambil dari API database
 if (typeof window.basePath === 'undefined') {
     window.basePath = window.appBasePath || '../../';
 }
@@ -31,7 +31,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     try {
-        // Fetch dari API database, bukan JSON statis
+        // Fetch dari API database
         const response = await fetch('/api/public/gallery');
         if (response.ok) {
             const flatData = await response.json();
@@ -50,39 +50,29 @@ document.addEventListener('DOMContentLoaded', async () => {
                     description: item.alt_text || '',
                     date: 'Terbaru',
                     size: 'medium',
-                    category: item.category || 'unknown' // Ambil kategori dari DB
+                    category: item.category || 'unknown'
                 };
 
                 let isMember = false;
 
-                // 1. PRIORITAS UTAMA: Cek kategori dari database jika ada
+                // Check category from database
                 if (galleryItem.category === 'member') {
-                    // Coba cari member mana ini
-                    let memberFound = false;
                     members.forEach(m => {
-                        // Cek apakah image_url mengandung nama member ATAU alt_text mengandung nama member
                         if (lowerSrc.includes(m.imgKey.toLowerCase()) ||
                             galleryItem.title.toLowerCase().includes(m.name.toLowerCase())) {
                             if (!galleryData.member[m.imgKey]) galleryData.member[m.imgKey] = [];
                             galleryData.member[m.imgKey].push(galleryItem);
-                            memberFound = true;
                             isMember = true;
                         }
                     });
-
-                    // Jika kategori 'member' tapi tidak ketemu member spesifik, masukkan ke 'all' atau abaikan?
-                    // Kita bisa masukkan ke member pertama atau biarkan saja (user minta spesifik)
                 } else if (galleryItem.category === 'group' || galleryItem.category === 'grup') {
                     galleryData.group.push(galleryItem);
                 } else if (galleryItem.category === 'dokumentasi' || galleryItem.category === 'event') {
                     galleryData.dokumentasi.push(galleryItem);
                 } else {
-                    // FALLBACK: Kategori 'carousel' atau lainnya, atau jika kategori null
-                    // Tetap gunakan logika lama sebagai cadangan jika kategori belum diset dengan benar
-
-                    // Cek apakah ini foto member tertentu
+                    // Fallback: cek nama file
                     members.forEach(m => {
-                        if (lowerSrc.includes(m.imgKey.toLowerCase()) || lowerSrc.includes(m.name.toLowerCase())) {
+                        if (lowerSrc.includes(m.imgKey.toLowerCase())) {
                             if (!galleryData.member[m.imgKey]) galleryData.member[m.imgKey] = [];
                             galleryData.member[m.imgKey].push(galleryItem);
                             isMember = true;
@@ -92,12 +82,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (!isMember) {
                         if (lowerSrc.includes('group') || lowerSrc.includes('grup')) {
                             galleryData.group.push(galleryItem);
-                        } else {
-                            // Default ke dokumentasi jika tidak ada match member/grup
-                            // Kecuali carousel, biasanya tidak ditampilkan di galeri utama
-                            if (galleryItem.category !== 'carousel') {
-                                galleryData.dokumentasi.push(galleryItem);
-                            }
+                        } else if (galleryItem.category !== 'carousel') {
+                            galleryData.dokumentasi.push(galleryItem);
                         }
                     }
                 }
@@ -107,11 +93,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     } catch (error) {
         console.error('Gagal memuat data dari API:', error);
-        // Fallback sudah dihapus sesuai permintaan user
+        // Fallback: empty data
+        galleryData = {
+            group: [],
+            member: {},
+            dokumentasi: []
+        };
+        members.forEach(m => galleryData.member[m.imgKey] = []);
     }
-
-    // List member buat filter, key-nya harus sama kayak nama file gambar
-
 
     // Ambil elemen-elemen HTML yang bakal diisi
     const groupGallery = document.getElementById('group-gallery');

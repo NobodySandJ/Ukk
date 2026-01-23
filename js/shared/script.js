@@ -203,8 +203,10 @@ document.addEventListener('DOMContentLoaded', function () {
             // Kartu Grup
             const groupCard = document.createElement('div');
             groupCard.className = 'member-card-detailed group-card';
-            // Handle both full URLs (Supabase) and relative paths
-            const groupImgSrc = (data.group_cheki.image || '').startsWith('http') ? data.group_cheki.image : basePath + data.group_cheki.image;
+            // Handle both full URLs (Supabase) and relative paths - with defensive coding
+            const groupImgSrc = data.group_cheki?.image
+                ? (data.group_cheki.image.startsWith('http') ? data.group_cheki.image : basePath + data.group_cheki.image)
+                : basePath + 'img/member/group.webp';
 
             groupCard.innerHTML = `
                 <img src="${groupImgSrc}" alt="${data.group.name}" loading="lazy" onerror="this.src='${basePath}img/placeholder.png'">
@@ -358,10 +360,13 @@ document.addEventListener('DOMContentLoaded', function () {
             // Tampilan jika belum ada data atau data bukan array
             if (!Array.isArray(data) || data.length === 0) {
                 container.innerHTML = `
-                    <div style="text-align: center; padding: 2rem; color: var(--secondary-text-color);">
-                        <p style="font-size: 3rem; margin-bottom: 1rem;">🏆</p>
-                        <p>Belum ada Top Spender saat ini.</p>
-                        <p style="margin-top: 0.5rem;">Jadilah yang pertama!</p>
+                    <div style="text-align: center; padding: 3rem 2rem; background: linear-gradient(135deg, rgba(251, 191, 36, 0.05) 0%, rgba(245, 158, 11, 0.05) 100%); border-radius: var(--border-radius-lg); border: 2px dashed rgba(251, 191, 36, 0.3);">
+                        <div style="font-size: 4rem; margin-bottom: 1rem; animation: float 3s ease-in-out infinite;">🏆</div>
+                        <h3 style="color: var(--text-color); font-size: 1.5rem; margin-bottom: 0.5rem; font-weight: 700;">Belum Ada Top Spender</h3>
+                        <p style="color: var(--secondary-text-color); font-size: 1rem; margin-bottom: 1.5rem;">Jadilah yang pertama mendukung member favorit kamu!</p>
+                        <a href="${basePath}pages/public/cheki.html" class="cta-button" style="display: inline-flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-star"></i> Beli Cheki Sekarang
+                        </a>
                     </div>`;
                 return;
             }
@@ -383,8 +388,13 @@ document.addEventListener('DOMContentLoaded', function () {
         } catch (error) {
             console.error('Leaderboard error:', error);
             container.innerHTML = `
-                <div style="text-align: center; padding: 2rem; color: var(--secondary-text-color);">
-                    <p>Tidak dapat memuat leaderboard.</p>
+                <div style="text-align: center; padding: 2.5rem 2rem; background: rgba(239, 68, 68, 0.05); border-radius: var(--border-radius-lg); border: 2px solid rgba(239, 68, 68, 0.2);">
+                    <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #ef4444; margin-bottom: 1rem; display: block;"></i>
+                    <h3 style="color: var(--text-color); font-size: 1.2rem; margin-bottom: 0.5rem; font-weight: 600;">Gagal Memuat Leaderboard</h3>
+                    <p style="color: var(--secondary-text-color); margin-bottom: 1.5rem;">Sepertinya ada masalah koneksi. Silakan coba lagi nanti.</p>
+                    <button onclick="window.location.reload()" class="cta-button secondary" style="background: transparent; color: var(--primary-color); border: 2px solid var(--primary-color); display: inline-flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-redo"></i> Muat Ulang
+                    </button>
                 </div>`;
         }
     }
@@ -408,7 +418,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 width: 100%;
                 height: 100%;
                 background: transparent;
-                z-index: 1000;
+                z-index: 999;
                 opacity: 0;
                 visibility: hidden;
                 transition: opacity 0.3s ease, visibility 0.3s ease;
@@ -463,14 +473,19 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!container) return;
 
         try {
-            const response = await fetch(`${basePath}data/gallery-data.json`);
+            // Use API instead of deleted JSON file
+            const response = await fetch('/api/public/gallery');
             if (!response.ok) throw new Error('Fetch failed');
             const data = await response.json();
 
             // Filter foto dokumentasi yang valid (bukan placeholder)
-            const dokumentasi = (data.dokumentasi || []).filter(item =>
-                item.src && !item.src.includes('example.webp')
-            );
+            const dokumentasi = (data || []).filter(item =>
+                item.image_url && !item.image_url.includes('example.webp') &&
+                (item.category === 'dokumentasi' || item.category === 'event')
+            ).map(item => ({
+                src: item.image_url,
+                title: item.alt_text || 'Gallery'
+            }));
 
             // Jika tidak ada foto, tampilkan pesan
             if (dokumentasi.length === 0) {
@@ -505,10 +520,17 @@ document.addEventListener('DOMContentLoaded', function () {
 
         } catch (error) {
             console.error('Gallery preview error:', error);
+            // Better empty state with call-to-action
             container.innerHTML = `
-                <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; background: rgba(22, 163, 74, 0.05); border-radius: 16px; border: 2px dashed rgba(22, 163, 74, 0.2);">
-                    <i class="fas fa-images" style="font-size: 3rem; color: var(--primary-color); opacity: 0.5; margin-bottom: 1rem;"></i>
-                    <p style="color: var(--secondary-text-color); font-size: 1.1rem;">Foto belum tersedia</p>
+                <div style="grid-column: 1 / -1; text-align: center; padding: 3rem; background: linear-gradient(135deg, rgba(22, 163, 74, 0.05) 0%, rgba(52, 211, 153, 0.05) 100%); border-radius: 16px; border: 2px dashed rgba(22, 163, 74, 0.2);">
+                    <i class="fas fa-images" style="font-size: 3.5rem; color: var(--primary-color); opacity: 0.6; margin-bottom: 1rem; display: block;"></i>
+                    <h3 style="color: var(--text-color); font-size: 1.2rem; margin-bottom: 0.5rem; font-weight: 600;">Galeri Foto Segera Hadir</h3>
+                    <p style="color: var(--secondary-text-color); font-size: 0.95rem; margin-bottom: 1.5rem;">Kami sedang mempersiapkan momen-momen terbaik untuk kalian</p>
+                    <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #059669 0%, #34d399 100%); border-radius: 12px; opacity: 0.3;"></div>
+                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #059669 0%, #34d399 100%); border-radius: 12px; opacity: 0.2;"></div>
+                        <div style="width: 80px; height: 80px; background: linear-gradient(135deg, #059669 0%, #34d399 100%); border-radius: 12px; opacity: 0.1;"></div>
+                    </div>
                 </div>
             `;
         }
