@@ -76,8 +76,6 @@ app.use('/', orderRoutes);        // /get-snap-token, /update-order-status, /api
 // Menyajikan Berkas Statis dari direktori induk
 app.use(express.static(path.join(__dirname, '..')));
 
-// Fallback untuk SPA (Opsional, jika menggunakan router frontend seperti React)
-// app.get('*', (req, res) => res.sendFile(path.join(__dirname, '..', 'index.html')));
 
 // ============================================================
 // ENHANCED ERROR HANDLER - Now with proper logging!
