@@ -37,6 +37,7 @@ router.post('/update-cheki-stock', adminController.updateChekiStock);
 // ORDER MANAGEMENT
 // ============================================================
 router.post('/undo-ticket-status', adminController.undoTicketStatus);
+router.post('/cleanup-orders', adminController.cleanupOrders);
 router.delete('/orders/:id', adminController.deleteOrder);
 
 // ============================================================

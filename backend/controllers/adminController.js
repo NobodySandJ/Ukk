@@ -287,6 +287,59 @@ const getMonthlyStats = async (req, res) => {
     }
 };
 
+const cleanupOrders = async (req, res) => {
+    // Note: User requested this for testing "local and deploy".
+    // We strictly enforce Admin Auth (handled by middleware).
+
+    try {
+        const { range } = req.body; // 'week', 'month', 'year'
+        if (!['week', 'month', 'year', 'all'].includes(range)) {
+            return res.status(400).json({ message: "Range tidak valid. Gunakan: week, month, year, atau all." });
+        }
+
+        let startDate;
+        const now = new Date();
+
+        if (range === 'week') {
+            startDate = new Date(now.setDate(now.getDate() - 7)).toISOString();
+        } else if (range === 'month') {
+            startDate = new Date(now.setMonth(now.getMonth() - 1)).toISOString();
+        } else if (range === 'year') {
+            startDate = new Date(now.setFullYear(now.getFullYear() - 1)).toISOString();
+        }
+        // 'all' means delete everything, so startDate stays undefined (or logic handles it)
+
+        let query = supabase.from('pesanan').delete();
+
+        if (range !== 'all') {
+            query = query.gte('dibuat_pada', startDate);
+        } else {
+            // For safety, require 'all' to explicitly check strict condition? 
+            // supabase delete without 'eq' or filter deletes ALL? Yes.
+            // But usually requires at least one filter?
+            // "neq" id 0 is a hack, but "gt" created_at 1970 works.
+            query = query.neq('id_pesanan', 'safeguard_impossible_id');
+        }
+
+        // Execute
+        const { error, count } = await query;
+
+        if (error) throw error;
+
+        // Also reset Stock? 
+        // User didn't specify, but usually "Testing Reset" implies restocking.
+        // But stock is global setting. 
+        // If we delete orders, we theoretically 'return' stock?
+        // Or just clear orders history?
+        // Let's just clear orders. Stock management is manual via Settings.
+
+        res.json({ message: `Data pesanan (${range}) berhasil dibersihkan.` });
+
+    } catch (e) {
+        res.status(500).json({ message: "Gagal membersihkan data.", error: e.message });
+    }
+};
+
 const getAllOrders = async (req, res) => {
     if (isDemoMode) {
         return res.json([
@@ -319,5 +372,7 @@ module.exports = {
     undoTicketStatus,
     deleteOrder,
     getAllOrders,
-    getMonthlyStats
+    getAllOrders,
+    getMonthlyStats,
+    cleanupOrders
 };

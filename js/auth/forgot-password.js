@@ -60,8 +60,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const result = await response.json();
 
             if (response.ok) {
+                // Simpan email untuk step reset password
+                localStorage.setItem('resetEmail', email);
+
                 // Sukses - tampilkan modal OTP
-                showOtpModal(result.code, result.expiresIn);
+                showOtpModal(result.resetCode, '10 Menit');
                 form.reset();
             } else {
                 showMessage(result.message || 'Verifikasi gagal.', 'error');

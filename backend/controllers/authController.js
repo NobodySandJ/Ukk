@@ -5,7 +5,8 @@ const supabase = require("../config/supabase");
 // Helper: Check Demo Mode
 const isDemoMode = !process.env.JWT_SECRET;
 
-// Temporary in-memory storage REMOVED. Now using 'password_resets' table in Supabase.
+// Temporary in-memory storage for OTP codes (in production, use Redis or database)
+const otpStorage = new Map();
 
 const register = async (req, res) => {
     if (isDemoMode) {
@@ -119,14 +120,12 @@ const verifyAndGenerateOTP = async (req, res) => {
         // Generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Store OTP in Database
-        const { error: otpError } = await supabase.from('password_resets').insert({
-            email,
-            token: otp,
-            expires_at: new Date(Date.now() + 10 * 60 * 1000).toISOString()
+        // Store OTP with expiration (10 minutes)
+        otpStorage.set(email, {
+            code: otp,
+            expiresAt: Date.now() + 10 * 60 * 1000,
+            userId: user.id
         });
-
-        if (otpError) throw otpError;
 
         // In production, send OTP via email/SMS
         // For now, return it in response for testing
@@ -161,19 +160,19 @@ const resetPasswordWithCode = async (req, res) => {
             return res.status(400).json({ message: "Password minimal 6 karakter." });
         }
 
-        // Verify OTP from Database
-        const { data: otpData, error: otpError } = await supabase
-            .from('password_resets')
-            .select('*')
-            .eq('email', email)
-            .eq('token', code)
-            .gt('expires_at', new Date().toISOString())
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .single();
+        // Verify OTP
+        const otpData = otpStorage.get(email);
+        if (!otpData) {
+            return res.status(400).json({ message: "Kode tidak valid atau sudah expired." });
+        }
 
-        if (otpError || !otpData) {
-            return res.status(400).json({ message: "Kode tidak valid, salah, atau sudah kadaluarsa." });
+        if (otpData.expiresAt < Date.now()) {
+            otpStorage.delete(email);
+            return res.status(400).json({ message: "Kode sudah kadaluarsa. Silakan request kode baru." });
+        }
+
+        if (otpData.code !== code) {
+            return res.status(400).json({ message: "Kode OTP salah." });
         }
 
         // Hash new password
@@ -181,18 +180,15 @@ const resetPasswordWithCode = async (req, res) => {
         const password_hash = await bcrypt.hash(newPassword, salt);
 
         // Update password in database
-        const { data: user } = await supabase.from('pengguna').select('id').eq('email', email).single();
-        if (!user) return res.status(404).json({ message: "User tidak ditemukan." });
-
-        const { error: updateError } = await supabase
+        const { error } = await supabase
             .from("pengguna")
             .update({ kata_sandi: password_hash })
-            .eq("id", user.id); // Use ID from query, not otpData
+            .eq("id", otpData.userId);
 
-        if (updateError) throw updateError;
+        if (error) throw error;
 
         // Remove used OTP
-        await supabase.from('password_resets').delete().eq('email', email);
+        otpStorage.delete(email);
 
         res.json({ message: "Password berhasil direset! Silakan login dengan password baru." });
     } catch (e) {

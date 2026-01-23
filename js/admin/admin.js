@@ -1061,6 +1061,32 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
+    // --- TESTING CLEANUP ---
+    const cleanupButtons = [
+        { id: 'btn-cleanup-week', range: 'week', label: 'Hapus data pesanan MINGGU INI?' },
+        { id: 'btn-cleanup-month', range: 'month', label: 'Hapus data pesanan BULAN INI?' },
+        { id: 'btn-cleanup-year', range: 'year', label: 'Hapus data pesanan TAHUN INI?' },
+        { id: 'btn-cleanup-all', range: 'all', label: 'RESET SEMUA data pesanan? (Tidak bisa dikembalikan)' }
+    ];
+
+    cleanupButtons.forEach(btn => {
+        const el = document.getElementById(btn.id);
+        if (el) {
+            el.addEventListener('click', () => {
+                showConfirm(btn.label, async () => {
+                    await apiRequest('/api/admin/cleanup-orders', {
+                        method: 'POST',
+                        body: JSON.stringify({ range: btn.range })
+                    });
+                    showToast('Pembersihan data berhasil.', 'success');
+                    // Reload dashboard stats if active
+                    if (document.getElementById('view-dashboard').classList.contains('active')) loadDashboard();
+                    if (document.getElementById('view-event').classList.contains('active')) loadEvents();
+                });
+            });
+        }
+    });
+
     // INIT
     switchView('dashboard');
 

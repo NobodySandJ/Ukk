@@ -70,11 +70,21 @@ document.addEventListener('DOMContentLoaded', function () {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
 
+        const email = localStorage.getItem('resetEmail');
+
+        if (!email) {
+            showMessage('Session expired. Silakan ulangi proses lupa password.', 'error');
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-save"></i> Simpan Password Baru';
+            return;
+        }
+
         try {
             const response = await fetch('/api/reset-password-with-code', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
+                    email: email,
                     code: code,
                     newPassword: newPassword
                 })
