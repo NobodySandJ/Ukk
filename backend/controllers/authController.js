@@ -5,8 +5,8 @@ const supabase = require("../config/supabase");
 // Helper: Check Demo Mode
 const isDemoMode = !process.env.JWT_SECRET;
 
-// Temporary in-memory storage for OTP codes (in production, use Redis or database)
-const otpStorage = new Map();
+// Shared OTP Storage
+const otpStorage = require('../utils/otpStore');
 
 const register = async (req, res) => {
     if (isDemoMode) {
@@ -121,7 +121,8 @@ const verifyAndGenerateOTP = async (req, res) => {
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
         // Store OTP with expiration (10 minutes)
-        otpStorage.set(email, {
+        // Store OTP with expiration (10 minutes)
+        otpStorage.set(email.toLowerCase(), {
             code: otp,
             expiresAt: Date.now() + 10 * 60 * 1000,
             userId: user.id
@@ -161,13 +162,13 @@ const resetPasswordWithCode = async (req, res) => {
         }
 
         // Verify OTP
-        const otpData = otpStorage.get(email);
+        const otpData = otpStorage.get(email.toLowerCase());
         if (!otpData) {
             return res.status(400).json({ message: "Kode tidak valid atau sudah expired." });
         }
 
         if (otpData.expiresAt < Date.now()) {
-            otpStorage.delete(email);
+            otpStorage.delete(email.toLowerCase());
             return res.status(400).json({ message: "Kode sudah kadaluarsa. Silakan request kode baru." });
         }
 
@@ -188,7 +189,7 @@ const resetPasswordWithCode = async (req, res) => {
         if (error) throw error;
 
         // Remove used OTP
-        otpStorage.delete(email);
+        otpStorage.delete(email.toLowerCase());
 
         res.json({ message: "Password berhasil direset! Silakan login dengan password baru." });
     } catch (e) {

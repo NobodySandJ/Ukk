@@ -1035,8 +1035,12 @@ document.addEventListener('DOMContentLoaded', function () {
             btn.addEventListener('click', () => {
                 showConfirm('Generate OTP reset password untuk user ini?', async () => {
                     const res = await apiRequest('/api/admin/generate-reset-code', { method: 'POST', body: JSON.stringify({ userId: btn.dataset.id }) });
-                    // Show OTP Modal
+                    // Show OTP Modal with Email info
                     document.getElementById('otp-code-display').textContent = res.code;
+                    document.getElementById('otp-target-email').textContent = `Untuk: ${res.email}`;
+                    // Store email in dataset for copy button
+                    document.getElementById('copy-btn').dataset.email = res.email;
+
                     openModal('otp-modal');
                 });
             });
@@ -1045,11 +1049,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
     }
 
-    // OTP Modal Copy
-    document.getElementById('copy-btn').addEventListener('click', () => {
+    // OTP Modal Copy (Enhanced Method 3)
+    document.getElementById('copy-btn').addEventListener('click', (e) => {
         const code = document.getElementById('otp-code-display').textContent;
-        navigator.clipboard.writeText(code);
-        showToast('Kode disalin', 'success');
+        const email = e.currentTarget.dataset.email || 'user@email.com';
+
+        const message = `Halo, berikut kode reset password Anda:\n\nKode: ${code}\nEmail: ${email}\n\nMohon masukkan URL ini di browser:\n${window.location.origin}/pages/auth/reset-password.html?mode=manual`;
+
+        navigator.clipboard.writeText(message);
+        showToast('Pesan lengkap disalin (Kode + Instruksi)', 'success');
+    });
+
+    // OTP Modal Close
+    document.getElementById('close-modal-btn').addEventListener('click', () => {
+        closeModal('otp-modal');
     });
 
     // LOGOUT

@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const submitBtn = document.getElementById('submit-btn');
     const messageBox = document.getElementById('message-box');
     const resetBtn = document.getElementById('reset-btn');
+    const emailGroup = document.getElementById('email-group'); // New
+    const emailInput = document.getElementById('email-input'); // New
 
     if (!form) return;
 
@@ -70,13 +72,20 @@ document.addEventListener('DOMContentLoaded', function () {
         submitBtn.disabled = true;
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
 
-        const email = localStorage.getItem('resetEmail');
+        let email = localStorage.getItem('resetEmail');
 
+        // Check fallback email input
         if (!email) {
-            showMessage('Session expired. Silakan ulangi proses lupa password.', 'error');
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fas fa-save"></i> Simpan Password Baru';
-            return;
+            // If email input is visible, user must fill it
+            if (emailInput && emailInput.value.trim()) {
+                email = emailInput.value.trim();
+            } else {
+                if (emailGroup) emailGroup.style.display = 'block';
+                showMessage('Silakan masukkan email Anda (Sesi tidak ditemukan).', 'info');
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> Simpan Password Baru';
+                return;
+            }
         }
 
         try {
@@ -119,6 +128,35 @@ document.addEventListener('DOMContentLoaded', function () {
             submitBtn.innerHTML = '<i class="fas fa-save"></i> Simpan Password Baru';
         }
     });
+
+    // Cek session saat load
+    const storedEmail = localStorage.getItem('resetEmail');
+    const urlParams = new URLSearchParams(window.location.search);
+    const isManualMode = urlParams.get('mode') === 'manual';
+
+    console.log('[ResetPassword] Stored Email:', storedEmail, 'Mode:', isManualMode ? 'MANUAL' : 'AUTO');
+
+    if (isManualMode || !storedEmail || storedEmail === 'null' || storedEmail === 'undefined') {
+        console.log('[ResetPassword] Entering Manual/Admin Mode.');
+        if (emailGroup) {
+            emailGroup.style.display = 'block'; // Force show
+            if (emailInput) {
+                // Clear any stored email if forcing manual
+                if (isManualMode) localStorage.removeItem('resetEmail');
+
+                emailInput.required = true;
+            }
+
+            // UI Awareness: Ganti judul biar user paham
+            const titleEl = document.querySelector('.reset-card h2');
+            const subTitleEl = document.querySelector('.reset-card .subtitle');
+            if (titleEl) titleEl.innerHTML = '<i class="fas fa-user-shield" style="color: #ef4444;"></i> Verifikasi Kode Admin';
+            if (subTitleEl) subTitleEl.textContent = 'Masukkan Email Anda & Kode OTP dari Admin';
+        }
+        showMessage('Mode Manual: Silakan masukkan Email & Kode.', 'info');
+    } else {
+        console.log('[ResetPassword] Session found for:', storedEmail);
+    }
 
     function showMessage(msg, type) {
         messageBox.textContent = msg;

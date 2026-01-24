@@ -1,5 +1,6 @@
 const supabase = require("../config/supabase");
 const { getChekiStock } = require("../utils/stockUtils");
+const otpStorage = require("../utils/otpStore");
 
 const isDemoMode = !process.env.JWT_SECRET;
 
@@ -287,6 +288,35 @@ const getMonthlyStats = async (req, res) => {
     }
 };
 
+const generateResetCode = async (req, res) => {
+    // Admin generates OTP for a user
+    try {
+        const { userId } = req.body;
+        if (!userId) return res.status(400).json({ message: "User ID diperlukan." });
+
+        // Get user email
+        const { data: user, error } = await supabase.from('pengguna').select('id, email').eq('id', userId).single();
+        if (error || !user) return res.status(404).json({ message: "User tidak ditemukan." });
+
+        // Generate OTP
+        const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+        // Store in Shared Map
+        otpStorage.set(user.email.toLowerCase(), {
+            code: otp,
+            expiresAt: Date.now() + 10 * 60 * 1000, // 10 minutes
+            userId: user.id
+        });
+
+        console.log(`[ADMIN GENERATED OTP] For ${user.email}: ${otp}`);
+
+        res.json({ message: "Kode OTP berhasil di-generate.", code: otp, email: user.email });
+
+    } catch (e) {
+        res.status(500).json({ message: "Gagal generate OTP.", error: e.message });
+    }
+};
+
 const cleanupOrders = async (req, res) => {
     // Note: User requested this for testing "local and deploy".
     // We strictly enforce Admin Auth (handled by middleware).
@@ -374,5 +404,7 @@ module.exports = {
     getAllOrders,
     getAllOrders,
     getMonthlyStats,
-    cleanupOrders
+    getMonthlyStats,
+    cleanupOrders,
+    generateResetCode
 };
