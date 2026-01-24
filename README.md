@@ -1,196 +1,146 @@
 # Refresh Breeze - JKT48 Fanbase Web App (UKK Project)
 
-**Refresh Breeze** adalah aplikasi web manajemen fanbase dan penjualan tiket (Cheki) untuk JKT48. Aplikasi ini dibangun sebagai proyek Uji Kompetensi Keahlian (UKK) dengan standar industri, mencakup fitur manajemen member, galeri, berita, dan sistem checkout tiket yang terintegrasi dengan Payment Gateway.
+**Refresh Breeze** adalah aplikasi web manajemen fanbase dan penjualan tiket (Cheki) untuk JKT48. Aplikasi ini dibangun sebagai proyek Uji Kompetensi Keahlian (UKK) dengan standar industri, mencakup fitur manajemen member, galeri, berita, dan sistem checkout tiket yang terintegrasi dengan Payment Gateway (Midtrans).
 
-## 🚀 Fitur Utama
+---
 
-- **Public**:
-  - Landing Page Modern & Responsif.
-  - **Galeri Foto**: Filter berdasarkan Kategori (Member, Group, Event).
-  - **Leaderboard**: Klasemen fans terbanyak membeli tiket (Top Spender).
-  - **Pembelian Tiket (Cheki)**: Integrasi Midtrans (QRIS, GoPay, VA).
-- **User**:
-  - Dashboard Riwayat Pesanan.
-  - Edit Profil.
-- **Admin**:
-  - Dashboard Statistik (Pendapatan, Stok, User).
-  - Manajemen Member (CRUD).
-  - Manajemen Galeri & Berita.
-  - Pengaturan Global (Harga, Event).
+## 📂 Struktur Folder Projek
 
-## 🛠 Teknologi yang Digunakan
+Berikut adalah penjelasan lengkap struktur folder dan file dalam proyek ini:
 
-- **Frontend**: HTML5, CSS3 (Modern UI), Vanilla JavaScript.
-- **Backend**: Node.js, Express.js.
+```bash
+ukk-refresh-breeze/
+├── backend/                    # Server-side Logic (Node.js/Express)
+│   ├── config/                 # Konfigurasi Database & Environment
+│   │   ├── midtrans.js         # Setup Midtrans Snap API
+│   │   └── supabase.js         # Koneksi ke Database Supabase
+│   ├── controllers/            # Logika Utama (Menghubungkan Route & DB)
+│   │   ├── adminController.js  # Logic Dashboard Admin, User Management
+│   │   ├── authController.js   # Login, Register, Reset Password
+│   │   └── orderController.js  # Transaksi, Callback Midtrans
+│   ├── middleware/             # Fungsi Penengah (Security Check)
+│   │   ├── authMiddleware.js   # Verifikasi Token JWT (Protect Routes)
+│   │   └── validationMiddleware.js # Validasi Input Otomatis
+│   ├── routes/                 # Definisi URL Endpoint API
+│   │   ├── adminRoutes.js      # /api/admin/*
+│   │   └── authRoutes.js       # /api/auth/*
+│   ├── services/               # Business Logic Layer (Pemisah Logic DB)
+│   │   └── authService.js      # Handle Query Register/Login
+│   ├── utils/                  # Helper Functions
+│   │   ├── demoMode.js         # Centralized Demo Logic
+│   │   ├── otpStore.js         # In-Memory OTP Storage
+│   │   └── stockUtils.js       # Helper Cek Stok Realtime
+│   └── server.js               # Entry Point Server App
+│
+├── css/                        # Stylesheet Frontend
+│   ├── admin.css               # Style Khusus Panel Admin (Clean UI)
+│   └── style.css               # Style Utama Website (Public/User)
+│
+├── img/                        # Galeri Aset Gambar
+│   ├── logo/                   # Favicon & Logo Brand
+│   ├── member/                 # Foto Member JKT48
+│   └── product/                # Foto Produk Cheki
+│
+├── js/                         # Client-side Scripting
+│   ├── admin/                  # Logic Halaman Admin
+│   ├── auth/                   # Logic Halaman Login/Register
+│   ├── public/                 # Logic Halaman User
+│   └── shared/                 # Script Global (Toast, Auth Check)
+│
+├── pages/                      # Halaman HTML (Views)
+│   ├── admin/                  # Dashboard Admin
+│   ├── auth/                   # Form Login/Register/Reset
+│   └── public/                 # Halaman Cheki, Galeri, User Profile
+│
+├── index.html                  # Landing Page Utama
+└── README.md                   # Dokumen Proyek Ini
+```
+
+---
+
+## 📊 Analisis & Perancangan Sistem
+
+Bagian ini disusun untuk kebutuhan Laporan UKK (Bab Analisis Perancangan).
+
+### 1. Entity Relationship Diagram (ERD)
+
+Sistem menggunakan database relasional yang ter-normalisasi (3NF).
+
+- **`users` (pengguna)**: Menyimpan data akun (`id`, `email`, `password_hash`, `role`).
+  - _Relasi_: One-to-Many ke `orders`.
+- **`products`**: Menyimpan data tikat cheki (`id`, `name`, `price`, `stock`, `category`).
+  - _Relasi_: One-to-Many ke `order_items`.
+- **`orders` (pesanan)**: Header transaksi (`id`, `user_id`, `total_price`, `status`, `snap_token`).
+  - _Relasi_: One-to-Many ke `order_items`.
+- **`order_items`**: Detail belanja (`id`, `order_id`, `product_id`, `qty`, `price_at_purchase`).
+- **`members`**: Data profil member JKT48 (`id`, `name`, `jiko`, `image_url`).
+  - _Relasi_: Terhubung logic ke Products (nama member).
+
+### 2. Data Flow Diagram (DFD)
+
+#### **Level 0 (Context Diagram)**
+
+- **Sistem**: Web Refresh Breeze.
+- **Entitas Luar**:
+  1.  **User (Fans)**: Memberikan data registrasi, order, pembayaran. Menerima tiket, info member.
+  2.  **Admin**: Memberikan data produk, berita, update stok. Menerima laporan penjualan.
+  3.  **Payment Gateway (Midtrans)**: Menerima request token pembayaran. Memberikan status sukses/gagal (Callback).
+
+#### **Level 1 (Proses Utama)**
+
+1.  **Proses 1.0 (Autentikasi)**: Mengelola Login/Register.
+    - _Input_: Email/Pass. _Output_: Token JWT.
+2.  **Proses 2.0 (Manajemen Data)**: Kelola Member & Produk (Admin Only).
+    - _Input_: Data Baru. _Output_: Update DB.
+3.  **Proses 3.0 (Transaksi)**: User melakukan checkout.
+    - _Input_: Cart Item. _Output_: Snap Token Midtrans.
+4.  **Proses 4.0 (Pembayaran)**: Verifikasi status bayar.
+    - _Input_: Notifikasi Webhook. _Output_: Update Status 'LUNAS'.
+
+#### **Level 2 (Detail Proses Transaksi)**
+
+Akan memecah **Proses 3.0** menjadi lebih rinci:
+
+- **3.1 Cek Stok**: Memastikan `qty` diminta <= `stock` tersedia di DB.
+- **3.2 Hitung Total**: Mengkalkulasi `qty * price` dari semua item.
+- **3.3 Buat Order Header**: Insert ke tabel `orders` (status: pending).
+- **3.4 Buat Order Detail**: Insert ke tabel `order_items`.
+- **3.5 Request Snap Token**: Kirim data ke API Midtrans -> Terima Token.
+
+### 3. Use Case Diagram
+
+| Aktor     | Use Case (Fitur)           | Deskripsi                                     |
+| :-------- | :------------------------- | :-------------------------------------------- |
+| **User**  | 1. Registrasi / Login      | Masuk ke sistem untuk transaksi.              |
+|           | 2. Lihat Galeri & Member   | Melihat konten publik.                        |
+|           | 3. Beli Tiket (Checkout)   | Memilih item dan melakukan pemesanan.         |
+|           | 4. Bayar (Payment)         | Menyelesaikan pembayaran via Payment Gateway. |
+|           | 5. Lihat Riwayat (History) | Melihat status pesanan di dashboard user.     |
+| **Admin** | 6. Login Admin             | Masuk ke panel kontrol khusus.                |
+|           | 7. Kelola Member           | Tambah/Edit/Hapus data member JKT48.          |
+|           | 8. Kelola Stok & Harga     | Update harga tiket dan jumlah stok.           |
+|           | 9. Lihat Laporan           | Melihat grafik pendapatan dan list user.      |
+
+---
+
+## 🛠 Teknologi
+
+- **Frontend**: HTML5, CSS3 (Admin & Public terpisah), Vanilla JS.
+- **Backend**: Node.js, Express.js (MVC Pattern).
 - **Database**: Supabase (PostgreSQL).
-- **Payment Gateway**: Midtrans (Sandbox/Production).
-- **Authentication**: JWT (JSON Web Token) & Supabase Auth.
-
-## 🗃️ Database Schema (Normalized)
-
-Aplikasi ini menggunakan struktur database relasional (3NF) untuk integritas data yang tinggi:
-
-1.  **`pengguna`**: Data user (login, profil).
-2.  **`pesanan`**: Header transaksi (Total harga, Status pembayaran).
-3.  **`order_items`**: Rincian belanja per item (Menyimpan snapshot harga saat transaksi).
-4.  **`products`**: Manajemen stok dan harga produk dinamis (Member/Group Cheki).
-5.  **`members`**: Data member JKT48 (terhubung ke Products & Gallery).
-6.  **`gallery`**: Foto dokumentasi (terhubung ke Member).
-7.  **`news`**: Artikel berita/pengumuman.
-8.  **`pengaturan`**: Konfigurasi dinamis (Harga Default, Event Info).
-
-## 📦 Cara Install & Menjalankan
-
-### 1. Prasyarat
-
-- Node.js (v16+)
-- Akun Supabase & Midtrans.
-
-### 2. Instalasi
-
-```bash
-# Clone repository
-git clone https://github.com/username/ukk-refresh-breeze.git
-cd ukk-refresh-breeze
-
-# Install dependencies
-cd backend
-npm install
-```
-
-### 3. Konfigurasi Environment
-
-Buat file `.env` di root folder dengan isi:
-
-```env
-# Server
-PORT=3000
-JWT_SECRET=rahasia_negara_api
-
-# Supabase
-SUPABASE_URL=https://xyz.supabase.co
-SUPABASE_ANON_KEY=eyJh...
-SUPABASE_SERVICE_ROLE_KEY=eyJh... (Untuk Admin)
-
-# Midtrans
-MIDTRANS_SERVER_KEY=SB-Mid-server-...
-MIDTRANS_CLIENT_KEY=SB-Mid-client-...
-```
-
-### 4. Setup Database
-
-Jalankan script SQL `migration_v2_complex.sql` di Supabase SQL Editor untuk membuat tabel dan seeding data awal.
-
-### 5. Menjalankan Server
-
-```bash
-# Mode Development
-npm run dev
-# atau
-node backend/server.js
-
-# Akses di browser: http://localhost:3000
-```
-
-<br>
-<br>
+- **Security**: Bcrypt (Hashing), JWT (Session), Helmet (HTTP Headers).
 
 ---
 
-# 🎓 CHEAT SHEET PRESENTASI UKK
+## 🎓 Cheat Sheet Presentasi (Demo Alur)
 
-(Dilarang dibaca Penguji! Ini contekan Anda)
-
-## 1. Fitur Unggulan (Nilai Plus)
-
-Jika ditanya "Apa kelebihan aplikasi kamu?", jawab poin-poin ini:
-
-1.  **Integrasi Pembayaran Riil (Midtrans)**:
-    - Bukan sekedar mencatat transaksi di database, tapi terhubung ke sistem perbankan simulasi.
-    - Mendukung QRIS, GoPay, dan Virtual Account.
-    - Menggunakan **Webhooks** untuk update status pembayaran otomatis (Server-to-Server communication).
-
-2.  **Pencegahan "Race Condition" (Anti-Borong Curang)**:
-    - Sistem memvalidasi stok stok secara _real-time_ di server sesaat sebelum token pembayaran dibuat.
-    - Mencegah 2 orang membeli tiket terakhir secara bersamaan. (Logic di `server-local.js` baris ~460).
-
-3.  **Keamanan Standar Industri**:
-    - Password di-hash menggunakan **Bcrypt** (aman dari kebocoran database).
-    - Login menggunakan **JWT (JSON Web Token)** untuk sesi stateless.
-    - Proteksi **Rate Limiting** (Mencegah serangan spam/DDoS sederhana).
-    - Proteksi Header HTTP menggunakan **Helmet**.
-
-4.  **Fitur Gamifikasi (Leaderboard)**:
-    - Menampilkan "Top Spender" (Sultan) per member (Oshi).
-    - Menggunakan Query SQL Aggregation (`SUM(quantity)`) yang cukup kompleks.
+1.  **Buka Admin Panel**: Tunjukkan dashboard statistik dan menu member.
+2.  **Setting Stok**: Di menu "Event", ubah stok jadi sedikit (misal: 3) untuk demo "Realtime Stock".
+3.  **User Login**: Buka Incognito, login sebagai user biasa.
+4.  **Transaksi**: Beli tiket, checkout, pilih "BCA Virtual Account".
+5.  **Simulasi Bayar**: Gunakan Simulator Midtrans untuk membayar VA tersebut.
+6.  **Verifikasi**: Tunukkan otomatis redirect ke halaman "Sukses", lalu cek di Admin Panel bahwa stok berkurang dan pendapatan naik.
 
 ---
 
-## 2. Skenario Demo (Alur Presentasi)
-
-Lakukan urutan ini agar demo berjalan mulus:
-
-### A. Admin (Persiapan)
-
-1.  Login Admin (`admin@admin.com` / `admin123`).
-2.  Update Stok Cheki di menu **Event** (misal: set jadi 5).
-3.  Klik "Simpan Harga".
-
-### B. User (Transaksi)
-
-1.  Buka browser dalam mode **Incognito** (agar sesi admin tidak tertimpa).
-2.  Register user baru (misal: `penguji`).
-3.  Login dan masuk halaman **Beli Cheki**.
-4.  Checkout Tiket -> Pilih pembayaran BCA VA.
-5.  **Simulasi Bayar**: Copy VA -> Klik link Simulator -> Paste -> Bayar.
-6.  User akan otomatis redirect ke Dashboard dan melihat Tiket QR.
-
-### C. Pembuktian
-
-1.  Kembali ke Admin Panel.
-2.  Tunjukkan stok berkurang otomatis (5 -> 4).
-3.  Tunjukkan saldo pendapatan bertambah di Dashboard Admin.
-
----
-
-## 3. Panduan Modifikasi Cepat (Jika Ditantang Penguji)
-
-### Q: "Ubah Nama Aplikasinya jadi 'Toko Tiket Sekolah'!"
-
-- **Lokasi**: File `index.html` (bagian Title & Navbar), dan `js/shared/script.js` (bagian config/toast).
-- **Cara**: Ctrl+F "Refresh Breeze", ganti teksnya.
-
-### Q: "Saya mau tiketnya lebih mahal, ubah harganya!"
-
-- **Cara UI**: Login Admin -> Event Settings -> Ubah Harga -> Save.
-- **Cara DB**: Buka Supabase -> Tabel `products` -> Edit kolom `price`.
-
-### Q: "Ganti logo websitenya!"
-
-- **Lokasi**: Folder `img/logo/`.
-- **Cara**: Replace file `apple-touch-icon.png` atau `favicon.ico`.
-
-### Q: "Pindahkan database ke Localhost (Offline)!"
-
-- **Jawaban Diplomatis**: "Aplikasi ini didesain _Cloud-Native_ pakai Supabase agar fitur Realtime dan Storage gambar bisa jalan. Kalau pindah ke Localhost (XAMPP), fitur Upload Gambar dan Auth-nya harus ditulis ulang pak."
-- **Solusi Cepat**: "Saya bisa ganti koneksi ke Project Supabase bapak kalau ada credential-nya."
-
----
-
-## 4. Tanya Jawab Teknis (Q&A)
-
-**Q: Jelaskan alur datanya!**
-A: User Input -> Frontend Validasi -> API Request (JSON) -> Backend Validasi Token & Stok -> Insert Database -> Return Response.
-
-**Q: Kenapa pakai Node.js?**
-A: Karena _Non-blocking I/O_, jadi lebih cepat menangani banyak request sekaligus (cocok untuk war tiket) dibanding PHP biasa.
-
-**Q: Apa fungsi file `.env`?**
-A: Menyimpan rahasia (API Keys) agar tidak bisa dibaca orang lain jika source code bocor/di-upload ke GitHub.
-
-**Q: Token Login (JWT) disimpan dimana?**
-A: Disimpan di **LocalStorage** browser agar user tetap login meskipun halaman di-refresh.
-
----
-
-_Dokumen ini diperbarui otomatis untuk persiapan UKK._
+_Dibuat untuk keperluan Uji Kompetensi Keahlian (UKK) Rekayasa Perangkat Lunak._

@@ -3075,12 +3075,13 @@ footer p {
 #toast-container {
     position: fixed;
     top: 20px;
-    right: 20px;
+    left: 50%;
+    transform: translateX(-50%);
     z-index: 9999;
     display: flex;
     flex-direction: column;
     gap: 10px;
-    max-width: 400px;
+    align-items: center;
     pointer-events: none;
 }
 
@@ -3090,15 +3091,23 @@ footer p {
     gap: 12px;
     padding: 16px 20px;
     background: rgba(255, 255, 255, 0.98);
-    border-radius: 12px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    border-radius: 50px;
+    /* Pill shape */
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
     backdrop-filter: blur(10px);
     border-left: 4px solid #333;
     opacity: 0;
-    transform: translateX(400px);
-    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    transform: translateY(-20px) scale(0.95);
+    /* Slide down animation */
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
     pointer-events: all;
     min-width: 300px;
+    max-width: 90vw;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateY(0) scale(1);
 }
 
 .toast.show {

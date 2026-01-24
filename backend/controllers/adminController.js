@@ -67,7 +67,12 @@ const getAllUsers = async (req, res) => {
         ]);
     }
     try {
-        const { data, error } = await supabase.from('pengguna').select('id, nama_pengguna, email, nomor_whatsapp').neq('peran', 'admin');
+        const { data, error } = await supabase
+            .from('pengguna')
+            .select('id, nama_pengguna, email, nomor_whatsapp')
+            .neq('peran', 'admin')
+            .order('id', { ascending: false });
+
         if (error) throw error;
         res.json(data);
     } catch (e) {
