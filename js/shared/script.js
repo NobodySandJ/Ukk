@@ -197,8 +197,8 @@ document.addEventListener('DOMContentLoaded', function () {
             // Inisialisasi slider jika ada
             if (document.querySelector('.slider-container') && data.gallery) {
                 startSlider(data.gallery.map(item => {
-                    const src = item.src || item.image_url || '';
-                    return src.startsWith('http') ? src : basePath + src;
+                    const src = (item.src || item.image_url || '').trim();
+                    return (src.startsWith('http://') || src.startsWith('https://')) ? src : basePath + src;
                 }));
             }
 
@@ -563,9 +563,13 @@ document.addEventListener('DOMContentLoaded', function () {
                     </div>
                 ` : '';
 
+                // Fix: Handle both HTTP and HTTPS URLs
+                const imgSrc = (item.src || '').trim();
+                const finalSrc = (imgSrc.startsWith('http://') || imgSrc.startsWith('https://')) ? imgSrc : basePath + imgSrc;
+
                 return `
                     <div class="gallery-preview-item" style="position: relative; cursor: pointer;" onclick="window.location.href='${basePath}pages/public/gallery.html'">
-                        <img src="${basePath}${item.src}" alt="${item.title}" style="${extraStyle}" loading="lazy">
+                        <img src="${finalSrc}" alt="${item.title}" style="${extraStyle}" loading="lazy">
                         ${overlay}
                     </div>
                 `;
@@ -590,8 +594,30 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ============================================================
+    // FUNGSI BUTTON LAPOR BUG FLOATING
+    // ============================================================
+    function createFloatingBugButton() {
+        // Cek kalo udah ada biar ga double
+        if (document.getElementById('floating-bug-btn')) return;
+
+        const btn = document.createElement('a');
+        btn.id = 'floating-bug-btn';
+        btn.className = 'floating-bug-btn';
+        // Format WA link
+        btn.href = 'https://wa.me/6285765907580?text=Halo%20Admin%20Refresh%20Breeze%2C%20saya%20ingin%20melaporkan%20bug%20di%20website';
+        btn.target = '_blank';
+        btn.rel = 'noopener noreferrer';
+        btn.innerHTML = '<i class="fab fa-whatsapp"></i> Lapor Bug';
+
+        document.body.appendChild(btn);
+    }
+
+    // ============================================================
     // INISIALISASI HOMEPAGE
     // ============================================================
+    // Jalankan di semua halaman
+    createFloatingBugButton();
+
     if (document.querySelector('#hero')) {
         loadWebsiteData();
         fetchHomepageLeaderboard();

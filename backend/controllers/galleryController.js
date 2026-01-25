@@ -78,7 +78,7 @@ const createGallery = async (req, res) => {
             
             // Upload to Supabase Storage
             const { data: uploadData, error: uploadError } = await supabase.storage
-                .from('images') // Bucket name: 'images'
+                .from('public-images') // Bucket name: 'public-images'
                 .upload(filePath, req.file.buffer, {
                     contentType: req.file.mimetype,
                     cacheControl: '3600',
@@ -89,7 +89,7 @@ const createGallery = async (req, res) => {
 
             // Get public URL
             const { data: publicUrlData } = supabase.storage
-                .from('images')
+                .from('public-images')
                 .getPublicUrl(filePath);
 
             image_url = publicUrlData.publicUrl;
@@ -146,7 +146,7 @@ const updateGallery = async (req, res) => {
             
             // Upload new file to Supabase Storage
             const { data: uploadData, error: uploadError } = await supabase.storage
-                .from('images')
+                .from('public-images')
                 .upload(filePath, req.file.buffer, {
                     contentType: req.file.mimetype,
                     cacheControl: '3600',
@@ -157,12 +157,54 @@ const updateGallery = async (req, res) => {
 
             // Get public URL
             const { data: publicUrlData } = supabase.storage
-                .from('images')
+                .from('public-images')
                 .getPublicUrl(filePath);
 
             updateData.image_url = publicUrlData.publicUrl;
 
-            // Delete o (SUPABASE STORAGE VERSION)
+            // Delete old file from Supabase Storage if it exists
+            if (oldData?.image_url && oldData.image_url.includes('supabase')) {
+                try {
+                    const urlParts = oldData.image_url.split('/');
+                    const oldFileName = urlParts[urlParts.length - 1];
+                    const oldFilePath = `gallery/${oldFileName}`;
+                    
+                    await supabase.storage
+                        .from('public-images')
+                        .remove([oldFilePath]);
+                } catch (storageError) {
+                    console.error("Failed to delete old file from storage:", storageError);
+                }
+            }
+        }
+
+        // Update other fields if provided
+        if (caption !== undefined) updateData.alt_text = caption;
+        if (alt_text !== undefined) updateData.alt_text = alt_text;
+        if (category !== undefined) updateData.category = category;
+        if (member_id !== undefined) {
+            updateData.member_id = (member_id === '' || member_id === 'null') ? null : member_id;
+        }
+
+        // Perform update
+        const { data, error } = await supabase
+            .from('gallery')
+            .update(updateData)
+            .eq('id', id)
+            .select()
+            .single();
+
+        if (error) throw error;
+        if (!data) return res.status(404).json({ message: "Foto tidak ditemukan." });
+
+        res.json({ message: "Foto berhasil diperbarui!", gallery: data });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal memperbarui foto.", error: e.message });
+    }
+};
+
+// ============================================================
+// DELETE GALLERY IMAGE (SUPABASE STORAGE VERSION)
 // ============================================================
 const deleteGallery = async (req, res) => {
     if (isDemoMode) {
@@ -198,7 +240,7 @@ const deleteGallery = async (req, res) => {
                 const filePath = `gallery/${fileName}`;
                 
                 await supabase.storage
-                    .from('images')
+                    .from('public-images')
                     .remove([filePath]);
             } catch (storageError) {
                 console.error("Failed to delete from storage:", storageError);
@@ -206,46 +248,7 @@ const deleteGallery = async (req, res) => {
             }
         }
 
-        res.json({ message: "Foto berhasil dihapus dari database dan storage====
-const fs = require('fs');
-const path = require('path');
-
-const deleteGallery = async (req, res) => {
-    if (isDemoMode) {
-        return res.json({ message: "Foto berhasil dihapus! (Demo)" });
-    }
-
-    try {
-        const { id } = req.params;
-
-        // 1. Get the image URL first
-        const { data: item, error: fetchError } = await supabase
-            .from('gallery')
-            .select('image_url')
-            .eq('id', id)
-            .single();
-
-        if (fetchError || !item) return res.status(404).json({ message: "Foto tidak ditemukan." });
-
-        // 2. Delete from Database
-        const { error } = await supabase
-            .from('gallery')
-            .delete()
-            .eq('id', id);
-
-        if (error) throw error;
-
-        // 3. Delete from Disk (if it's a local file)
-        if (item.image_url && item.image_url.startsWith('img/gallery/')) {
-            const filePath = path.join(__dirname, '../../', item.image_url);
-            if (fs.existsSync(filePath)) {
-                fs.unlink(filePath, (err) => {
-                    if (err) console.error("Failed to delete file:", err);
-                });
-            }
-        }
-
-        res.json({ message: "Foto dan file berhasil dihapus!" });
+        res.json({ message: "Foto berhasil dihapus dari database dan storage" });
     } catch (e) {
         res.status(500).json({ message: "Gagal menghapus foto.", error: e.message });
     }

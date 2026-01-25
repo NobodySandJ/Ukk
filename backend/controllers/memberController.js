@@ -74,7 +74,7 @@ const createMember = async (req, res) => {
             
             // Upload to Supabase Storage
             const { data: uploadData, error: uploadError } = await supabase.storage
-                .from('images')
+                .from('public-images')
                 .upload(filePath, req.file.buffer, {
                     contentType: req.file.mimetype,
                     cacheControl: '3600',
@@ -85,7 +85,7 @@ const createMember = async (req, res) => {
 
             // Get public URL
             const { data: publicUrlData } = supabase.storage
-                .from('images')
+                .from('public-images')
                 .getPublicUrl(filePath);
 
             image_url = publicUrlData.publicUrl;

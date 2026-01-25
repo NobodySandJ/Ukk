@@ -97,11 +97,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             const response = await fetch('/api/public/gallery');
             if (response.ok) {
                 const flatData = await response.json();
+                console.log('🔍 Gallery API Response:', flatData);
                 galleryData = { group: [], member: {}, dokumentasi: [] };
                 members.forEach(m => galleryData.member[m.id] = []);
 
                 flatData.forEach(item => {
                     const src = item.image_url || '';
+                    console.log('📸 Processing image:', src, 'Category:', item.category);
                     const lowerSrc = src.toLowerCase();
                     const galleryItem = {
                         src: src,
@@ -221,7 +223,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             const avatar = document.createElement('div');
             avatar.className = 'member-avatar';
             avatar.dataset.member = member.id; // Use ID as key
-            const imgSrc = member.image_url?.startsWith('http') ? member.image_url : basePath + (member.image_url ? member.image_url.replace(/^\//, '') : `img/member/${member.imgKey}.webp`);
+            
+            // Fix: Handle both HTTP and HTTPS URLs
+            const imageUrl = (member.image_url || '').trim();
+            const imgSrc = (imageUrl.startsWith('http://') || imageUrl.startsWith('https://'))
+                ? imageUrl 
+                : basePath + (imageUrl ? imageUrl.replace(/^\//, '') : `img/member/${member.imgKey}.webp`);
 
             avatar.innerHTML = `
                 <img src="${imgSrc}" alt="${member.name}" loading="lazy">
@@ -283,7 +290,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             const div = document.createElement('div');
             const isLandscape = category === 'group';
             div.className = `gallery-item ${item.size || ''} ${isLandscape ? 'landscape' : ''}`;
-            const imgSrc = item.src.startsWith('http') ? item.src : basePath + item.src;
+            
+            // Fix: Handle both HTTP and HTTPS URLs
+            const imageSrc = (item.src || '').trim();
+            const imgSrc = (imageSrc.startsWith('http://') || imageSrc.startsWith('https://')) 
+                ? imageSrc 
+                : basePath + imageSrc;
+            
             div.innerHTML = `
                 <img src="${imgSrc}" alt="${item.title}" loading="lazy">
                 <div class="gallery-overlay">
@@ -351,7 +364,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function updateLightboxImage() {
         const item = allImages[currentIndex];
-        lightboxImg.src = item.src.startsWith('http') ? item.src : basePath + item.src;
+        
+        // Fix: Handle both HTTP and HTTPS URLs
+        const imageSrc = (item.src || '').trim();
+        lightboxImg.src = (imageSrc.startsWith('http://') || imageSrc.startsWith('https://'))
+            ? imageSrc 
+            : basePath + imageSrc;
+        
         lightboxImg.alt = item.title;
         lightboxTitle.textContent = item.title;
         lightboxDesc.textContent = item.description;
