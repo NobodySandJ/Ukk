@@ -593,11 +593,22 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('member-form').addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('edit-member-id').value;
-        const name = document.getElementById('member-name').value;
-        const role = document.getElementById('member-role').value;
+        const name = document.getElementById('member-name').value.trim();
+        const role = document.getElementById('member-role').value.trim();
         const jiko = document.getElementById('member-jiko').value;
         const instagram = document.getElementById('member-instagram').value;
         const imageFile = document.getElementById('member-image').files[0];
+
+        // Frontend validation
+        if (!name) {
+            showToast('Nama member wajib diisi!', 'error');
+            return;
+        }
+        if (!role) {
+            showToast('Peran (Gen/Role) wajib diisi! Contoh: Gen 13, Team KIII, Group', 'error');
+            document.getElementById('member-role').focus();
+            return;
+        }
 
         // Construct FormData if image, else JSON
         let bodyPayload;

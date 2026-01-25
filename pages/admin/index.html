@@ -340,23 +340,21 @@
             <form id="member-form">
                 <input type="hidden" id="edit-member-id">
                 <div class="form-group">
-                    <label class="form-label">Nama Member</label>
-                    <input type="text" id="member-name" class="form-control" required>
+                    <label class="form-label">Nama Member <span style="color: red;">*</span></label>
+                    <input type="text" id="member-name" class="form-control" placeholder="Contoh: Aca, Sinta, Grup" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Peran (Gen/Role) <span style="color: red;">*</span></label>
+                    <input type="text" id="member-role" class="form-control" placeholder="Contoh: Gen 13, Team KIII, Group" required>
+                    <small style="color: #64748b; font-size: 0.85rem;">Wajib diisi! Contoh: Gen 13, Team KIII, Member, atau Group</small>
                 </div>
                 <div class="form-group">
                     <label class="form-label">Jikoshoukai</label>
-                    <textarea id="member-jiko" class="form-control" rows="2"></textarea>
+                    <textarea id="member-jiko" class="form-control" rows="2" placeholder="Perkenalan singkat..."></textarea>
                 </div>
-                 <!-- Simplified for UI -->
-                <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                    <div>
-                        <label class="form-label">Peran (Gen/Role)</label>
-                        <input type="text" id="member-role" class="form-control">
-                    </div>
-                    <div>
-                        <label class="form-label">Instagram URL</label>
-                        <input type="text" id="member-instagram" class="form-control">
-                    </div>
+                <div class="form-group">
+                    <label class="form-label">Instagram URL</label>
+                    <input type="text" id="member-instagram" class="form-control" placeholder="https://instagram.com/username">
                 </div>
                 <!-- File Upload with Preview -->
                 <div class="form-group">
