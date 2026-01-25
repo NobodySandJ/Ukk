@@ -16,6 +16,8 @@ yarn-debug.log*
 yarn-error.log*
 logs
 *.log
+backend/*.log
+backend/logs/
 
 # Runtime data
 pids
@@ -37,3 +39,13 @@ build
 
 # Vercel
 .vercel
+
+# Uploaded files (now stored in Supabase Storage)
+img/gallery/*
+!img/gallery/.gitkeep
+
+img/member/*.webp
+!img/member/placeholder.webp
+!img/member/NEaca.webp
+!img/member/NEsinta.webp
+!img/member/group.webp

@@ -52,7 +52,7 @@ const getMemberById = async (req, res) => {
 };
 
 // ============================================================
-// CREATE MEMBER
+// CREATE MEMBER (SUPABASE STORAGE VERSION)
 // ============================================================
 const createMember = async (req, res) => {
     if (isDemoMode) {
@@ -66,10 +66,29 @@ const createMember = async (req, res) => {
             return res.status(400).json({ message: "Nama dan role wajib diisi." });
         }
 
-        // Handle image upload
+        // Handle image upload to Supabase Storage
         let image_url = req.body.image_url || '/img/member/placeholder.webp';
         if (req.file) {
-            image_url = `img/member/${req.file.filename}`;
+            const fileName = `${Date.now()}-${req.file.originalname}`;
+            const filePath = `members/${fileName}`;
+            
+            // Upload to Supabase Storage
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('images')
+                .upload(filePath, req.file.buffer, {
+                    contentType: req.file.mimetype,
+                    cacheControl: '3600',
+                    upsert: false
+                });
+
+            if (uploadError) throw new Error(`Upload failed: ${uploadError.message}`);
+
+            // Get public URL
+            const { data: publicUrlData } = supabase.storage
+                .from('images')
+                .getPublicUrl(filePath);
+
+            image_url = publicUrlData.publicUrl;
         }
 
         const { data, error } = await supabase
@@ -88,7 +107,7 @@ const createMember = async (req, res) => {
             .single();
 
         if (error) throw error;
-        res.status(201).json({ message: "Member berhasil ditambahkan!", member: data });
+        res.status(201).json({ message: "Member berhasil ditambahkan ke Supabase Storage!", member: data });
     } catch (e) {
         res.status(500).json({ message: "Gagal menambahkan member.", error: e.message });
     }
