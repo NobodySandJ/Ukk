@@ -75,7 +75,29 @@ USING ( bucket_id = 'images' );
 - Pilih bucket `images`
 - Klik **"Create policy"**
 
-### 5. Test Upload
+### 5. Cleanup Data Lama (PENTING!)
+
+Sebelum mulai upload baru, hapus dulu data lama dari database:
+
+**Option A: Via Script Node.js (RECOMMENDED)**
+
+```bash
+cd C:\Githab\Ukk
+node backend/scripts/cleanup-gallery.js
+```
+
+**Option B: Via Supabase SQL Editor**
+
+1. Buka Supabase Dashboard > SQL Editor
+2. Paste & run script dari `backend/data/cleanup_old_uploads.sql`
+
+```sql
+DELETE FROM gallery WHERE image_url LIKE 'img/gallery/%';
+DELETE FROM members WHERE image_url LIKE 'img/member/%' 
+  AND image_url NOT IN ('/img/member/placeholder.webp', 'img/member/NEaca.webp', 'img/member/NEsinta.webp', 'img/member/group.webp');
+```
+
+### 6. Test Upload
 
 Upload 1 gambar test ke folder `gallery/`:
 1. Buka bucket `images` > folder `gallery`
