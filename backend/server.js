@@ -53,7 +53,9 @@ const corsOptions = {
 };
 app.use(cors(corsOptions));
 
-app.use(express.json());
+// Increase limit for Gallery Uploads
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // ============================================================
 // ROUTING (API)
@@ -75,6 +77,11 @@ app.use('/', orderRoutes);        // /get-snap-token, /update-order-status, /api
 
 // Menyajikan Berkas Statis dari direktori induk
 app.use(express.static(path.join(__dirname, '..')));
+
+// Specific Route for Favicon (since we moved it to img/logo)
+app.get('/favicon.ico', (req, res) => {
+    res.sendFile(path.join(__dirname, '..', 'img', 'logo', 'favicon.ico'));
+});
 
 
 // ============================================================

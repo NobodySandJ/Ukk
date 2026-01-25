@@ -213,7 +213,7 @@
                 </div>
 
                 <!-- Ticket & Price Settings Card -->
-                <div class="card" style="margin-top: 2rem;">
+                <div class="card" style="margin-top: 0;">
                     <div class="card-header">
                         <div class="card-title">Pengaturan Stok & Harga</div>
                     </div>
@@ -353,14 +353,18 @@
                         <label class="form-label">Peran (Gen/Role)</label>
                         <input type="text" id="member-role" class="form-control">
                     </div>
-                     <div>
-                        <label class="form-label">Showroom URL</label>
-                        <input type="text" id="member-showroom" class="form-control">
+                    <div>
+                        <label class="form-label">Instagram URL</label>
+                        <input type="text" id="member-instagram" class="form-control">
                     </div>
                 </div>
-                <!-- File Upload -->
+                <!-- File Upload with Preview -->
                 <div class="form-group">
                     <label class="form-label">Foto Member</label>
+                    <div id="member-image-preview" style="margin-bottom: 0.75rem; display: none; text-align: center; padding: 1rem; background: var(--bg-secondary); border-radius: 8px;">
+                        <img id="member-preview-img" src="" alt="Preview" style="width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid var(--primary-color); display: block; margin: 0 auto;">
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.75rem; margin-bottom: 0;">Foto saat ini (pilih file baru untuk mengganti)</p>
+                    </div>
                     <input type="file" id="member-image" class="form-control" accept="image/*">
                 </div>
                 <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
@@ -451,6 +455,7 @@
                  <div class="form-group">
                      <label class="form-label">Pilih Foto (Max 5MB)</label>
                      <input type="file" id="gallery-image" class="form-control" accept="image/*" required>
+                     <img id="gallery-preview-image" src="" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px; margin-top: 10px; display: none; border: 1px solid #ddd;">
                      <small style="color:#64748b;">Kosongkan jika tidak ingin mengganti foto</small>
                  </div>
                  <div class="form-group">
@@ -466,10 +471,14 @@
                              <option value="member">Foto Member</option>
                          </select>
                      </div>
-                     <div>
-                         <label class="form-label">Urutan Tampil</label>
-                         <input type="number" id="gallery-order" class="form-control" value="99" min="1">
+                     <div id="gallery-member-container" style="display: none;">
+                         <label class="form-label">Member</label>
+                         <select id="gallery-member" class="form-control">
+                             <option value="">-- Pilih Member --</option>
+                             <!-- Populated by JS -->
+                         </select>
                      </div>
+
                  </div>
                  <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 2rem;">
                      <button type="button" class="btn btn-outline" data-close="gallery-modal">Batal</button>

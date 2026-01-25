@@ -60,10 +60,16 @@ const createMember = async (req, res) => {
     }
 
     try {
-        const { name, role, image_url, details } = req.body;
+        const { name, role, jiko, instagram, details } = req.body;
 
         if (!name || !role) {
             return res.status(400).json({ message: "Nama dan role wajib diisi." });
+        }
+
+        // Handle image upload
+        let image_url = req.body.image_url || '/img/member/placeholder.webp';
+        if (req.file) {
+            image_url = `img/member/${req.file.filename}`;
         }
 
         const { data, error } = await supabase
@@ -71,8 +77,12 @@ const createMember = async (req, res) => {
             .insert({
                 name,
                 role,
-                image_url: image_url || '/img/member/placeholder.webp',
-                details: details || {}
+                image_url,
+                details: { 
+                    ...(details || {}), 
+                    jiko: jiko || '',
+                    instagram: instagram || ''
+                }
             })
             .select()
             .single();
@@ -94,18 +104,41 @@ const updateMember = async (req, res) => {
 
     try {
         const { id } = req.params;
-        const { name, role, image_url, details } = req.body;
+        const { name, role, details, jiko, instagram } = req.body;
+
+        // Fetch existing member to merge details
+        const { data: existing, error: fetchError } = await supabase
+            .from('members')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (fetchError || !existing) {
+            return res.status(404).json({ message: "Member tidak ditemukan." });
+        }
 
         // Build update object dynamically
         const updateData = {};
-        if (name !== undefined) updateData.name = name;
-        if (role !== undefined) updateData.role = role;
-        if (image_url !== undefined) updateData.image_url = image_url;
-        if (details !== undefined) updateData.details = details;
-
-        if (Object.keys(updateData).length === 0) {
-            return res.status(400).json({ message: "Tidak ada data yang diupdate." });
+        if (name !== undefined && name !== '') updateData.name = name;
+        if (role !== undefined && role !== '') updateData.role = role;
+        
+        // Handle image upload
+        if (req.file) {
+            updateData.image_url = `img/member/${req.file.filename}`;
+        } else if (req.body.image_url !== undefined) {
+            updateData.image_url = req.body.image_url;
         }
+
+        // Handle details (merge with existing)
+        const existingDetails = existing.details || {};
+        updateData.details = {
+            ...existingDetails,
+            ...(details || {}),
+            ...(jiko !== undefined ? { jiko } : {}),
+            ...(instagram !== undefined ? { instagram } : {})
+        };
+
+        updateData.updated_at = new Date().toISOString();
 
         const { data, error } = await supabase
             .from('members')
@@ -115,7 +148,6 @@ const updateMember = async (req, res) => {
             .single();
 
         if (error) throw error;
-        if (!data) return res.status(404).json({ message: "Member tidak ditemukan." });
 
         res.json({ message: "Member berhasil diupdate!", member: data });
     } catch (e) {

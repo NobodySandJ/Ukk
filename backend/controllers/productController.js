@@ -1,26 +1,29 @@
 const supabase = require("../config/supabase");
 const { getChekiStock } = require("../utils/stockUtils");
-const productData = require("../../data.json");
 
 const isDemoMode = !process.env.JWT_SECRET;
 
 const getProductsAndStock = async (req, res) => {
     try {
-        let responseData = JSON.parse(JSON.stringify(productData));
+        let responseData = {};
 
         if (!isDemoMode) {
             try {
                 // Fetch ALL dynamic data from Supabase in parallel
-                const [productsRes, settingsRes, newsRes, galleryRes] = await Promise.all([
+                const [productsRes, settingsRes, newsRes, galleryRes, membersRes] = await Promise.all([
                     supabase.from('products').select('*, members(name, role, image_url, details)').eq('is_active', true).order('created_at', { ascending: true }),
                     supabase.from('pengaturan').select('nama, nilai'),
                     supabase.from('news').select('title, content, date').eq('is_published', true).order('created_at', { ascending: false }).limit(3),
-                    supabase.from('gallery').select('image_url, alt_text, category').eq('is_active', true).order('display_order', { ascending: true })
+                    supabase.from('gallery').select('image_url, alt_text, category').eq('is_active', true).order('display_order', { ascending: true }),
+                    supabase.from('members').select('name, image_url').eq('member_type', 'group').single()
                 ]);
 
                 // Parse settings into object
                 const settings = {};
                 (settingsRes.data || []).forEach(s => { settings[s.nama] = s.nilai; });
+
+                // Get group member image from members table
+                const groupMember = membersRes.data;
 
                 // Process Products from new table
                 const allProducts = productsRes.data || [];
@@ -29,10 +32,13 @@ const getProductsAndStock = async (req, res) => {
 
                 // Transform Group Cheki
                 if (groupProduct) {
+                    // Priority: Members Table (Admin) > Settings > Product Image > Default
+                    const groupImg = groupMember?.image_url || settings.group_photo_url || groupProduct.image_url || 'img/member/group.webp';
+
                     responseData.group_cheki = {
                         id: groupProduct.id,
                         name: groupProduct.name || 'Cheki Grup',
-                        image: groupProduct.image_url || 'img/member/group.webp',
+                        image: groupImg,
                         price: groupProduct.price,
                         stock: groupProduct.stock
                     };
@@ -43,7 +49,8 @@ const getProductsAndStock = async (req, res) => {
                     id: p.id,
                     name: p.name.replace('Cheki ', ''), // Remove prefix for display
                     role: p.members?.role || 'Member',
-                    image: p.image_url || p.members?.image_url || `img/member/placeholder.webp`,
+                    // Prioritize Member Profile Image (Admin > Member) over Product Image
+                    image: p.members?.image_url || p.image_url || `img/member/placeholder.webp`,
                     price: p.price,
                     stock: p.stock,
                     details: p.members?.details || {}
@@ -52,9 +59,10 @@ const getProductsAndStock = async (req, res) => {
                 // Transform News
                 const dbNews = newsRes.data || [];
 
-                // Transform Gallery
+                // Transform Gallery (For Homepage Slider)
                 const dbGallery = (galleryRes.data || [])
-                    .filter(g => !g.category || g.category === 'carousel')
+                    // Include 'carousel' AND 'group' (as they are usually landscape/header worthy)
+                    .filter(g => !g.category || g.category === 'carousel' || g.category === 'group')
                     .map(g => ({
                         src: g.image_url,
                         alt: g.alt_text
@@ -71,6 +79,29 @@ const getProductsAndStock = async (req, res) => {
                     lokasi: settings.event_lokasi || null,
                     lineup: settings.event_lineup || null
                 };
+
+                // Add Group Info (Required by frontend)
+                responseData.group = {
+                    name: settings.group_name || 'Refresh Breeze',
+                    tagline: settings.group_tagline || 'Original Idol Group',
+                    about: settings.group_about || 'Refresh Breeze adalah idol group original yang membawa angin segar dalam industri musik.'
+                };
+
+                // Add Static Data (defaults)
+                responseData.how_to_order = [
+                    { title: "1. Login / Daftar", description: "Kamu wajib punya akun dulu ya. Klik tombol **Login** di pojok kanan atas. Kalau belum punya, daftar dulu gampang kok!" },
+                    { title: "2. Pilih Oshi Kamu", description: "Buka menu **Cheki**, lalu pilih member favorit (Oshi) yang mau kamu ajak foto 2-shot." },
+                    { title: "3. Checkout & Bayar", description: "Masukkan jumlah tiket, lalu klik Checkout. Bayar pakai **QRIS atau Virtual Account** (BCA/Mandiri/dll) biar praktis." },
+                    { title: "4. Tiket Siap!", description: "Setelah bayar, tiket QR Code otomatis muncul di menu **Dashboard**. Tunjukkan ke staf saat event ya!" }
+                ];
+
+                responseData.faq = [
+                    { question: "Kak, tiketnya bisa di-refund gak?", answer: "Maaf banget, tiket yang sudah dibeli **tidak bisa dikembalikan (Non-Refundable)** kecuali acaranya batal dari pihak kami." },
+                    { question: "Batas waktu bayarnya berapa lama?", answer: "Kamu punya waktu **15 menit** untuk transfer. Kalau lewat, pesanan otomatis batal dan harus ulang lagi." },
+                    { question: "Cheki itu ngapain aja sih?", answer: "Cheki itu sesi foto instan (Polaroid) berdua bareng member setelah perform. Kamu bisa request gaya yang sopan ya!" },
+                    { question: "Aman gak nih transaksinya?", answer: "Aman dong! Kita pakai **Midtrans** (Payment Gateway Resmi) dan sistem stok otomatis. Jadi gak bakal rebutan kalau udah dapet token bayar." },
+                    { question: "Gimana kalau ada masalah atau butuh bantuan?", answer: "Jika ada kendala teknis, pembayaran, atau pertanyaan lainnya, langsung aja hubungi **Admin** melalui WhatsApp di **085765907580**. Kami siap membantu!" }
+                ];
 
                 // GLOBAL STOCK
                 responseData.cheki_stock = parseInt(settings.stok_cheki || '0', 10);

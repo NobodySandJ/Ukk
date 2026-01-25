@@ -68,7 +68,13 @@ const createGallery = async (req, res) => {
     }
 
     try {
-        const { image_url, caption, category, member_id } = req.body;
+        const { caption, category, member_id } = req.body;
+        let image_url = req.body.image_url;
+
+        // Handle File Upload
+        if (req.file) {
+            image_url = `img/gallery/${req.file.filename}`;
+        }
 
         if (!image_url || !category) {
             return res.status(400).json({ message: "URL gambar dan kategori wajib diisi." });
@@ -78,9 +84,9 @@ const createGallery = async (req, res) => {
             .from('gallery')
             .insert({
                 image_url,
-                caption: caption || null,
+                alt_text: caption || req.body.alt_text || null, // Map caption input to alt_text column
                 category,
-                member_id: member_id || null
+                member_id: (member_id === '' || member_id === 'null') ? null : (member_id || null) // Handle empty string/null
             })
             .select()
             .single();
@@ -102,14 +108,19 @@ const updateGallery = async (req, res) => {
 
     try {
         const { id } = req.params;
-        const { image_url, caption, category, member_id } = req.body;
+        const { image_url, caption, alt_text, category, member_id } = req.body;
 
         // Build update object dynamically
         const updateData = {};
         if (image_url !== undefined) updateData.image_url = image_url;
-        if (caption !== undefined) updateData.caption = caption;
+        if (caption !== undefined) updateData.alt_text = caption;
+        if (alt_text !== undefined) updateData.alt_text = alt_text; // Support direct matching
         if (category !== undefined) updateData.category = category;
-        if (member_id !== undefined) updateData.member_id = member_id;
+
+        // Handle member_id (allow nullifying)
+        if (member_id !== undefined) {
+            updateData.member_id = (member_id === '' || member_id === 'null') ? null : member_id;
+        }
 
         if (Object.keys(updateData).length === 0) {
             return res.status(400).json({ message: "Tidak ada data yang diupdate." });
@@ -134,6 +145,12 @@ const updateGallery = async (req, res) => {
 // ============================================================
 // DELETE GALLERY IMAGE
 // ============================================================
+// ============================================================
+// DELETE GALLERY IMAGE
+// ============================================================
+const fs = require('fs');
+const path = require('path');
+
 const deleteGallery = async (req, res) => {
     if (isDemoMode) {
         return res.json({ message: "Foto berhasil dihapus! (Demo)" });
@@ -142,13 +159,34 @@ const deleteGallery = async (req, res) => {
     try {
         const { id } = req.params;
 
+        // 1. Get the image URL first
+        const { data: item, error: fetchError } = await supabase
+            .from('gallery')
+            .select('image_url')
+            .eq('id', id)
+            .single();
+
+        if (fetchError || !item) return res.status(404).json({ message: "Foto tidak ditemukan." });
+
+        // 2. Delete from Database
         const { error } = await supabase
             .from('gallery')
             .delete()
             .eq('id', id);
 
         if (error) throw error;
-        res.json({ message: "Foto berhasil dihapus!" });
+
+        // 3. Delete from Disk (if it's a local file)
+        if (item.image_url && item.image_url.startsWith('img/gallery/')) {
+            const filePath = path.join(__dirname, '../../', item.image_url);
+            if (fs.existsSync(filePath)) {
+                fs.unlink(filePath, (err) => {
+                    if (err) console.error("Failed to delete file:", err);
+                });
+            }
+        }
+
+        res.json({ message: "Foto dan file berhasil dihapus!" });
     } catch (e) {
         res.status(500).json({ message: "Gagal menghapus foto.", error: e.message });
     }

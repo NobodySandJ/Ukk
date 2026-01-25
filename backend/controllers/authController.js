@@ -1,4 +1,7 @@
 const jwt = require("jsonwebtoken");
+const bcrypt = require("bcryptjs"); // Needed for old functions
+const supabase = require("../config/supabase"); // Needed for old functions
+const otpStorage = require('../utils/otpStore'); // Needed for old functions
 const { isDemoMode } = require("../utils/demoMode");
 const AuthService = require("../services/authService");
 
@@ -87,7 +90,6 @@ const verifyAndGenerateOTP = async (req, res) => {
         // Generate 6-digit OTP
         const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-        // Store OTP with expiration (10 minutes)
         // Store OTP with expiration (10 minutes)
         otpStorage.set(email.toLowerCase(), {
             code: otp,

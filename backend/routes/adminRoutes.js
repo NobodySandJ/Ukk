@@ -5,6 +5,7 @@ const memberController = require('../controllers/memberController');
 const newsController = require('../controllers/newsController');
 const galleryController = require('../controllers/galleryController');
 const { authenticateToken, authorizeAdmin } = require('../middleware/authMiddleware');
+const upload = require('../middleware/uploadMiddleware');
 
 // ============================================================
 // MIDDLEWARE: Apply authentication to all admin routes
@@ -46,8 +47,8 @@ router.delete('/orders/:id', adminController.deleteOrder);
 // ============================================================
 router.get('/members', memberController.getAllMembers);
 router.get('/members/:id', memberController.getMemberById);
-router.post('/members', memberController.createMember);
-router.put('/members/:id', memberController.updateMember);
+router.post('/members', upload.single('image'), memberController.createMember);
+router.put('/members/:id', upload.single('image'), memberController.updateMember);
 router.delete('/members/:id', memberController.deleteMember);
 
 // ============================================================
@@ -62,10 +63,11 @@ router.delete('/news/:id', newsController.deleteNews);
 // ============================================================
 // GALLERY MANAGEMENT (CRUD)
 // ============================================================
+
 router.get('/gallery', galleryController.getAllGallery);
 router.get('/gallery/:id', galleryController.getGalleryById);
-router.post('/gallery', galleryController.createGallery);
-router.put('/gallery/:id', galleryController.updateGallery);
+router.post('/gallery', upload.single('image'), galleryController.createGallery);
+router.put('/gallery/:id', upload.single('image'), galleryController.updateGallery);
 router.delete('/gallery/:id', galleryController.deleteGallery);
 
 module.exports = router;

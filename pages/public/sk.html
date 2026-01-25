@@ -8,84 +8,82 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <link rel="apple-touch-icon" sizes="180x180" href="../../img/logo/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="../../img/logo/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="../../img/logo/favicon-16x16.png">
-    <link rel="manifest" href="../../img/logo/site.webmanifest">
+    <style>
+        .sk-content {
+            background: white;
+            padding: 3rem;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            margin: 2rem auto;
+            max-width: 800px;
+        }
+        .sk-section { margin-bottom: 2rem; }
+        .sk-section h2 { color: var(--primary-color); border-bottom: 2px solid #eee; padding-bottom: 0.5rem; margin-bottom: 1rem; }
+        .sk-section ul { padding-left: 1.5rem; }
+        .sk-section li { margin-bottom: 0.5rem; color: var(--text-color); }
+    </style>
 </head>
 <body>
     <header>
         <nav class="container">
             <a href="../../index.html" class="logo">
                 <img src="../../img/logo/apple-touch-icon.png" alt="Logo">
-                <div class="logo-text">
-                    <strong>Refresh Breeze</strong>
-                    <span>Official Website</span>
-                </div>
+                <div class="logo-text"><strong>Refresh Breeze</strong><span>Official Website</span></div>
             </a>
-            <ul class="nav-links" id="nav-links">
-                <li><a href="../../index.html#hero">About Us</a></li>
-                <li><a href="../../index.html#members">Member</a></li>
-                <li><a href="../../index.html#news">News</a></li>
-                <li><a href="cheki.html">Cheki</a></li>
-            </ul>
-            <div class="nav-auth-buttons">
-                <!-- Diisi oleh auth.js -->
-            </div>
-            <button class="hamburger" id="hamburger-menu" aria-label="Buka menu"><i class="fas fa-bars"></i></button>
         </nav>
-        <div class="nav-menu" id="nav-menu"></div>
     </header>
 
-    <main>
-        <section id="sk-page">
-            <div class="container" style="max-width: 800px; text-align: center;">
-                <h2>Syarat & Ketentuan</h2>
-                <div class="sk-content" style="text-align: left; line-height: 1.8;">
-                    <p><strong>Pembaruan Terakhir: 13 September 2025</strong></p>
-                    <p>Selamat datang di situs resmi Refresh Breeze. Dengan mendaftar dan menggunakan layanan kami, Anda setuju untuk mematuhi syarat dan ketentuan di bawah ini.</p>
-                    
-                    <h3 style="margin-top: 2rem;">1. Pendaftaran Akun</h3>
-                    <ul>
-                        <li><strong>Untuk mendaftar dan melakukan pembelian di situs ini, Anda harus berusia minimal 13 tahun.</strong></li>
-                        <li>Anda bertanggung jawab untuk menyediakan data yang akurat dan valid, termasuk nama pengguna, alamat email aktif, nomor WhatsApp, dan username Instagram.</li>
-                        <li>Anda bertanggung jawab penuh atas keamanan akun dan password Anda. Segala aktivitas yang terjadi melalui akun Anda adalah tanggung jawab Anda.</li>
-                    </ul>
-
-                    <h3 style="margin-top: 2rem;">2. Pembelian Produk</h3>
-                    <ul>
-                        <li>Semua produk yang dijual adalah produk digital (Cheki Digital).</li>
-                        <li>Harga yang tertera adalah final dan dalam Rupiah (IDR).</li>
-                        <li>Pembayaran diproses melalui Midtrans sebagai payment gateway pihak ketiga.</li>
-                        <li>Setelah pembayaran berhasil diverifikasi, detail pesanan dan tiket digital (QR Code) akan tersedia di dasbor akun Anda.</li>
-                    </ul>
-
-                    <h3 style="margin-top: 2rem;">3. Penggunaan Tiket Digital (QR Code)</h3>
-                    <ul>
-                        <li>Setiap QR Code bersifat unik dan hanya berlaku untuk satu kali penukaran sesuai dengan detail pesanan.</li>
-                        <li>QR Code berisi informasi detail item yang dibeli dan total harga.</li>
-                        <li>Pihak Refresh Breeze berhak menolak penukaran jika QR Code tidak valid atau telah digunakan sebelumnya.</li>
-                        <li>Dilarang memperjualbelikan atau mendistribusikan QR Code tiket kepada pihak lain.</li>
-                    </ul>
-                    
-                    <h3 style="margin-top: 2rem;">4. Kebijakan Privasi</h3>
-                    <ul>
-                        <li>Kami menyimpan data pribadi Anda (email, no. WA, username IG) untuk keperluan verifikasi dan komunikasi terkait pesanan.</li>
-                        <li>Kami tidak akan membagikan data pribadi Anda kepada pihak ketiga tanpa persetujuan Anda, kecuali diwajibkan oleh hukum.</li>
-                    </ul>
-
-                    <p style="margin-top: 2rem;">Kami berhak mengubah syarat dan ketentuan ini sewaktu-waktu. Perubahan akan diinformasikan melalui situs ini.</p>
-                </div>
+    <main class="container">
+        <div class="sk-content">
+            <h1 style="text-align: center; margin-bottom: 2rem;">Syarat & Ketentuan</h1>
+            
+            <div class="sk-section">
+                <h2>1. Umum</h2>
+                <ul>
+                    <li>Website ini dikelola resmi oleh manajemen Refresh Breeze (Idol Group).</li>
+                    <li>Dengan mendaftar dan bertransaksi, Anda menyetujui seluruh aturan yang berlaku.</li>
+                    <li>Kami berhak mengubah S&K sewaktu-waktu tanpa pemberitahuan sebelumnya.</li>
+                </ul>
             </div>
-        </section>
+
+            <div class="sk-section">
+                <h2>2. Pembelian Tiket Cheki</h2>
+                <ul>
+                    <li>Tiket Cheki yang sudah dibeli <strong>tidak dapat dikembalikan (Non-Refundable)</strong>.</li>
+                    <li>Satu akun hanya boleh membeli maksimal 5 tiket per transaksi untuk memberi kesempatan fans lain.</li>
+                    <li>Pembayaran wajib diselesaikan dalam waktu 15 menit. Jika lewat, pesanan otomatis batal.</li>
+                    <li>Tiket berbentuk QR Code digital yang tersimpan di menu "Riwayat Pesanan".</li>
+                </ul>
+            </div>
+
+            <div class="sk-section">
+                <h2>3. Pelaksanaan Event</h2>
+                <ul>
+                    <li>Tunjukkan QR Code kepada staf saat antrian cheki.</li>
+                    <li>Dilarang melakukan kontak fisik berlebihan atau ucapan tidak pantas kepada member.</li>
+                    <li>Manajemen berhak membatalkan tiket dan mengusir fans yang melanggar aturan etika (Blacklist).</li>
+                    <li>Jika member berhalangan hadir (sakit), tiket dapat ditukar untuk event berikutnya atau direfund (kebijakan situasional).</li>
+                </ul>
+            </div>
+
+            <div class="sk-section">
+                <h2>4. Privasi Data</h2>
+                <ul>
+                    <li>Data pribadi (Email, No WA) dijaga kerahasiaannya dan hanya digunakan untuk keperluan verifikasi tiket.</li>
+                    <li>Sistem kami menggunakan enkripsi standar industri untuk keamanan password Anda.</li>
+                </ul>
+            </div>
+            
+            <div style="text-align: center; margin-top: 3rem;">
+                <a href="../../index.html" class="btn btn-primary">Kembali ke Beranda</a>
+            </div>
+        </div>
     </main>
 
     <footer>
-        <div class="container">
-            <p>&copy; 2025 Refresh Breeze. All Rights Reserved.</p>
+        <div class="container" style="text-align: center;">
+            <p>&copy; 2025 Refresh Breeze Management.</p>
         </div>
     </footer>
-
-    <script>window.appBasePath = '../../';</script>
-    <script src="../../js/shared/auth.js"></script>
-    <script src="../../js/shared/script.js"></script>
 </body>
 </html>

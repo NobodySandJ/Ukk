@@ -134,19 +134,31 @@ document.addEventListener('DOMContentLoaded', function () {
     // ============================================================
 
     // Helper API Request
-    async function apiRequest(url, options = {}) {
+    async function apiRequest(endpoint, options = {}) {
         const token = localStorage.getItem('userToken');
-        const defaultHeaders = {
-            'Authorization': `Bearer ${token}`
-        };
-        if (!(options.body instanceof FormData)) {
-            defaultHeaders['Content-Type'] = 'application/json';
+        const headers = { ...options.headers };
+
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        // Auto-set Content-Type to JSON only if NOT FormData
+        if (!(options.body instanceof FormData) && !headers['Content-Type']) {
+            headers['Content-Type'] = 'application/json';
         }
 
         const config = {
             ...options,
-            headers: { ...defaultHeaders, ...options.headers }
+            headers
         };
+
+        // Determine API Base URL
+        // If accessed via file:// or non-3000 port, assume localhost:3000
+        const apiBase = (window.location.protocol === 'file:' || window.location.port !== '3000')
+            ? 'http://localhost:3000'
+            : '';
+
+        // Ensure endpoint starts with / if not present
+        const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+        const url = `${apiBase}${cleanEndpoint}`;
 
         try {
             const response = await fetch(url, config);
@@ -510,12 +522,31 @@ document.addEventListener('DOMContentLoaded', function () {
         document.querySelectorAll('.btn-edit-member').forEach(btn => {
             btn.addEventListener('click', () => {
                 const data = JSON.parse(btn.dataset.json);
+                console.log('Edit member data:', data); // Debug
                 document.getElementById('edit-member-id').value = data.id;
                 document.getElementById('member-name').value = data.name;
                 document.getElementById('member-role').value = data.role;
                 document.getElementById('member-jiko').value = data.details?.jiko || '';
-                document.getElementById('member-showroom').value = data.socials?.showroom || '';
+                document.getElementById('member-instagram').value = data.socials?.instagram || data.details?.instagram || '';
                 document.getElementById('member-modal-title').textContent = 'Edit Member';
+                
+                // Show current photo preview
+                const previewContainer = document.getElementById('member-image-preview');
+                const previewImg = document.getElementById('member-preview-img');
+                const previewText = previewContainer.querySelector('p');
+                
+                if (data.image_url) {
+                    const imgSrc = data.image_url.startsWith('http') ? data.image_url : '../../' + data.image_url;
+                    previewImg.src = imgSrc;
+                    previewImg.style.display = 'block';
+                    previewContainer.style.display = 'block';
+                    previewText.textContent = 'Foto saat ini (pilih file baru untuk mengganti)';
+                } else {
+                    previewImg.style.display = 'none';
+                    previewContainer.style.display = 'none';
+                }
+                document.getElementById('member-image').value = ''; // Reset file input
+                
                 openModal('member-modal');
             });
         });
@@ -537,7 +568,26 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('member-form').reset();
         document.getElementById('edit-member-id').value = '';
         document.getElementById('member-modal-title').textContent = 'Tambah Member Baru';
+        // Hide photo preview for new member
+        document.getElementById('member-image-preview').style.display = 'none';
         openModal('member-modal');
+    });
+
+    // Live preview when selecting new image
+    document.getElementById('member-image').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const previewContainer = document.getElementById('member-image-preview');
+        const previewImg = document.getElementById('member-preview-img');
+        
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                previewImg.src = event.target.result;
+                previewContainer.style.display = 'block';
+                previewContainer.querySelector('p').textContent = 'Preview foto baru';
+            };
+            reader.readAsDataURL(file);
+        }
     });
 
     document.getElementById('member-form').addEventListener('submit', async (e) => {
@@ -546,15 +596,11 @@ document.addEventListener('DOMContentLoaded', function () {
         const name = document.getElementById('member-name').value;
         const role = document.getElementById('member-role').value;
         const jiko = document.getElementById('member-jiko').value;
-        const showroom = document.getElementById('member-showroom').value;
+        const instagram = document.getElementById('member-instagram').value;
         const imageFile = document.getElementById('member-image').files[0];
 
         // Construct FormData if image, else JSON
-        // Backend handles both? Assuming FormData for image
-        // If image present, must use FormData
-
         let bodyPayload;
-        let isFormData = false;
 
         if (imageFile) {
             const formData = new FormData();
@@ -562,13 +608,12 @@ document.addEventListener('DOMContentLoaded', function () {
             formData.append('name', name);
             formData.append('role', role);
             formData.append('jiko', jiko);
-            formData.append('showroom', showroom);
+            formData.append('instagram', instagram);
             formData.append('image', imageFile);
             bodyPayload = formData;
-            isFormData = true;
         } else {
             bodyPayload = JSON.stringify({
-                id, name, role, jiko, showroom // Flattened for server processing
+                id, name, role, jiko, instagram // Flattened for server processing
             });
         }
 
@@ -634,6 +679,27 @@ document.addEventListener('DOMContentLoaded', function () {
     // --- GALLERY ---
     let currentGalleryFilter = 'all';
 
+    async function refreshGalleryMemberSelect() {
+        if (allMembersCache.length === 0) {
+            try {
+                allMembersCache = await apiRequest('/api/admin/members');
+            } catch (e) { }
+        }
+        const select = document.getElementById('gallery-member');
+        select.innerHTML = '<option value="">-- Pilih Member --</option>' +
+            allMembersCache.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+    }
+
+    document.getElementById('gallery-category').addEventListener('change', (e) => {
+        const container = document.getElementById('gallery-member-container');
+        if (e.target.value === 'member') {
+            container.style.display = 'block';
+        } else {
+            container.style.display = 'none';
+            document.getElementById('gallery-member').value = '';
+        }
+    });
+
     async function loadGallery() {
         const grid = document.getElementById('gallery-grid');
         grid.innerHTML = '<div style="grid-column:1/-1; text-align:center;">Loading...</div>';
@@ -673,13 +739,39 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // Edit Gallery
             document.querySelectorAll('.btn-edit-gallery').forEach(btn => {
-                btn.addEventListener('click', () => {
+                btn.addEventListener('click', async () => {
                     const data = JSON.parse(btn.dataset.json);
                     document.getElementById('edit-gallery-id').value = data.id;
                     document.getElementById('gallery-alt').value = data.alt_text || '';
                     document.getElementById('gallery-category').value = data.category || 'carousel';
-                    document.getElementById('gallery-order').value = data.display_order || 99;
+                    // document.getElementById('gallery-order').value = data.display_order || 99; // Removed
+
+                    // Show Preview
+                    const preview = document.getElementById('gallery-preview-image');
+                    const imgSrc = data.image_url ? (data.image_url.startsWith('http') ? data.image_url : '../../' + data.image_url) : '';
+                    if (imgSrc) {
+                        preview.src = imgSrc;
+                        preview.style.display = 'block';
+                    } else {
+                        preview.style.display = 'none';
+                    }
+
                     document.getElementById('gallery-image').required = false;
+                    document.getElementById('gallery-category').disabled = false; // Ensure category is editable
+
+                    // Member Select Logic
+                    await refreshGalleryMemberSelect();
+                    const memberContainer = document.getElementById('gallery-member-container');
+                    const memberSelect = document.getElementById('gallery-member');
+
+                    if (data.category === 'member') {
+                        memberContainer.style.display = 'block';
+                        memberSelect.value = data.member_id || '';
+                    } else {
+                        memberContainer.style.display = 'none';
+                        memberSelect.value = '';
+                    }
+
                     document.getElementById('gallery-modal-title').textContent = 'Edit Foto';
                     openModal('gallery-modal');
                 });
@@ -710,10 +802,15 @@ document.addEventListener('DOMContentLoaded', function () {
         });
     });
 
-    document.getElementById('add-gallery-btn').addEventListener('click', () => {
+    document.getElementById('add-gallery-btn').addEventListener('click', async () => {
         document.getElementById('gallery-form').reset();
         document.getElementById('edit-gallery-id').value = '';
         document.getElementById('gallery-image').required = true;
+        document.getElementById('gallery-preview-image').style.display = 'none'; // Hide preview
+
+        refreshGalleryMemberSelect();
+        document.getElementById('gallery-member-container').style.display = 'none'; // Hidden by default until Member category selected
+
         document.getElementById('gallery-modal-title').textContent = 'Tambah Foto Baru';
         openModal('gallery-modal');
     });
@@ -724,17 +821,37 @@ document.addEventListener('DOMContentLoaded', function () {
         const img = document.getElementById('gallery-image').files[0];
         const alt = document.getElementById('gallery-alt').value;
         const category = document.getElementById('gallery-category').value;
-        const order = document.getElementById('gallery-order').value;
+        const memberId = document.getElementById('gallery-member').value;
+
+        // Determine effective member_id (send '' if not member category or empty)
+        const finalMemberId = (category === 'member' && memberId) ? memberId : '';
 
         try {
-            if (id && !img) {
-                // Edit tanpa ganti gambar
-                await apiRequest(`/api/admin/gallery/${id}`, {
-                    method: 'PUT',
-                    body: JSON.stringify({ alt_text: alt, category, display_order: order })
-                });
+            if (id) {
+                // UPDATE EXISTING
+                if (img) {
+                    const fd = new FormData();
+                    fd.append('image', img);
+                    fd.append('alt_text', alt);
+                    fd.append('category', category);
+                    fd.append('member_id', finalMemberId); // Always send
+
+                    await apiRequest(`/api/admin/gallery/${id}`, { method: 'PUT', body: fd });
+                } else {
+                    // JSON update
+                    const payload = {
+                        alt_text: alt,
+                        category,
+                        member_id: finalMemberId || null // JSON prefers null over empty string
+                    };
+
+                    await apiRequest(`/api/admin/gallery/${id}`, {
+                        method: 'PUT',
+                        body: JSON.stringify(payload)
+                    });
+                }
             } else {
-                // Add new atau Edit dengan gambar baru
+                // CREATE NEW
                 if (!img) {
                     showToast('Pilih file gambar', 'error');
                     return;
@@ -743,15 +860,21 @@ document.addEventListener('DOMContentLoaded', function () {
                 fd.append('image', img);
                 fd.append('alt_text', alt);
                 fd.append('category', category);
-                fd.append('display_order', order);
+                fd.append('member_id', finalMemberId);
 
                 await apiRequest('/api/admin/gallery', { method: 'POST', body: fd });
             }
             showToast('Foto berhasil disimpan', 'success');
             closeModal('gallery-modal');
             loadGallery();
-        } catch (err) { }
+        } catch (err) {
+            console.error(err);
+            showToast('Gagal menyimpan foto', 'error');
+        }
     });
+
+
+
 
 
     // --- EVENTS MANAGEMENT ---

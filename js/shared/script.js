@@ -106,6 +106,54 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     // ============================================================
+    // RENDER SKELETONS (HOMEPAGE)
+    // ============================================================
+    function renderHomepageSkeletons() {
+        const memberGrid = document.getElementById('member-grid');
+        const galleryGrid = document.getElementById('gallery-preview-grid');
+
+        if (memberGrid) {
+            memberGrid.innerHTML = '';
+            // Group Card Skeleton
+            const groupSkeleton = document.createElement('div');
+            groupSkeleton.className = 'member-card-detailed skeleton';
+            groupSkeleton.innerHTML = `
+                <div class="skeleton-rect" style="width: 120px; height: 120px; flex-shrink: 0;"></div>
+                <div style="flex: 1; padding: 1rem;">
+                    <div class="skeleton-title"></div>
+                    <div class="skeleton-text"></div>
+                    <div class="skeleton-text-short"></div>
+                </div>
+            `;
+            memberGrid.appendChild(groupSkeleton);
+
+            // Member Card Skeletons
+            for (let i = 0; i < 3; i++) {
+                const card = document.createElement('div');
+                card.className = 'member-card-detailed skeleton';
+                card.innerHTML = `
+                    <div class="skeleton-avatar" style="width: 100px; height: 100px; border-radius: 8px;"></div>
+                    <div style="flex: 1; padding-left: 1rem;">
+                        <div class="skeleton-title" style="height: 1.5rem;"></div>
+                        <div class="skeleton-text"></div>
+                    </div>
+                `;
+                memberGrid.appendChild(card);
+            }
+        }
+
+        if (galleryGrid) {
+            galleryGrid.innerHTML = '';
+            for (let i = 0; i < 4; i++) {
+                const item = document.createElement('div');
+                item.className = 'gallery-preview-item skeleton';
+                item.innerHTML = `<div class="skeleton-rect"></div>`;
+                galleryGrid.appendChild(item);
+            }
+        }
+    }
+
+    // ============================================================
     // FUNGSI LOAD DATA WEBSITE
     // UPDATED: Mengambil data dari API (dengan Supabase members) atau fallback ke data.json
     // ============================================================
@@ -114,6 +162,9 @@ document.addEventListener('DOMContentLoaded', function () {
             // Try fetching from API first (supports dynamic members from Supabase)
             let data;
             let nextEvent = null;
+
+            // Render Skeletons
+            renderHomepageSkeletons();
 
             try {
                 const [productsRes, eventRes] = await Promise.all([
@@ -129,17 +180,12 @@ document.addEventListener('DOMContentLoaded', function () {
                     nextEvent = await eventRes.json();
                 }
             } catch (apiError) {
-                console.log('API not available, falling back to data.json');
+                console.error('API Error:', apiError);
+                // No fallback available since data.json is deleted.
+                // UI will handle empty state.
             }
 
-            // Fallback to data.json if API fails
-            if (!data || !data.group) {
-                const fallbackResponse = await fetch(`${basePath}data.json`);
-                if (!fallbackResponse.ok) throw new Error(`Fetch error: ${fallbackResponse.statusText}`);
-                data = await fallbackResponse.json();
-            }
-
-            if (!data || !data.group) throw new Error("Invalid data format");
+            if (!data) throw new Error("Gagal memuat data dari API");
 
             // Add next event to data object
             if (nextEvent) {
@@ -234,6 +280,13 @@ document.addEventListener('DOMContentLoaded', function () {
                             <li><strong>Sifat:</strong> ${details.sifat || '-'}</li>
                             <li><strong>Hobi:</strong> ${details.hobi || '-'}</li>
                         </ul>
+                        ${details.instagram ? `
+                        <div style="margin-top: 1rem;">
+                            <a href="${details.instagram}" target="_blank" class="btn btn-outline" style="width:100%; justify-content:center; gap:0.5rem; font-size:0.9rem;">
+                                <i class="fab fa-instagram"></i> Follow Instagram
+                            </a>
+                        </div>
+                        ` : ''}
                     </div>`;
                 memberGrid.appendChild(card);
             });
@@ -511,8 +564,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 ` : '';
 
                 return `
-                    <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); aspect-ratio: 1; position: relative; cursor: pointer;" onclick="window.location.href='${basePath}pages/public/gallery.html'">
-                        <img src="${basePath}${item.src}" alt="${item.title}" style="width: 100%; height: 100%; object-fit: cover; ${extraStyle}" loading="lazy">
+                    <div class="gallery-preview-item" style="position: relative; cursor: pointer;" onclick="window.location.href='${basePath}pages/public/gallery.html'">
+                        <img src="${basePath}${item.src}" alt="${item.title}" style="${extraStyle}" loading="lazy">
                         ${overlay}
                     </div>
                 `;

@@ -395,6 +395,8 @@ const getAllOrders = async (req, res) => {
     }
 };
 
+
+
 module.exports = {
     getAdminStats,
     getDashboardStats,
@@ -407,8 +409,6 @@ module.exports = {
     undoTicketStatus,
     deleteOrder,
     getAllOrders,
-    getAllOrders,
-    getMonthlyStats,
     getMonthlyStats,
     cleanupOrders,
     generateResetCode

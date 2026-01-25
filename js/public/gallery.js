@@ -12,97 +12,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // List member buat filter, key-nya harus sama kayak nama file gambar
-    const members = [
-        { name: 'Aca', imgKey: 'aca' },
-        { name: 'Sinta', imgKey: 'sinta' },
-        { name: 'Cissi', imgKey: 'cissi' },
-        { name: 'Channie', imgKey: 'channie' },
-        { name: 'Cally', imgKey: 'cally' },
-        { name: 'Yanyee', imgKey: 'yanyee' },
-        { name: 'Piya', imgKey: 'piya' }
-    ];
+    // URL for dynamic member fetch
+    const MEMBERS_API = '/api/public/members';
+    let members = []; // Will be populated from API
 
-    // Tempat nyimpen data galeri
-    let galleryData = {
-        group: [],
-        member: {},
-        dokumentasi: []
-    };
-
-    try {
-        // Fetch dari API database
-        const response = await fetch('/api/public/gallery');
-        if (response.ok) {
-            const flatData = await response.json();
-
-            // Siapkan struktur data
-            galleryData = { group: [], member: {}, dokumentasi: [] };
-            members.forEach(m => galleryData.member[m.imgKey] = []);
-
-            // Transform data flat dari DB ke struktur frontend
-            flatData.forEach(item => {
-                const src = item.image_url || '';
-                const lowerSrc = src.toLowerCase();
-                const galleryItem = {
-                    src: src,
-                    title: item.alt_text || 'Foto Gallery',
-                    description: item.alt_text || '',
-                    date: 'Terbaru',
-                    size: 'medium',
-                    category: item.category || 'unknown'
-                };
-
-                let isMember = false;
-
-                // Check category from database
-                if (galleryItem.category === 'member') {
-                    members.forEach(m => {
-                        if (lowerSrc.includes(m.imgKey.toLowerCase()) ||
-                            galleryItem.title.toLowerCase().includes(m.name.toLowerCase())) {
-                            if (!galleryData.member[m.imgKey]) galleryData.member[m.imgKey] = [];
-                            galleryData.member[m.imgKey].push(galleryItem);
-                            isMember = true;
-                        }
-                    });
-                } else if (galleryItem.category === 'group' || galleryItem.category === 'grup') {
-                    galleryData.group.push(galleryItem);
-                } else if (galleryItem.category === 'dokumentasi' || galleryItem.category === 'event') {
-                    galleryData.dokumentasi.push(galleryItem);
-                } else {
-                    // Fallback: cek nama file
-                    members.forEach(m => {
-                        if (lowerSrc.includes(m.imgKey.toLowerCase())) {
-                            if (!galleryData.member[m.imgKey]) galleryData.member[m.imgKey] = [];
-                            galleryData.member[m.imgKey].push(galleryItem);
-                            isMember = true;
-                        }
-                    });
-
-                    if (!isMember) {
-                        if (lowerSrc.includes('group') || lowerSrc.includes('grup')) {
-                            galleryData.group.push(galleryItem);
-                        } else if (galleryItem.category !== 'carousel') {
-                            galleryData.dokumentasi.push(galleryItem);
-                        }
-                    }
-                }
-            });
-        } else {
-            throw new Error("API response not ok");
-        }
-    } catch (error) {
-        console.error('Gagal memuat data dari API:', error);
-        // Fallback: empty data
-        galleryData = {
-            group: [],
-            member: {},
-            dokumentasi: []
-        };
-        members.forEach(m => galleryData.member[m.imgKey] = []);
-    }
-
-    // Ambil elemen-elemen HTML yang bakal diisi
+    // Ambil elemen-elemen HTML yang bakal diisi (Moved to top to fix ReferenceError)
     const groupGallery = document.getElementById('group-gallery');
     const memberGallery = document.getElementById('member-gallery');
     const memberAvatars = document.getElementById('member-avatars');
@@ -125,15 +39,166 @@ document.addEventListener('DOMContentLoaded', async () => {
     let currentIndex = 0;
     let selectedMember = 'all';
 
+    // Tempat nyimpen data galeri
+    let galleryData = {
+        group: [],
+        member: {},
+        dokumentasi: []
+    };
+
+    // Helper to get image filename
+    const getImgKey = (path) => {
+        if (!path) return '';
+        const parts = path.split('/');
+        const filename = parts[parts.length - 1];
+        return filename.split('.')[0];
+    };
+
+    // ============================================================
+    // FUNGSI RENDER SKELETON
+    // ============================================================
+    function renderGallerySkeletons() {
+        const containers = [groupGallery, memberGallery, eventGallery];
+        containers.forEach(container => {
+            if (container) {
+                container.innerHTML = '';
+                for (let i = 0; i < 4; i++) {
+                    const div = document.createElement('div');
+                    div.className = 'gallery-item skeleton';
+                    div.style.aspectRatio = '1/1';
+                    div.style.height = '250px';
+                    div.innerHTML = '<div class="skeleton-rect"></div>';
+                    container.appendChild(div);
+                }
+            }
+        });
+    }
+
+    // ============================================================
+    // FUNGSI FETCH DATA
+    // ============================================================
+    async function loadData() {
+        try {
+            renderGallerySkeletons();
+
+            // 1. Fetch Members List (Dynamic)
+            const membersRes = await fetch(MEMBERS_API);
+            if (membersRes.ok) {
+                const membersData = await membersRes.json();
+                members = membersData.map(m => ({
+                    name: m.name,
+                    id: m.id, // Store ID for exact matching
+                    imgKey: getImgKey(m.image_url),
+                    image_url: m.image_url
+                }));
+            }
+
+            // 2. Fetch Gallery Images
+            const response = await fetch('/api/public/gallery');
+            if (response.ok) {
+                const flatData = await response.json();
+                galleryData = { group: [], member: {}, dokumentasi: [] };
+                members.forEach(m => galleryData.member[m.id] = []);
+
+                flatData.forEach(item => {
+                    const src = item.image_url || '';
+                    const lowerSrc = src.toLowerCase();
+                    const galleryItem = {
+                        src: src,
+                        title: item.alt_text || 'Foto Gallery',
+                        description: item.alt_text || '',
+                        date: 'Terbaru',
+                        size: 'medium',
+                        category: item.category || 'unknown'
+                    };
+
+                    let isMember = false;
+
+                    if (galleryItem.category === 'member') {
+                        let matchedById = false;
+
+                        // 1. EXACT MATCH by Member ID (New accurate method)
+                        if (item.member_id) {
+                            const m = members.find(mem => mem.id === item.member_id);
+                            if (m) {
+                                if (!galleryData.member[m.id]) galleryData.member[m.id] = [];
+                                galleryData.member[m.id].push(galleryItem);
+                                isMember = true;
+                                matchedById = true;
+                            }
+                        }
+
+                        // 2. FUZZY MATCH (Fallback for old photos without ID)
+                        if (!matchedById) {
+                            members.forEach(m => {
+                                // MATCHING LOGIC:
+                                // A. Check if Gallery Title (Alt Text) contains Member Name
+                                // B. Check if Gallery Filename contains Member Profile Filename
+                                const nameMatch = galleryItem.title.toLowerCase().includes(m.name.toLowerCase());
+                                const imgKeyMatch = lowerSrc.includes(m.imgKey.toLowerCase());
+
+                                if (nameMatch || (imgKeyMatch && m.imgKey.length > 3)) {
+                                    if (!galleryData.member[m.id]) galleryData.member[m.id] = [];
+
+                                    const exists = galleryData.member[m.id].some(i => i.src === galleryItem.src);
+                                    if (!exists) {
+                                        galleryData.member[m.id].push(galleryItem);
+                                        isMember = true;
+                                    }
+                                }
+                            });
+                        }
+                    } else if (galleryItem.category === 'group' || galleryItem.category === 'grup') {
+                        galleryData.group.push(galleryItem);
+                    } else if (galleryItem.category === 'dokumentasi' || galleryItem.category === 'event') {
+                        galleryData.dokumentasi.push(galleryItem);
+                    } else {
+                        members.forEach(m => {
+                            if (lowerSrc.includes(m.imgKey.toLowerCase())) {
+                                if (galleryData.member[m.id]) { // Check if ID key exists
+                                    // Avoid duplicates
+                                    const exists = galleryData.member[m.id].some(i => i.src === galleryItem.src);
+                                    if (!exists) {
+                                        galleryData.member[m.id].push(galleryItem);
+                                        isMember = true;
+                                    }
+                                }
+                            }
+                        });
+
+                        if (!isMember) {
+                            if (lowerSrc.includes('group') || lowerSrc.includes('grup')) {
+                                galleryData.group.push(galleryItem);
+                            } else if (galleryItem.category !== 'carousel') {
+                                galleryData.dokumentasi.push(galleryItem);
+                            }
+                        }
+                    }
+                });
+            } else {
+                throw new Error("API response not ok");
+            }
+
+            // Render content after fetch
+            renderMemberAvatars();
+            renderGallery(groupGallery, galleryData.group || [], 'group');
+            renderMemberPhotos();
+            renderGallery(eventGallery, galleryData.dokumentasi || [], 'event');
+            updateStats();
+
+        } catch (error) {
+            console.error('Gagal memuat data:', error);
+            // Show error state if needed
+        }
+    }
+
     // ============================================================
     // FUNGSI RENDER MEMBER AVATARS (SELECTOR)
     // ============================================================
     function renderMemberAvatars() {
         if (!memberAvatars) return;
-
         memberAvatars.innerHTML = '';
 
-        // Tombol "Semua"
         const allBtn = document.createElement('div');
         allBtn.className = 'member-avatar all-btn active';
         allBtn.dataset.member = 'all';
@@ -141,16 +206,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         allBtn.addEventListener('click', () => selectMember('all'));
         memberAvatars.appendChild(allBtn);
 
-        // Avatar setiap member
+        if (members.length === 0) {
+            const emptyMsg = document.createElement('div');
+            emptyMsg.style.gridColumn = '1/-1';
+            emptyMsg.style.textAlign = 'center';
+            emptyMsg.style.color = '#64748b';
+            emptyMsg.style.fontSize = '0.9rem';
+            emptyMsg.innerHTML = '<em>Member belum ditambahkan. Cek Admin Panel.</em>';
+            memberAvatars.appendChild(emptyMsg);
+            return;
+        }
+
         members.forEach(member => {
             const avatar = document.createElement('div');
             avatar.className = 'member-avatar';
-            avatar.dataset.member = member.imgKey;
+            avatar.dataset.member = member.id; // Use ID as key
+            const imgSrc = member.image_url?.startsWith('http') ? member.image_url : basePath + (member.image_url ? member.image_url.replace(/^\//, '') : `img/member/${member.imgKey}.webp`);
+
             avatar.innerHTML = `
-                <img src="${basePath}img/member/${member.imgKey}.webp" alt="${member.name}" loading="lazy">
+                <img src="${imgSrc}" alt="${member.name}" loading="lazy">
                 <span class="member-name">${member.name}</span>
             `;
-            avatar.addEventListener('click', () => selectMember(member.imgKey));
+            avatar.addEventListener('click', () => selectMember(member.id));
             memberAvatars.appendChild(avatar);
         });
     }
@@ -160,41 +237,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     // ============================================================
     function selectMember(memberKey) {
         selectedMember = memberKey;
-
-        // Update avatar active state
         document.querySelectorAll('.member-avatar').forEach(avatar => {
             avatar.classList.toggle('active', avatar.dataset.member === memberKey);
         });
-
-        // Render foto berdasarkan member yang dipilih
         renderMemberPhotos();
     }
 
     // ============================================================
-    // FUNGSI RENDER MEMBER PHOTOS (FILTERED)
+    // FUNGSI RENDER MEMBER PHOTOS
     // ============================================================
     function renderMemberPhotos() {
         if (!memberGallery) return;
-
         let photosToShow = [];
-
         if (selectedMember === 'all') {
-            // Tampilkan semua foto member
             Object.values(galleryData.member || {}).forEach(memberPhotos => {
                 photosToShow = photosToShow.concat(memberPhotos);
             });
         } else {
-            // Tampilkan foto dari member yang dipilih saja
             photosToShow = (galleryData.member && galleryData.member[selectedMember]) || [];
         }
-
         renderGallery(memberGallery, photosToShow, 'member');
-
-        // Update count
         const memberCount = document.getElementById('member-count');
-        if (memberCount) {
-            memberCount.textContent = photosToShow.length;
-        }
+        if (memberCount) memberCount.textContent = photosToShow.length;
     }
 
     // ============================================================
@@ -203,11 +267,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function renderGallery(container, items, category) {
         if (!container) return;
         container.innerHTML = '';
-
-        // Filter out placeholder items
-        const validItems = items.filter(item =>
-            item.src && !item.src.includes('example.webp')
-        );
+        const validItems = items.filter(item => item.src && !item.src.includes('example.webp'));
 
         if (validItems.length === 0) {
             container.innerHTML = `
@@ -241,22 +301,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     // FUNGSI UPDATE STATISTIK
     // ============================================================
     function updateStats() {
-        // Hitung total foto member
         let totalMemberPhotos = 0;
         Object.values(galleryData.member || {}).forEach(memberPhotos => {
             totalMemberPhotos += memberPhotos.length;
         });
-
         const groupPhotos = (galleryData.group || []).length;
         const dokPhotos = (galleryData.dokumentasi || []).filter(d => !d.src.includes('example.webp')).length;
         const totalPhotos = groupPhotos + totalMemberPhotos + dokPhotos;
 
         document.getElementById('total-photos').textContent = totalPhotos;
         document.getElementById('total-events').textContent = dokPhotos;
-
-        const eventCount = document.getElementById('event-count');
-        if (eventCount) {
-            eventCount.textContent = dokPhotos;
+        if (document.getElementById('event-count')) {
+            document.getElementById('event-count').textContent = dokPhotos;
         }
     }
 
@@ -312,28 +368,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Event Listeners Lightbox
-    closeBtn.addEventListener('click', closeLightbox);
-    prevBtn.addEventListener('click', prevImage);
-    nextBtn.addEventListener('click', nextImage);
+    if (closeBtn) closeBtn.addEventListener('click', closeLightbox);
+    if (prevBtn) prevBtn.addEventListener('click', prevImage);
+    if (nextBtn) nextBtn.addEventListener('click', nextImage);
 
-    lightbox.addEventListener('click', (e) => {
-        if (e.target === lightbox) closeLightbox();
-    });
+    if (lightbox) {
+        lightbox.addEventListener('click', (e) => {
+            if (e.target === lightbox) closeLightbox();
+        });
+    }
 
-    // Keyboard Navigation
     document.addEventListener('keydown', (e) => {
-        if (!lightbox.classList.contains('active')) return;
-        if (e.key === 'Escape') closeLightbox();
-        if (e.key === 'ArrowRight') nextImage();
-        if (e.key === 'ArrowLeft') prevImage();
+        if (lightbox && lightbox.classList.contains('active')) {
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowRight') nextImage();
+            if (e.key === 'ArrowLeft') prevImage();
+        }
     });
 
     // ============================================================
     // INISIALISASI
     // ============================================================
-    renderMemberAvatars();
-    renderGallery(groupGallery, galleryData.group || [], 'group');
-    renderMemberPhotos();
-    renderGallery(eventGallery, galleryData.dokumentasi || [], 'event');
-    updateStats();
+    loadData();
+
 });
