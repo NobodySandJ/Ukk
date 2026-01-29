@@ -193,6 +193,34 @@ const updateChekiStock = async (req, res) => {
     }
 };
 
+const updateTicketStatus = async (req, res) => {
+    if (isDemoMode) return res.json({ message: 'Status tiket berhasil diupdate. (Demo)' });
+    try {
+        const { order_id, new_status } = req.body;
+        if (!order_id || !new_status) return res.status(400).json({ message: "ID pesanan dan status baru diperlukan." });
+
+        const validStatuses = ['berlaku', 'sudah_dipakai', 'kadaluarsa'];
+        if (!validStatuses.includes(new_status)) {
+            return res.status(400).json({ message: "Status tidak valid. Gunakan: berlaku, sudah_dipakai, atau kadaluarsa." });
+        }
+
+        const { data: order, error: fetchError } = await supabase.from('pesanan').select('status_tiket').eq('id_pesanan', order_id).single();
+        if (fetchError || !order) return res.status(404).json({ message: "Pesanan tidak ditemukan." });
+
+        const updateData = { status_tiket: new_status };
+        if (new_status === 'sudah_dipakai') {
+            updateData.dipakai_pada = new Date().toISOString();
+        }
+
+        const { error: updateError } = await supabase.from('pesanan').update(updateData).eq('id_pesanan', order_id);
+        if (updateError) throw updateError;
+
+        res.json({ message: `Status tiket berhasil diubah ke '${new_status}'.` });
+    } catch (e) {
+        res.status(500).json({ message: "Gagal mengupdate status tiket.", error: e.message });
+    }
+};
+
 const undoTicketStatus = async (req, res) => {
     if (isDemoMode) return res.json({ message: 'Status tiket berhasil di-undo. (Demo)' });
     try {
@@ -406,6 +434,7 @@ module.exports = {
     bulkUpdateSettings,
     setChekiStock,
     updateChekiStock,
+    updateTicketStatus,
     undoTicketStatus,
     deleteOrder,
     getAllOrders,

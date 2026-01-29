@@ -448,10 +448,12 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     initOrderFilters();
 
-    // Filter button
-    document.getElementById('btn-filter-orders')?.addEventListener('click', async () => {
+    // Apply Filters Function
+    async function applyOrderFilters() {
         const month = document.getElementById('filter-month').value;
         const year = document.getElementById('filter-year').value;
+        const status = document.getElementById('filter-status').value;
+        const query = document.getElementById('search-input').value.toLowerCase();
 
         let url = '/api/admin/all-orders';
         const params = [];
@@ -460,25 +462,37 @@ document.addEventListener('DOMContentLoaded', function () {
         if (params.length > 0) url += '?' + params.join('&');
 
         try {
-            const orders = await apiRequest(url);
+            let orders = await apiRequest(url);
+            
+            // Filter by status on client side
+            if (status) {
+                orders = orders.filter(o => o.status_tiket === status);
+            }
+
+            // Filter by search query
+            if (query) {
+                orders = orders.filter(o =>
+                    o.id_pesanan?.toLowerCase().includes(query) ||
+                    o.nama_pelanggan?.toLowerCase().includes(query) ||
+                    (o.nomor_whatsapp || '').includes(query)
+                );
+            }
+            
             allOrders = orders;
             renderOrders(orders.slice(0, 50));
-            showToast(`Menampilkan ${orders.length} pesanan`, 'success');
         } catch (e) { /* handled */ }
-    });
+    }
 
-    // Search input
-    document.getElementById('search-input')?.addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase();
-        if (!query) {
-            renderOrders(allOrders.slice(0, 50));
-            return;
-        }
-        const filtered = allOrders.filter(o =>
-            o.id_pesanan?.toLowerCase().includes(query) ||
-            o.nama_pelanggan?.toLowerCase().includes(query)
-        );
-        renderOrders(filtered.slice(0, 50));
+    // Auto-apply filters on change
+    document.getElementById('filter-status')?.addEventListener('change', applyOrderFilters);
+    document.getElementById('filter-month')?.addEventListener('change', applyOrderFilters);
+    document.getElementById('filter-year')?.addEventListener('change', applyOrderFilters);
+    
+    // Search input with debounce
+    let searchTimeout;
+    document.getElementById('search-input')?.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(applyOrderFilters, 300);
     });
 
 

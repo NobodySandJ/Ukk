@@ -597,6 +597,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // FUNGSI BUTTON LAPOR BUG FLOATING
     // ============================================================
     function createFloatingBugButton() {
+        // Jangan tampilkan di halaman admin
+        if (window.location.pathname.includes('/pages/admin/')) return;
+        
         // Cek kalo udah ada biar ga double
         if (document.getElementById('floating-bug-btn')) return;
 
@@ -615,7 +618,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ============================================================
     // INISIALISASI HOMEPAGE
     // ============================================================
-    // Jalankan di semua halaman
+    // Jalankan di semua halaman (kecuali admin)
     createFloatingBugButton();
 
     if (document.querySelector('#hero')) {
