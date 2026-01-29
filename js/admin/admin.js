@@ -151,10 +151,10 @@ document.addEventListener('DOMContentLoaded', function () {
         };
 
         // Determine API Base URL
-        // If accessed via file:// or non-3000 port, assume localhost:3000
-        const apiBase = (window.location.protocol === 'file:' || window.location.port !== '3000')
+        // In production (Vercel), use same origin. In development, use localhost:3000
+        const apiBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')
             ? 'http://localhost:3000'
-            : '';
+            : ''; // Use relative path for production (same origin)
 
         // Ensure endpoint starts with / if not present
         const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
