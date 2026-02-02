@@ -13,8 +13,27 @@ document.addEventListener('DOMContentLoaded', function () {
     const token = localStorage.getItem('userToken');
     const userData = localStorage.getItem('userData') ? JSON.parse(localStorage.getItem('userData')) : null;
 
+    // Validasi token
     if (!token || !userData || userData.peran !== 'admin') {
-        window.location.href = `${basePath}index.html`;
+        if (typeof showToast === 'function') {
+            showToast('Akses ditolak. Hanya admin yang bisa mengakses halaman ini.', 'error');
+        }
+        setTimeout(() => {
+            window.location.href = `${basePath}index.html`;
+        }, 1500);
+        return;
+    }
+    
+    // Check if token is expired (optional - for better UX)
+    if (typeof isTokenValid === 'function' && !isTokenValid(token)) {
+        if (typeof showToast === 'function') {
+            showToast('Token Anda telah expired. Silakan login kembali.', 'error');
+        }
+        localStorage.removeItem('userToken');
+        localStorage.removeItem('userData');
+        setTimeout(() => {
+            window.location.href = `${basePath}index.html`;
+        }, 2000);
         return;
     }
 
@@ -179,9 +198,15 @@ document.addEventListener('DOMContentLoaded', function () {
                     errorMessage = data || errorMessage;
                 }
 
-                if (response.status === 401) {
+                // Handle authentication errors
+                if (response.status === 401 || response.status === 403) {
+                    showToast('Sesi Anda telah berakhir. Silakan login kembali.', 'error');
                     localStorage.removeItem('userToken');
-                    window.location.reload();
+                    localStorage.removeItem('userData');
+                    setTimeout(() => {
+                        window.location.href = `${basePath}index.html`;
+                    }, 2000);
+                    return;
                 }
                 throw new Error(errorMessage);
             } return data;

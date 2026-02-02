@@ -49,3 +49,4 @@ img/member/*.webp
 !img/member/NEaca.webp
 !img/member/NEsinta.webp
 !img/member/group.webp
+.env*.local

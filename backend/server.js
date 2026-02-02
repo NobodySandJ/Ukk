@@ -9,6 +9,7 @@ const helmet = require("helmet");
 const compression = require("compression");
 const rateLimit = require("express-rate-limit");
 const morgan = require("morgan");
+const chalk = require("chalk");
 require("dotenv").config({ path: require('path').join(__dirname, '..', '.env') });
 
 // Import Dependencies & Config
@@ -106,7 +107,30 @@ app.use((err, req, res, next) => {
 // ============================================================
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`\n🚀 Server berjalan di http://localhost:${PORT}`);
-    console.log(`📝 Log tersimpan di backend/combined.log`);
-    console.log(`🔒 CORS: ${process.env.NODE_ENV === 'production' ? 'Production Mode' : 'Development Mode (Allow All)'}`);
+    console.clear();
+    console.log(chalk.cyan.bold('\n╔══════════════════════════════════════════════════════════╗'));
+    console.log(chalk.cyan.bold('║') + chalk.green.bold('        🌊 REFRESH BREEZE SERVER STARTED 🌊          ') + chalk.cyan.bold('║'));
+    console.log(chalk.cyan.bold('╚══════════════════════════════════════════════════════════╝'));
+    console.log('');
+    console.log(chalk.yellow('  🚀 Server Status:    ') + chalk.green.bold('RUNNING'));
+    console.log(chalk.yellow('  🌐 Local URL:        ') + chalk.blue.underline(`http://localhost:${PORT}`));
+    console.log(chalk.yellow('  📁 Static Files:     ') + chalk.gray(path.join(__dirname, '..')));
+    console.log(chalk.yellow('  📝 Logs Directory:   ') + chalk.gray('backend/combined.log'));
+    console.log('');
+    console.log(chalk.magenta('  📡 API Endpoints:'));
+    console.log(chalk.gray('     → /api/register, /api/login'));
+    console.log(chalk.gray('     → /api/products-and-stock'));
+    console.log(chalk.gray('     → /api/admin/*'));
+    console.log(chalk.gray('     → /get-snap-token'));
+    console.log('');
+    console.log(chalk.yellow('  🔒 CORS Mode:        ') + 
+        (process.env.NODE_ENV === 'production' 
+            ? chalk.red.bold('Production (Restricted)') 
+            : chalk.green.bold('Development (Allow All)')));
+    console.log(chalk.yellow('  🛡️  Security:         ') + chalk.green('Helmet, Rate Limit, JWT'));
+    console.log('');
+    console.log(chalk.cyan('════════════════════════════════════════════════════════════'));
+    console.log(chalk.green.bold('  ✓ Ready to handle requests!'));
+    console.log(chalk.gray('  💡 Press Ctrl+C to stop the server'));
+    console.log(chalk.cyan('════════════════════════════════════════════════════════════\n'));
 });

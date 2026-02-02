@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fix Token Error - Refresh Breeze</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            padding: 40px;
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .icon-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .icon-container i {
+            font-size: 80px;
+            color: #ef4444;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        h1 {
+            color: #1e293b;
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            color: #64748b;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+
+        .error-box {
+            background: #fee2e2;
+            border-left: 4px solid #ef4444;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .error-box code {
+            background: #fca5a5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+
+        .solution-box {
+            background: #f0f9ff;
+            border-left: 4px solid #3b82f6;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .solution-box h3 {
+            color: #1e40af;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .solution-box ol {
+            margin-left: 20px;
+            color: #475569;
+            line-height: 1.8;
+        }
+
+        .solution-box li {
+            margin-bottom: 10px;
+        }
+
+        .btn-container {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            flex: 1;
+            min-width: 200px;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f1f5f9;
+            color: #475569;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .status {
+            text-align: center;
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+            display: block;
+        }
+
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+            display: block;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 30px 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            .btn {
+                min-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="icon-container">
+            <i class="fas fa-exclamation-triangle"></i>
+        </div>
+
+        <h1>⚠️ Token Authentication Error</h1>
+        <p class="subtitle">Ada masalah dengan token autentikasi Anda</p>
+
+        <div class="error-box">
+            <strong>Error Message:</strong><br>
+            <code>Failed to load resource: the server responded with a status of 403 (Forbidden)</code><br>
+            <code>Token tidak valid.</code>
+        </div>
+
+        <div class="solution-box">
+            <h3><i class="fas fa-tools"></i> Solusi Cepat:</h3>
+            <ol>
+                <li><strong>Klik tombol "Clear Token & Login Ulang"</strong> di bawah untuk membersihkan data lama</li>
+                <li>Anda akan diarahkan ke halaman home</li>
+                <li><strong>Login kembali</strong> dengan email dan password Anda</li>
+                <li>Token baru akan di-generate dan masalah akan teratasi</li>
+            </ol>
+        </div>
+
+        <div class="solution-box">
+            <h3><i class="fas fa-info-circle"></i> Mengapa ini terjadi?</h3>
+            <ol>
+                <li><strong>Token Expired:</strong> Token JWT memiliki masa berlaku (24 jam). Jika sudah lewat, harus login ulang.</li>
+                <li><strong>Server Restart:</strong> Jika server di-restart dengan JWT_SECRET yang berbeda, token lama tidak valid.</li>
+                <li><strong>Browser Cache:</strong> Token lama masih tersimpan di localStorage browser Anda.</li>
+            </ol>
+        </div>
+
+        <div class="btn-container">
+            <button class="btn btn-primary" onclick="clearTokenAndRedirect()">
+                <i class="fas fa-eraser"></i>
+                Clear Token & Login Ulang
+            </button>
+            <a href="../../index.html" class="btn btn-secondary">
+                <i class="fas fa-home"></i>
+                Kembali ke Home
+            </a>
+        </div>
+
+        <div id="status" class="status"></div>
+    </div>
+
+    <script>
+        function clearTokenAndRedirect() {
+            const statusEl = document.getElementById('status');
+            
+            try {
+                // Clear localStorage
+                localStorage.removeItem('userToken');
+                localStorage.removeItem('userData');
+                
+                // Show success message
+                statusEl.className = 'status success';
+                statusEl.innerHTML = '<i class="fas fa-check-circle"></i> Token berhasil dihapus! Redirecting...';
+                
+                // Redirect after 2 seconds
+                setTimeout(() => {
+                    window.location.href = '../../index.html';
+                }, 2000);
+                
+            } catch (error) {
+                statusEl.className = 'status error';
+                statusEl.innerHTML = '<i class="fas fa-times-circle"></i> Error: ' + error.message;
+            }
+        }
+
+        // Auto-check if token exists
+        window.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('userToken');
+            if (!token) {
+                document.querySelector('.error-box').innerHTML = 
+                    '<strong>Status:</strong> Token sudah dihapus. Silakan <a href="../../index.html">kembali ke home</a> dan login ulang.';
+            }
+        });
+    </script>
+</body>
+</html>
