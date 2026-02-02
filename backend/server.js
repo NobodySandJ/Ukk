@@ -10,7 +10,18 @@ const compression = require("compression");
 const rateLimit = require("express-rate-limit");
 const morgan = require("morgan");
 const chalk = require("chalk");
-require("dotenv").config({ path: require('path').join(__dirname, '..', '.env') });
+
+// Load environment variables - try .env.local first, then .env
+const dotenv = require("dotenv");
+const envLocalPath = path.join(__dirname, '..', '.env.local');
+const envPath = path.join(__dirname, '..', '.env');
+const fs = require('fs');
+
+if (fs.existsSync(envLocalPath)) {
+    dotenv.config({ path: envLocalPath });
+} else if (fs.existsSync(envPath)) {
+    dotenv.config({ path: envPath });
+}
 
 // Import Dependencies & Config
 const { logger } = require("./middleware/loggerMiddleware");
