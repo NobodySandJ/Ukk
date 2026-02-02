@@ -185,13 +185,35 @@ const deleteMember = async (req, res) => {
     try {
         const { id } = req.params;
 
+        // 1. Delete or deactivate associated products (Cheki) linked to this member
+        const { error: productError } = await supabase
+            .from('products')
+            .update({ is_active: false })
+            .eq('member_id', id);
+
+        if (productError) {
+            console.error("Warning: Failed to deactivate products:", productError.message);
+            // Continue with member deletion even if product deactivation fails
+        }
+
+        // 2. Delete or deactivate gallery images linked to this member
+        const { error: galleryError } = await supabase
+            .from('gallery')
+            .update({ is_active: false })
+            .eq('member_id', id);
+
+        if (galleryError) {
+            console.error("Warning: Failed to deactivate gallery:", galleryError.message);
+        }
+
+        // 3. Delete the member
         const { error } = await supabase
             .from('members')
             .delete()
             .eq('id', id);
 
         if (error) throw error;
-        res.json({ message: "Member berhasil dihapus!" });
+        res.json({ message: "Member dan produk terkait berhasil dihapus!" });
     } catch (e) {
         res.status(500).json({ message: "Gagal menghapus member.", error: e.message });
     }
