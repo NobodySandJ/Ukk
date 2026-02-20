@@ -44,13 +44,11 @@ router.post('/generate-reset-code', adminController.generateResetCode);
 router.delete('/orders/:id', adminController.deleteOrder);
 
 // ============================================================
-// MEMBERS MANAGEMENT (CRUD)
+// MEMBERS MANAGEMENT (Edit Only - No Create/Delete)
 // ============================================================
 router.get('/members', memberController.getAllMembers);
 router.get('/members/:id', memberController.getMemberById);
-router.post('/members', upload.single('image'), memberController.createMember);
 router.put('/members/:id', upload.single('image'), memberController.updateMember);
-router.delete('/members/:id', memberController.deleteMember);
 
 // ============================================================
 // NEWS MANAGEMENT (CRUD)

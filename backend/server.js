@@ -33,6 +33,7 @@ const orderRoutes = require("./routes/orderRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const eventRoutes = require("./routes/eventRoutes");
 const userRoutes = require("./routes/userRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
 
 const app = express();
 
@@ -79,6 +80,7 @@ app.use('/api', productRoutes);   // /api/products-and-stock, /api/leaderboard
 app.use('/api/admin', adminRoutes); // /api/admin/* (UPDATED - all admin routes now centralized)
 app.use('/api', eventRoutes);     // /api/public/next-event, /api/admin/events
 app.use('/api/user', userRoutes); // /api/user/profile
+app.use('/api/reviews', reviewRoutes); // /api/reviews/*
 
 // Order Routes (Mounted at root because of non-standard paths like /get-snap-token)
 app.use('/', orderRoutes);        // /get-snap-token, /update-order-status, /api/my-orders, /api/midtrans-client-key
@@ -86,6 +88,16 @@ app.use('/', orderRoutes);        // /get-snap-token, /update-order-status, /api
 // ============================================================
 // STATIC FILES & ERROR HANDLING
 // ============================================================
+
+// Disable caching for HTML files in development
+app.use((req, res, next) => {
+    if (req.path.endsWith('.html') || req.path.endsWith('.js') || req.path.endsWith('.css')) {
+        res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+    }
+    next();
+});
 
 // Menyajikan Berkas Statis dari direktori induk
 app.use(express.static(path.join(__dirname, '..')));

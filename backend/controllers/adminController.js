@@ -414,6 +414,7 @@ const getAllOrders = async (req, res) => {
         const { data, error } = await supabase
             .from('pesanan')
             .select('*')
+            .neq('status_tiket', 'pending')
             .order('dibuat_pada', { ascending: false });
 
         if (error) throw error;

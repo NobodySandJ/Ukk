@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }, 1500);
         return;
     }
-    
+
     // Check if token is expired (optional - for better UX)
     if (typeof isTokenValid === 'function' && !isTokenValid(token)) {
         if (typeof showToast === 'function') {
@@ -58,6 +58,7 @@ document.addEventListener('DOMContentLoaded', function () {
     if (sidebarOverlay) sidebarOverlay.addEventListener('click', toggleSidebar);
 
     // Navigasi / Tampilan (Views)
+    let allMembersCache = [];
     const navLinks = document.querySelectorAll('.sidebar-nav .nav-link[data-view]');
     const views = document.querySelectorAll('.view-section');
     const pageTitle = document.getElementById('page-title');
@@ -82,7 +83,8 @@ document.addEventListener('DOMContentLoaded', function () {
             'news': 'Berita & Pengumuman',
             'gallery': 'Galeri Foto',
             'event': 'Pengaturan Event',
-            'users': 'Manajemen User'
+            'users': 'Manajemen User',
+            'reports': 'Laporan'
         };
         pageTitle.textContent = titles[viewName] || 'Admin Panel';
 
@@ -488,7 +490,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         try {
             let orders = await apiRequest(url);
-            
+
             // Filter by status on client side
             if (status) {
                 orders = orders.filter(o => o.status_tiket === status);
@@ -502,7 +504,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     (o.nomor_whatsapp || '').includes(query)
                 );
             }
-            
+
             allOrders = orders;
             renderOrders(orders.slice(0, 50));
         } catch (e) { /* handled */ }
@@ -512,7 +514,7 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('filter-status')?.addEventListener('change', applyOrderFilters);
     document.getElementById('filter-month')?.addEventListener('change', applyOrderFilters);
     document.getElementById('filter-year')?.addEventListener('change', applyOrderFilters);
-    
+
     // Search input with debounce
     let searchTimeout;
     document.getElementById('search-input')?.addEventListener('input', () => {
@@ -552,7 +554,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>
                 <div style="display:flex; justify-content:flex-end; gap:0.5rem;">
                     <button class="btn btn-outline btn-edit-member" data-id="${m.id}" data-json='${JSON.stringify(m).replace(/'/g, "&apos;")}'>Edit</button>
-                    <button class="btn btn-danger btn-delete-member" data-id="${m.id}">Hapus</button>
                 </div>
             </div>
          `).join('');
@@ -566,14 +567,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 document.getElementById('member-name').value = data.name;
                 document.getElementById('member-role').value = data.role;
                 document.getElementById('member-jiko').value = data.details?.jiko || '';
+                document.getElementById('member-sifat').value = data.details?.sifat || '';
+                document.getElementById('member-hobi').value = data.details?.hobi || '';
                 document.getElementById('member-instagram').value = data.socials?.instagram || data.details?.instagram || '';
                 document.getElementById('member-modal-title').textContent = 'Edit Member';
-                
+
                 // Show current photo preview
                 const previewContainer = document.getElementById('member-image-preview');
                 const previewImg = document.getElementById('member-preview-img');
                 const previewText = previewContainer.querySelector('p');
-                
+
                 if (data.image_url) {
                     const imgSrc = data.image_url.startsWith('http') ? data.image_url : '../../' + data.image_url;
                     previewImg.src = imgSrc;
@@ -585,42 +588,23 @@ document.addEventListener('DOMContentLoaded', function () {
                     previewContainer.style.display = 'none';
                 }
                 document.getElementById('member-image').value = ''; // Reset file input
-                
+
                 openModal('member-modal');
             });
         });
 
-        // Delete
-        document.querySelectorAll('.btn-delete-member').forEach(btn => {
-            btn.addEventListener('click', () => {
-                showConfirm('Hapus member ini selamanya?', async () => {
-                    await apiRequest(`/api/admin/members/${btn.dataset.id}`, { method: 'DELETE' });
-                    showToast('Member dihapus', 'success');
-                    loadMembers();
-                });
-            });
-        });
+        // Delete button removed - admin hanya bisa edit
     }
 
-    // Add Member
-    document.getElementById('add-member-btn').addEventListener('click', () => {
-        document.getElementById('member-form').reset();
-        document.getElementById('edit-member-id').value = '';
-        document.getElementById('member-modal-title').textContent = 'Tambah Member Baru';
-        // Hide photo preview for new member
-        document.getElementById('member-image-preview').style.display = 'none';
-        openModal('member-modal');
-    });
-
     // Live preview when selecting new image
-    document.getElementById('member-image').addEventListener('change', function(e) {
+    document.getElementById('member-image').addEventListener('change', function (e) {
         const file = e.target.files[0];
         const previewContainer = document.getElementById('member-image-preview');
         const previewImg = document.getElementById('member-preview-img');
-        
+
         if (file) {
             const reader = new FileReader();
-            reader.onload = function(event) {
+            reader.onload = function (event) {
                 previewImg.src = event.target.result;
                 previewContainer.style.display = 'block';
                 previewContainer.querySelector('p').textContent = 'Preview foto baru';
@@ -635,6 +619,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const name = document.getElementById('member-name').value.trim();
         const role = document.getElementById('member-role').value.trim();
         const jiko = document.getElementById('member-jiko').value;
+        const sifat = document.getElementById('member-sifat').value.trim();
+        const hobi = document.getElementById('member-hobi').value.trim();
         const instagram = document.getElementById('member-instagram').value;
         const imageFile = document.getElementById('member-image').files[0];
 
@@ -658,18 +644,24 @@ document.addEventListener('DOMContentLoaded', function () {
             formData.append('name', name);
             formData.append('role', role);
             formData.append('jiko', jiko);
+            formData.append('sifat', sifat);
+            formData.append('hobi', hobi);
             formData.append('instagram', instagram);
             formData.append('image', imageFile);
             bodyPayload = formData;
         } else {
             bodyPayload = JSON.stringify({
-                id, name, role, jiko, instagram // Flattened for server processing
+                id, name, role, jiko, sifat, hobi, instagram // Flattened for server processing
             });
         }
 
         try {
-            await apiRequest(id ? `/api/admin/members/${id}` : '/api/admin/members', {
-                method: id ? 'PUT' : 'POST',
+            if (!id) {
+                showToast('Menambah member baru tidak diizinkan', 'error');
+                return;
+            }
+            await apiRequest(`/api/admin/members/${id}`, {
+                method: 'PUT',
                 body: bodyPayload
             });
             showToast('Data member disimpan', 'success');
@@ -928,7 +920,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
     // --- EVENTS MANAGEMENT ---
-    let allMembersCache = [];
+    // allMembersCache declared at top
 
     async function loadEvents() {
         const container = document.getElementById('events-list');
@@ -1272,6 +1264,232 @@ document.addEventListener('DOMContentLoaded', function () {
             });
         }
     });
+
+    // ============================================================
+    // LAPORAN / COMPREHENSIVE PDF REPORT GENERATION
+    // ============================================================
+    async function generateComprehensiveReport() {
+        const preview = document.getElementById('report-preview');
+        const content = document.getElementById('report-content');
+        preview.style.display = 'block';
+        content.innerHTML = `
+            <div style="text-align:center; padding:2rem;">
+                <i class="fas fa-spinner fa-spin" style="font-size:2rem; color:var(--primary-color); margin-bottom:1rem;"></i>
+                <p>Sedang mengumpulkan data dan menyusun laporan...</p>
+            </div>`;
+
+        try {
+            const orders = await apiRequest('/api/admin/all-orders');
+            // Filter hanya pesanan yang sukses/berlaku
+            const validOrders = (orders || []).filter(o => 
+                o.status_tiket === 'berlaku' || 
+                o.status_tiket === 'sudah_dipakai' || 
+                o.status_tiket === 'hangus'
+            );
+
+            if (validOrders.length === 0) {
+                content.innerHTML = '<p style="text-align:center; padding:2rem; color:#888;">Tidak ada data penjualan yang valid untuk periode ini.</p>';
+                return;
+            }
+
+            // 1. REKAPITULASI TOTAL
+            let totalRevenue = 0;
+            let totalQty = 0;
+            let totalPolaroid = 0;
+            const memberStats = {}; // { memberName: { qty: 0, revenue: 0 } }
+            const buyerDetails = []; // [ { date, name, item, qty, total } ]
+
+            validOrders.forEach(o => {
+                totalRevenue += (o.total_harga || 0);
+                const items = o.detail_item || [];
+                
+                items.forEach(item => {
+                    const qty = item.quantity || 0;
+                    totalQty += qty;
+                    totalPolaroid += qty; // 1 qty = 1 polaroid
+
+                    // Member Stats
+                    if (!memberStats[item.name]) memberStats[item.name] = { qty: 0, revenue: 0 };
+                    memberStats[item.name].qty += qty;
+                    memberStats[item.name].revenue += (qty * (item.price || 0));
+
+                    // Buyer Details
+                    buyerDetails.push({
+                        tanggal: new Date(o.dibuat_pada || o.created_at).toLocaleDateString('id-ID'),
+                        nama: o.nama_pelanggan || 'Anonim',
+                        item: item.name,
+                        qty: qty,
+                        total: `Rp ${(qty * (item.price || 0)).toLocaleString('id-ID')}`
+                    });
+                });
+            });
+
+            // 2. REKAP BULANAN & MINGGUAN
+            const monthlyRecap = {};
+            const weeklyRecap = {};
+
+            validOrders.forEach(o => {
+                const date = new Date(o.dibuat_pada || o.created_at);
+                
+                // Monthly
+                const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+                if (!monthlyRecap[monthKey]) monthlyRecap[monthKey] = { orders: 0, revenue: 0, qty: 0 };
+                monthlyRecap[monthKey].orders++;
+                monthlyRecap[monthKey].revenue += (o.total_harga || 0);
+                (o.detail_item || []).forEach(i => monthlyRecap[monthKey].qty += (i.quantity || 0));
+
+                // Weekly (ISO Week-ish)
+                const oneJan = new Date(date.getFullYear(), 0, 1);
+                const weekNum = Math.ceil((((date - oneJan) / 86400000) + oneJan.getDay() + 1) / 7);
+                const weekKey = `Minggu ${weekNum} (${date.getFullYear()})`;
+                if (!weeklyRecap[weekKey]) weeklyRecap[weekKey] = { orders: 0, revenue: 0, qty: 0 };
+                weeklyRecap[weekKey].orders++;
+                weeklyRecap[weekKey].revenue += (o.total_harga || 0);
+                (o.detail_item || []).forEach(i => weeklyRecap[weekKey].qty += (i.quantity || 0));
+            });
+
+            // Prepare Table Data for Preview
+            const rankRows = Object.entries(memberStats)
+                .sort((a, b) => b[1].qty - a[1].qty)
+                .map(([name, stats]) => ({
+                    member: name,
+                    terjual: stats.qty,
+                    pendapatan: `Rp ${stats.revenue.toLocaleString('id-ID')}`
+                }));
+
+            // UI PREVIEW
+            content.innerHTML = `
+                <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:2rem;">
+                    <div style="background:#f8fafc; padding:1rem; border-radius:8px; border-left:4px solid #059669;">
+                        <small style="color:#64748b; font-weight:600; text-transform:uppercase;">Total Pendapatan</small>
+                        <div style="font-size:1.5rem; font-weight:700; color:#0f172a;">Rp ${totalRevenue.toLocaleString('id-ID')}</div>
+                    </div>
+                    <div style="background:#f8fafc; padding:1rem; border-radius:8px; border-left:4px solid #3b82f6;">
+                        <small style="color:#64748b; font-weight:600; text-transform:uppercase;">Total Cheki Terjual</small>
+                        <div style="font-size:1.5rem; font-weight:700; color:#0f172a;">${totalQty} Unit</div>
+                    </div>
+                    <div style="background:#f8fafc; padding:1rem; border-radius:8px; border-left:4px solid #7c3aed;">
+                        <small style="color:#64748b; font-weight:600; text-transform:uppercase;">Kertas Polaroid</small>
+                        <div style="font-size:1.5rem; font-weight:700; color:#0f172a;">${totalPolaroid} Lembar</div>
+                    </div>
+                </div>
+
+                <h4 style="margin-bottom:1rem; border-bottom:1px solid #e2e8f0; padding-bottom:0.5rem;">🏆 Peringkat Member</h4>
+                <table style="width:100%; border-collapse:collapse; margin-bottom:2rem; font-size:0.9rem;">
+                    <thead style="background:#f1f5f9;">
+                        <tr>
+                            <th style="padding:0.75rem; text-align:left;">Member</th>
+                            <th style="padding:0.75rem; text-align:center;">Qty Terjual</th>
+                            <th style="padding:0.75rem; text-align:right;">Subtotal Rp</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rankRows.map(r => `
+                        <tr>
+                            <td style="padding:0.5rem 0.75rem; border-bottom:1px solid #f1f5f9;">${r.member}</td>
+                            <td style="padding:0.5rem 0.75rem; text-align:center; border-bottom:1px solid #f1f5f9;">${r.terjual}</td>
+                            <td style="padding:0.5rem 0.75rem; text-align:right; border-bottom:1px solid #f1f5f9;">${r.pendapatan}</td>
+                        </tr>`).join('')}
+                    </tbody>
+                </table>
+                <p style="text-align:center; color:#64748b; font-size:0.85rem;">* Pratinjau di atas hanya ringkaran. Laporan PDF akan berisi detail lengkap mingguan, bulanan, dan per pembeli.</p>
+            `;
+
+            // Function for actual PDF Download
+            const btnDownload = document.getElementById('btn-download-pdf');
+            btnDownload.onclick = () => {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF();
+                const now = new Date().toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' });
+                
+                // HEADER
+                doc.setFontSize(22);
+                doc.setTextColor(5, 150, 105);
+                doc.text('Refresh Breeze', 14, 20);
+                doc.setFontSize(14);
+                doc.setTextColor(100);
+                doc.text('LAPORAN PENJUALAN KOMPREHENSIF', 14, 28);
+                doc.setFontSize(9);
+                doc.text(`Waktu Cetak: ${now}`, 14, 34);
+                
+                // 1. RINGKASAN EKSEKUTIF
+                doc.setFontSize(12);
+                doc.setTextColor(0);
+                doc.setFont('helvetica', 'bold');
+                doc.text('1. Ringkasan Eksekutif', 14, 45);
+                doc.setFont('helvetica', 'normal');
+                doc.setFontSize(10);
+                doc.text(`Total Pendapatan: Rp ${totalRevenue.toLocaleString('id-ID')}`, 14, 52);
+                doc.text(`Total Cheki Terjual: ${totalQty} unit`, 14, 58);
+                doc.text(`Kertas Polaroid Digunakan: ${totalPolaroid} lembar (1 unit = 1 lembar)`, 14, 64);
+
+                // 2. PERINGKAT MEMBER
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text('2. Performa Penjualan per Member', 14, 75);
+                doc.autoTable({
+                    startY: 80,
+                    head: [['Peringkat', 'Nama Member', 'Qty Terjual', 'Total Pendapatan (Rp)']],
+                    body: rankRows.map((r, i) => [i + 1, r.member, r.terjual, r.pendapatan]),
+                    styles: { fontSize: 9 },
+                    headStyles: { fillColor: [5, 150, 105] }
+                });
+
+                // 3. REKAP BULANAN
+                doc.addPage();
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text('3. Rekapitulasi Bulanan', 14, 20);
+                doc.autoTable({
+                    startY: 25,
+                    head: [['Bulan', 'Jumlah Pesanan', 'Qty Cheki', 'Total Pendapatan (Rp)']],
+                    body: Object.entries(monthlyRecap).sort().map(([key, s]) => [key, s.orders, s.qty, `Rp ${s.revenue.toLocaleString('id-ID')}`]),
+                    styles: { fontSize: 9 },
+                    headStyles: { fillColor: [59, 130, 246] }
+                });
+
+                // 4. REKAP MINGGUAN
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text('4. Rekapitulasi Mingguan', 14, doc.autoTable.previous.finalY + 15);
+                doc.autoTable({
+                    startY: doc.autoTable.previous.finalY + 20,
+                    head: [['Minggu', 'Pesanan', 'Qty', 'Revenue']],
+                    body: Object.entries(weeklyRecap).sort().reverse().slice(0, 10).map(([key, s]) => [key, s.orders, s.qty, `Rp ${s.revenue.toLocaleString('id-ID')}`]),
+                    styles: { fontSize: 9 },
+                    headStyles: { fillColor: [124, 58, 237] }
+                });
+
+                // 5. DETAIL PEMBELI
+                doc.addPage();
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.text('5. Detail Riwayat Transaksi (Per Item)', 14, 20);
+                doc.autoTable({
+                    startY: 25,
+                    head: [['Tanggal', 'Nama Pembeli', 'Item', 'Qty', 'Subtotal (Rp)']],
+                    body: buyerDetails.map(b => [b.tanggal, b.nama, b.item, b.qty, b.total]),
+                    styles: { fontSize: 8 },
+                    headStyles: { fillColor: [71, 85, 105] },
+                    alternateRowStyles: { fillColor: [248, 250, 252] }
+                });
+
+                const fileName = `Refresh_Breeze_Official_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+                doc.save(fileName);
+                showToast('Laporan PDF berhasil diunduh.', 'success');
+            };
+
+        } catch (error) {
+            console.error('Report Error:', error);
+            content.innerHTML = '<p style="color:red; text-align:center;">Gagal memproses data laporan: ' + error.message + '</p>';
+        }
+    }
+
+    // Report button event listeners
+    const btnComprehensive = document.getElementById('btn-report-comprehensive');
+    const btnDownloadPdf = document.getElementById('btn-download-pdf');
+
+    if (btnComprehensive) btnComprehensive.addEventListener('click', generateComprehensiveReport);
+    if (btnDownloadPdf) { /* logic asigned in function */ }
 
     // INIT
     switchView('dashboard');

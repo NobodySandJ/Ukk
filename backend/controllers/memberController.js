@@ -60,7 +60,7 @@ const createMember = async (req, res) => {
     }
 
     try {
-        const { name, role, jiko, instagram, details } = req.body;
+        const { name, role, jiko, sifat, hobi, instagram, details } = req.body;
 
         if (!name || !role) {
             return res.status(400).json({ message: "Nama dan role wajib diisi." });
@@ -100,6 +100,8 @@ const createMember = async (req, res) => {
                 details: { 
                     ...(details || {}), 
                     jiko: jiko || '',
+                    sifat: sifat || '',
+                    hobi: hobi || '',
                     instagram: instagram || ''
                 }
             })
@@ -123,7 +125,7 @@ const updateMember = async (req, res) => {
 
     try {
         const { id } = req.params;
-        const { name, role, details, jiko, instagram } = req.body;
+        const { name, role, details, jiko, sifat, hobi, instagram } = req.body;
 
         // Fetch existing member to merge details
         const { data: existing, error: fetchError } = await supabase
@@ -154,6 +156,8 @@ const updateMember = async (req, res) => {
             ...existingDetails,
             ...(details || {}),
             ...(jiko !== undefined ? { jiko } : {}),
+            ...(sifat !== undefined ? { sifat } : {}),
+            ...(hobi !== undefined ? { hobi } : {}),
             ...(instagram !== undefined ? { instagram } : {})
         };
 

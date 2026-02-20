@@ -241,7 +241,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         // --- Section: Member ---
-        // Edit di sini untuk mengubah tampilan kartu member
+        // Data member diambil dari API (Supabase) — jumlah fixed 7, admin hanya bisa edit
         const memberGrid = document.getElementById('member-grid');
         if (memberGrid) {
             memberGrid.innerHTML = '';
@@ -249,7 +249,6 @@ document.addEventListener('DOMContentLoaded', function () {
             // Kartu Grup
             const groupCard = document.createElement('div');
             groupCard.className = 'member-card-detailed group-card';
-            // Handle both full URLs (Supabase) and relative paths - with defensive coding
             const groupImgSrc = data.group_cheki?.image
                 ? (data.group_cheki.image.startsWith('http') ? data.group_cheki.image : basePath + data.group_cheki.image)
                 : basePath + 'img/member/group.webp';
@@ -263,11 +262,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 </div>`;
             memberGrid.appendChild(groupCard);
 
-            // Kartu Member Individual
-            data.members.forEach(member => {
+            // Kartu Member Individual (dari API/Database)
+            (data.members || []).forEach(member => {
                 const card = document.createElement('div');
                 card.className = 'member-card-detailed';
-                // Handle both full URLs (Supabase) and relative paths (data.json)
                 const imgSrc = (member.image || '').startsWith('http') ? member.image : basePath + member.image;
                 const details = member.details || {};
                 card.innerHTML = `
@@ -594,6 +592,49 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // ============================================================
+    // FUNGSI LOAD ULASAN HOMEPAGE
+    // ============================================================
+    async function loadHomepageReviews() {
+        const container = document.getElementById('reviews-container');
+        if (!container) return;
+
+        try {
+            const response = await fetch('/api/reviews');
+            if (!response.ok) throw new Error('Gagal memuat ulasan');
+            const reviews = await response.json();
+
+            if (!reviews || reviews.length === 0) {
+                container.innerHTML = '<p style="text-align:center; width:100%; grid-column:1/-1; color:var(--secondary-text-color);">Belum ada ulasan. Jadilah yang pertama! 🌟</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            reviews.forEach(review => {
+                const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+                const date = new Date(review.created_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+                const card = document.createElement('div');
+                card.style.cssText = 'background:white; border-radius:12px; padding:1.5rem; box-shadow:0 2px 12px rgba(0,0,0,0.06); border:1px solid #f0f0f0; transition: transform 0.2s;';
+                card.onmouseenter = () => card.style.transform = 'translateY(-4px)';
+                card.onmouseleave = () => card.style.transform = '';
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                        <div>
+                            <strong style="font-size:1rem;">${review.nama_pengguna}</strong>
+                            ${review.oshi ? `<span style="background:var(--primary-color); color:white; padding:2px 8px; border-radius:12px; font-size:0.75rem; margin-left:0.5rem;">Oshi: ${review.oshi}</span>` : ''}
+                        </div>
+                        <span style="color:#f59e0b; font-size:1.1rem; letter-spacing:2px;">${stars}</span>
+                    </div>
+                    <p style="color:var(--text-color); line-height:1.6; margin-bottom:0.75rem;">${review.komentar}</p>
+                    <small style="color:var(--secondary-text-color);">${date}</small>
+                `;
+                container.appendChild(card);
+            });
+        } catch (e) {
+            container.innerHTML = '<p style="text-align:center; width:100%; grid-column:1/-1; color:var(--secondary-text-color);">Gagal memuat ulasan</p>';
+        }
+    }
+
+    // ============================================================
     // FUNGSI BUTTON LAPOR BUG FLOATING
     // ============================================================
     function createFloatingBugButton() {
@@ -625,5 +666,6 @@ document.addEventListener('DOMContentLoaded', function () {
         loadWebsiteData();
         fetchHomepageLeaderboard();
         loadGalleryPreview();
+        loadHomepageReviews();
     }
 });

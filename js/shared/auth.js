@@ -266,7 +266,7 @@ document.addEventListener('DOMContentLoaded', function () {
                             <!-- Checkbox Syarat & Ketentuan -->
                             <div class="sk-agreement">
                                 <input type="checkbox" id="sk-checkbox" required>
-                                <label for="sk-checkbox">Saya setuju dengan <a href="${paths.sk}" target="_blank">Syarat & Ketentuan</a>.</label>
+                                <label for="sk-checkbox">Saya setuju dengan <a href="#" id="show-sk-modal" style="color: var(--primary-color); text-decoration: underline;">Syarat & Ketentuan</a>.</label>
                             </div>
 
                             <div style="display: flex; gap: 0.5rem;">
@@ -280,6 +280,47 @@ document.addEventListener('DOMContentLoaded', function () {
                     <p class="modal-switch-link">
                         Sudah punya akun? <a href="#" id="show-login-link">Login di sini</a>
                     </p>
+                </div>
+            </div>
+
+            <!-- INLINE S&K MODAL (overlays registration form) -->
+            <div id="sk-inline-modal" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; background:white; z-index:10; overflow-y:auto; border-radius: inherit; padding: 2rem;">
+                <h2 style="text-align:center; margin-bottom:1.5rem; color: var(--primary-color);">Syarat & Ketentuan</h2>
+                <div style="margin-bottom:1.5rem;">
+                    <h3 style="color: var(--primary-color); border-bottom:2px solid #eee; padding-bottom:0.5rem; margin-bottom:0.75rem;">1. Umum</h3>
+                    <ul style="padding-left:1.5rem; margin-bottom:1rem;">
+                        <li style="margin-bottom:0.5rem;">Website ini dikelola resmi oleh manajemen Refresh Breeze (Idol Group).</li>
+                        <li style="margin-bottom:0.5rem;">Dengan mendaftar dan bertransaksi, Anda menyetujui seluruh aturan yang berlaku.</li>
+                        <li style="margin-bottom:0.5rem;">Kami berhak mengubah S&K sewaktu-waktu tanpa pemberitahuan sebelumnya.</li>
+                    </ul>
+                </div>
+                <div style="margin-bottom:1.5rem;">
+                    <h3 style="color: var(--primary-color); border-bottom:2px solid #eee; padding-bottom:0.5rem; margin-bottom:0.75rem;">2. Pembelian Tiket Cheki</h3>
+                    <ul style="padding-left:1.5rem; margin-bottom:1rem;">
+                        <li style="margin-bottom:0.5rem;">Tiket Cheki yang sudah dibeli <strong>tidak dapat dikembalikan (Non-Refundable)</strong>.</li>
+                        <li style="margin-bottom:0.5rem;">Satu akun hanya boleh membeli maksimal 5 tiket per transaksi.</li>
+                        <li style="margin-bottom:0.5rem;">Pembayaran wajib diselesaikan dalam waktu 15 menit.</li>
+                        <li style="margin-bottom:0.5rem;">Tiket berbentuk QR Code digital di menu "Riwayat Pesanan".</li>
+                    </ul>
+                </div>
+                <div style="margin-bottom:1.5rem;">
+                    <h3 style="color: var(--primary-color); border-bottom:2px solid #eee; padding-bottom:0.5rem; margin-bottom:0.75rem;">3. Pelaksanaan Event</h3>
+                    <ul style="padding-left:1.5rem; margin-bottom:1rem;">
+                        <li style="margin-bottom:0.5rem;">Tunjukkan QR Code kepada staf saat antrian cheki.</li>
+                        <li style="margin-bottom:0.5rem;">Dilarang kontak fisik berlebihan atau ucapan tidak pantas kepada member.</li>
+                        <li style="margin-bottom:0.5rem;">Manajemen berhak membatalkan tiket dan mengusir fans yang melanggar (Blacklist).</li>
+                        <li style="margin-bottom:0.5rem;">Jika member berhalangan (sakit), tiket dapat ditukar untuk event berikutnya.</li>
+                    </ul>
+                </div>
+                <div style="margin-bottom:1.5rem;">
+                    <h3 style="color: var(--primary-color); border-bottom:2px solid #eee; padding-bottom:0.5rem; margin-bottom:0.75rem;">4. Privasi Data</h3>
+                    <ul style="padding-left:1.5rem; margin-bottom:1rem;">
+                        <li style="margin-bottom:0.5rem;">Data pribadi dijaga kerahasiaannya dan hanya untuk verifikasi tiket.</li>
+                        <li style="margin-bottom:0.5rem;">Sistem menggunakan enkripsi standar industri untuk keamanan password.</li>
+                    </ul>
+                </div>
+                <div style="text-align:center; margin-top:2rem;">
+                    <button type="button" id="close-sk-modal" class="cta-button" style="min-width:200px;">Kembali ke Pendaftaran</button>
                 </div>
             </div>
         </div>`;
@@ -351,6 +392,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 e.preventDefault();
                 registerView.style.display = 'none';
                 loginView.style.display = 'block';
+            });
+        }
+
+        // S&K Inline Modal - buka/tutup tanpa kehilangan data form
+        const showSkModal = document.getElementById('show-sk-modal');
+        const closeSkModal = document.getElementById('close-sk-modal');
+        const skInlineModal = document.getElementById('sk-inline-modal');
+
+        if (showSkModal && skInlineModal) {
+            showSkModal.addEventListener('click', (e) => {
+                e.preventDefault();
+                skInlineModal.style.display = 'block';
+            });
+        }
+        if (closeSkModal && skInlineModal) {
+            closeSkModal.addEventListener('click', () => {
+                skInlineModal.style.display = 'none';
             });
         }
 

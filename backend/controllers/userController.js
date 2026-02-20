@@ -24,8 +24,8 @@ const updateUserProfile = async (req, res) => {
     if (isDemoMode) return res.json({ message: "Updated (Demo)", token: 'demo', user: { ...req.body, id: 1 } });
 
     try {
-        const { nama_pengguna, email, nomor_whatsapp, instagram, password } = req.body;
-        const updateData = { nama_pengguna, email, nomor_whatsapp, instagram };
+        const { nama_pengguna, email, nomor_whatsapp, instagram, oshi, password } = req.body;
+        const updateData = { nama_pengguna, email, nomor_whatsapp, instagram, oshi };
 
         if (password && password.trim() !== "") {
             const salt = await bcrypt.genSalt(10);

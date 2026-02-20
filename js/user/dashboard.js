@@ -309,4 +309,137 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     fetchOrders();
+
+    // ============================================================
+    // ULASAN (REVIEW) - Cek Eligibility & Tampilkan Form
+    // ============================================================
+    async function loadReviewSection() {
+        const area = document.getElementById('review-form-area');
+        if (!area) return;
+
+        try {
+            // Cek apakah user boleh review
+            const eligRes = await fetch('/api/reviews/eligibility', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!eligRes.ok) throw new Error('Gagal cek eligibility');
+            const { eligible, hasReview } = await eligRes.json();
+
+            if (!eligible) {
+                area.innerHTML = `
+                    <div style="text-align:center; padding:1.5rem; background:#f8f9fa; border-radius:12px; color:#666;">
+                        <i class="fas fa-lock" style="font-size:2rem; margin-bottom:0.75rem; display:block; color:#aaa;"></i>
+                        <p style="margin:0;">Anda harus <strong>membeli dan menggunakan tiket cheki</strong> terlebih dahulu untuk memberikan ulasan.</p>
+                        <a href="../public/cheki.html" style="display:inline-block; margin-top:1rem; color:var(--primary-color); font-weight:600;">Beli Tiket →</a>
+                    </div>`;
+                return;
+            }
+
+            if (hasReview) {
+                // Load existing review for editing
+                const myRes = await fetch('/api/reviews/my-review', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const myReview = await myRes.json();
+                if (myReview) {
+                    renderReviewForm(area, myReview.rating, myReview.komentar, true);
+                    return;
+                }
+            }
+
+            // Show empty form
+            renderReviewForm(area, 0, '', false);
+        } catch (e) {
+            area.innerHTML = '<p style="color:#888;">Gagal memuat fitur ulasan.</p>';
+        }
+    }
+
+    function renderReviewForm(container, currentRating, currentComment, isEdit) {
+        let selectedRating = currentRating;
+        
+        container.innerHTML = `
+            <div style="background:#f8f9fa; border-radius:12px; padding:1.5rem; text-align:left;">
+                ${isEdit ? '<p style="color:#059669; font-weight:600; margin-bottom:1rem;"><i class="fas fa-check-circle"></i> Ulasan Anda sudah terkirim. Anda dapat mengeditnya di bawah.</p>' : ''}
+                <label style="display:block; font-weight:600; margin-bottom:0.5rem;">Rating</label>
+                <div id="star-rating" style="font-size:2rem; cursor:pointer; margin-bottom:1rem; letter-spacing:4px;">
+                    ${'☆'.repeat(5)}
+                </div>
+                <label style="display:block; font-weight:600; margin-bottom:0.5rem;">Komentar</label>
+                <textarea id="review-comment" rows="3" maxlength="500" placeholder="Ceritakan pengalaman cheki kamu..." 
+                    style="width:100%; padding:0.75rem; border:1px solid #ddd; border-radius:8px; font-size:0.95rem; resize:vertical; font-family:inherit;"
+                >${currentComment}</textarea>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-top:1rem;">
+                    <small id="review-char-count" style="color:#888;">${currentComment.length}/500</small>
+                    <button id="submit-review-btn" 
+                            style="background:var(--primary-color); color:white; border:none; padding:0.6rem 1.5rem; border-radius:8px; font-weight:600; cursor:pointer; font-size:0.95rem;">
+                        <i class="fas fa-paper-plane"></i> ${isEdit ? 'Perbarui Ulasan' : 'Kirim Ulasan'}
+                    </button>
+                </div>
+            </div>`;
+
+        // Star rating interaction
+        const starContainer = document.getElementById('star-rating');
+        const updateStars = (rating) => {
+            starContainer.innerHTML = '';
+            for (let i = 1; i <= 5; i++) {
+                const star = document.createElement('span');
+                star.textContent = i <= rating ? '★' : '☆';
+                star.style.color = i <= rating ? '#f59e0b' : '#ddd';
+                star.style.cursor = 'pointer';
+                star.style.transition = 'transform 0.15s';
+                star.onmouseenter = () => star.style.transform = 'scale(1.2)';
+                star.onmouseleave = () => star.style.transform = '';
+                star.onclick = () => { selectedRating = i; updateStars(i); };
+                starContainer.appendChild(star);
+            }
+        };
+        updateStars(selectedRating);
+
+        // Character counter
+        const textarea = document.getElementById('review-comment');
+        const charCount = document.getElementById('review-char-count');
+        textarea.addEventListener('input', () => {
+            charCount.textContent = `${textarea.value.length}/500`;
+        });
+
+        // Submit handler
+        document.getElementById('submit-review-btn').addEventListener('click', async () => {
+            const komentar = textarea.value.trim();
+            if (selectedRating < 1) {
+                showToast('Pilih rating terlebih dahulu!', 'warning');
+                return;
+            }
+            if (komentar.length < 5) {
+                showToast('Komentar minimal 5 karakter.', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('submit-review-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Mengirim...';
+
+            try {
+                const res = await fetch('/api/reviews', {
+                    method: isEdit ? 'PUT' : 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ rating: selectedRating, komentar })
+                });
+                const result = await res.json();
+                if (!res.ok) throw new Error(result.message || 'Gagal mengirim ulasan');
+
+                showToast(isEdit ? 'Ulasan diperbarui!' : 'Ulasan berhasil dikirim!', 'success');
+                // Reload the review section to show updated state
+                loadReviewSection();
+            } catch (e) {
+                showToast(e.message, 'error');
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fas fa-paper-plane"></i> ${isEdit ? 'Perbarui Ulasan' : 'Kirim Ulasan'}`;
+            }
+        });
+    }
+
+    loadReviewSection();
 });

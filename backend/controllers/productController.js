@@ -10,12 +10,14 @@ const getProductsAndStock = async (req, res) => {
         if (!isDemoMode) {
             try {
                 // Fetch ALL dynamic data from Supabase in parallel
-                const [productsRes, settingsRes, newsRes, galleryRes, membersRes] = await Promise.all([
-                    supabase.from('products').select('*, members(name, role, image_url, details)').eq('is_active', true).order('created_at', { ascending: true }),
+                const [productsRes, settingsRes, newsRes, galleryRes, groupMemberRes, allMembersRes] = await Promise.all([
+                    supabase.from('products').select('*, members(id, name, role, image_url, details)').eq('is_active', true).order('created_at', { ascending: true }),
                     supabase.from('pengaturan').select('nama, nilai'),
                     supabase.from('news').select('title, content, date').eq('is_published', true).order('created_at', { ascending: false }).limit(3),
                     supabase.from('gallery').select('image_url, alt_text, category').eq('is_active', true).order('display_order', { ascending: true }),
-                    supabase.from('members').select('name, image_url').eq('member_type', 'group').single()
+                    supabase.from('members').select('name, image_url').eq('member_type', 'group').single(),
+                    // Fetch ALL individual members directly for accurate details
+                    supabase.from('members').select('id, name, role, image_url, details').eq('member_type', 'individual').eq('is_active', true)
                 ]);
 
                 // Parse settings into object
@@ -23,7 +25,10 @@ const getProductsAndStock = async (req, res) => {
                 (settingsRes.data || []).forEach(s => { settings[s.nama] = s.nilai; });
 
                 // Get group member image from members table
-                const groupMember = membersRes.data;
+                const groupMember = groupMemberRes.data;
+                
+                // Get all individual members for lookup
+                const allMembers = allMembersRes.data || [];
 
                 // Process Products from new table
                 const allProducts = productsRes.data || [];
@@ -45,16 +50,28 @@ const getProductsAndStock = async (req, res) => {
                 }
 
                 // Transform Individual Members
-                const dbMembers = memberProducts.map(p => ({
-                    id: p.id,
-                    name: p.name.replace('Cheki ', ''), // Remove prefix for display
-                    role: p.members?.role || 'Member',
-                    // Prioritize Member Profile Image (Admin > Member) over Product Image
-                    image: p.members?.image_url || p.image_url || `img/member/placeholder.webp`,
-                    price: p.price,
-                    stock: p.stock,
-                    details: p.members?.details || {}
-                }));
+                // Prioritize data from members table (edited via admin) over product join
+                const dbMembers = memberProducts.map(p => {
+                    // Find the member directly from members table by matching name or member_id
+                    const memberName = p.name.replace('Cheki ', '');
+                    const directMember = allMembers.find(m => 
+                        m.name.toLowerCase() === memberName.toLowerCase() || 
+                        m.id === p.member_id
+                    );
+                    
+                    // Use direct member data if available, fallback to joined data
+                    const memberData = directMember || p.members || {};
+                    
+                    return {
+                        id: p.id,
+                        name: memberName,
+                        role: memberData.role || p.members?.role || 'Member',
+                        image: memberData.image_url || p.members?.image_url || p.image_url || `img/member/placeholder.webp`,
+                        price: p.price,
+                        stock: p.stock,
+                        details: memberData.details || p.members?.details || {}
+                    };
+                });
 
                 // Transform News
                 const dbNews = newsRes.data || [];

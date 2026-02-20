@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const emailInput = document.getElementById('profile-email');
     const whatsappInput = document.getElementById('profile-whatsapp');
     const instagramInput = document.getElementById('profile-instagram');
+    const oshiSelect = document.getElementById('profile-oshi');
     const passwordInput = document.getElementById('profile-password');
 
     // Fungsi buat nampilin pesan error di bawah input
@@ -124,6 +125,7 @@ document.addEventListener('DOMContentLoaded', function () {
             emailInput.value = profile.email;
             whatsappInput.value = profile.nomor_whatsapp || '';
             instagramInput.value = profile.instagram || '';
+            if (oshiSelect) oshiSelect.value = profile.oshi || '';
 
         } catch (error) {
             showToast(error.message, 'error');
@@ -185,6 +187,7 @@ document.addEventListener('DOMContentLoaded', function () {
             email: email,
             nomor_whatsapp: whatsapp,
             instagram: instagramInput.value,
+            oshi: oshiSelect ? oshiSelect.value : undefined,
             password: password,
         };
 

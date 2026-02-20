@@ -84,6 +84,33 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // ============================================================
+    // BANNER STOK HABIS / HAMPIR HABIS
+    // ============================================================
+    const showSoldOutBanner = (stock) => {
+        // Remove existing banner if any
+        const existing = document.getElementById('stock-warning-banner');
+        if (existing) existing.remove();
+
+        if (stock > 5) return; // No banner needed
+
+        const banner = document.createElement('div');
+        banner.id = 'stock-warning-banner';
+
+        if (stock === 0) {
+            banner.style.cssText = 'background:#dc2626; color:white; padding:1rem 1.5rem; border-radius:10px; text-align:center; margin-bottom:1.5rem; font-weight:600; font-size:1.1rem; display:flex; align-items:center; justify-content:center; gap:0.75rem; animation: pulse 2s ease-in-out infinite;';
+            banner.innerHTML = '<i class="fas fa-exclamation-triangle" style="font-size:1.3rem;"></i> TIKET CHEKI SUDAH HABIS — Silakan tunggu restock dari admin.';
+        } else {
+            banner.style.cssText = 'background:#f59e0b; color:#1a1a2e; padding:1rem 1.5rem; border-radius:10px; text-align:center; margin-bottom:1.5rem; font-weight:600; font-size:1.05rem; display:flex; align-items:center; justify-content:center; gap:0.75rem;';
+            banner.innerHTML = `<i class="fas fa-exclamation-circle" style="font-size:1.2rem;"></i> Tersisa ${stock} tiket lagi — Segera pesan sebelum habis!`;
+        }
+
+        // Insert banner before the product list
+        if (chekiListContainer && chekiListContainer.parentNode) {
+            chekiListContainer.parentNode.insertBefore(banner, chekiListContainer);
+        }
+    };
+
+    // ============================================================
     // MENGAMBIL DATA PRODUK & STOK DARI SERVER
     // ============================================================
     const fetchProductsAndStock = async () => {
@@ -99,6 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
             availableStock = data.cheki_stock || 0;
 
             chekiStockDisplay.textContent = `${availableStock} tiket`;
+            showSoldOutBanner(availableStock);
         } catch (error) {
             console.error("Gagal memuat produk:", error);
             chekiListContainer.innerHTML = `<p class="error-message" style="text-align: center; width: 100%;">${error.message}</p>`;
@@ -190,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (action === 'increase') {
             if (totalInCart >= availableStock) {
-                showToast('Maaf, sisa stok tiket tidak mencukupi.', false);
+                showToast('⚠️ Stok tiket sudah habis! Tidak bisa menambah ke keranjang.', 'warning', 8000);
                 return;
             }
             currentQuantity++;
@@ -384,4 +412,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Menjalankan inisialisasi halaman
     initializePage();
+
+    // ============================================================
+    // ULASAN FANS - Load reviews di halaman cheki
+    // ============================================================
+    async function loadChekiReviews() {
+        const container = document.getElementById('cheki-reviews-container');
+        if (!container) return;
+
+        try {
+            const res = await fetch('/api/reviews');
+            if (!res.ok) throw new Error('Gagal memuat ulasan');
+            const reviews = await res.json();
+
+            if (!reviews || reviews.length === 0) {
+                container.innerHTML = '<p style="text-align:center; width:100%; grid-column:1/-1; color:#888;">Belum ada ulasan. Jadilah yang pertama!</p>';
+                return;
+            }
+
+            container.innerHTML = '';
+            reviews.forEach(review => {
+                const stars = '★'.repeat(review.rating) + '☆'.repeat(5 - review.rating);
+                const date = new Date(review.created_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'long', day: 'numeric' });
+                const card = document.createElement('div');
+                card.style.cssText = 'background:white; border-radius:12px; padding:1.5rem; box-shadow:0 2px 12px rgba(0,0,0,0.06); border:1px solid #f0f0f0; transition: transform 0.2s;';
+                card.onmouseenter = () => card.style.transform = 'translateY(-4px)';
+                card.onmouseleave = () => card.style.transform = '';
+                card.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
+                        <div>
+                            <strong style="font-size:1rem;">${review.nama_pengguna || 'Anonim'}</strong>
+                            ${review.oshi ? `<span style="background:var(--primary-color); color:white; padding:2px 8px; border-radius:12px; font-size:0.75rem; margin-left:0.5rem;">Oshi: ${review.oshi}</span>` : ''}
+                        </div>
+                        <span style="color:#f59e0b; font-size:1.1rem; letter-spacing:2px;">${stars}</span>
+                    </div>
+                    <p style="color:var(--text-color); line-height:1.6; margin-bottom:0.75rem;">${review.komentar}</p>
+                    <small style="color:var(--secondary-text-color);">${date}</small>
+                `;
+                container.appendChild(card);
+            });
+        } catch (e) {
+            container.innerHTML = '<p style="text-align:center; width:100%; grid-column:1/-1; color:#888;">Gagal memuat ulasan.</p>';
+        }
+    }
+
+    loadChekiReviews();
 });
