@@ -1451,10 +1451,26 @@ document.addEventListener('DOMContentLoaded', function () {
                 doc.setFontSize(12);
                 doc.setFont('helvetica', 'bold');
                 doc.text('4. Rekapitulasi Mingguan', 14, doc.autoTable.previous.finalY + 15);
+                
+                const sortedWeeks = Object.entries(weeklyRecap).sort((a, b) => {
+                    // Extract year and week number for robust sorting
+                    const matchA = a[0].match(/Minggu (\d+) \((\d+)\)/);
+                    const matchB = b[0].match(/Minggu (\d+) \((\d+)\)/);
+                    if (matchA && matchB) {
+                        const yearA = parseInt(matchA[2]);
+                        const weekA = parseInt(matchA[1]);
+                        const yearB = parseInt(matchB[2]);
+                        const weekB = parseInt(matchB[1]);
+                        if (yearA !== yearB) return yearB - yearA;
+                        return weekB - weekA;
+                    }
+                    return b[0].localeCompare(a[0]);
+                }).slice(0, 10);
+
                 doc.autoTable({
                     startY: doc.autoTable.previous.finalY + 20,
                     head: [['Minggu', 'Pesanan', 'Qty', 'Revenue']],
-                    body: Object.entries(weeklyRecap).sort().reverse().slice(0, 10).map(([key, s]) => [key, s.orders, s.qty, `Rp ${s.revenue.toLocaleString('id-ID')}`]),
+                    body: sortedWeeks.map(([key, s]) => [key, s.orders, s.qty, `Rp ${s.revenue.toLocaleString('id-ID')}`]),
                     styles: { fontSize: 9 },
                     headStyles: { fillColor: [124, 58, 237] }
                 });
