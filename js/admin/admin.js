@@ -1271,6 +1271,15 @@ document.addEventListener('DOMContentLoaded', function () {
     async function generateComprehensiveReport() {
         const preview = document.getElementById('report-preview');
         const content = document.getElementById('report-content');
+        const startDateInput = document.getElementById('report-start-date');
+        const endDateInput = document.getElementById('report-end-date');
+
+        const startDate = startDateInput.value ? new Date(startDateInput.value) : null;
+        const endDate = endDateInput.value ? new Date(endDateInput.value) : null;
+
+        // Set end date to end of day if selected
+        if (endDate) endDate.setHours(23, 59, 59, 999);
+
         preview.style.display = 'block';
         content.innerHTML = `
             <div style="text-align:center; padding:2rem;">
@@ -1280,15 +1289,22 @@ document.addEventListener('DOMContentLoaded', function () {
 
         try {
             const orders = await apiRequest('/api/admin/all-orders');
-            // Filter hanya pesanan yang sukses/berlaku
-            const validOrders = (orders || []).filter(o => 
-                o.status_tiket === 'berlaku' || 
-                o.status_tiket === 'sudah_dipakai' || 
-                o.status_tiket === 'hangus'
-            );
+            
+            // Filter: Hanya pesanan sukses + dalam rentang tanggal (jika ada)
+            const validOrders = (orders || []).filter(o => {
+                const isSuccess = o.status_tiket === 'berlaku' || o.status_tiket === 'sudah_dipakai' || o.status_tiket === 'hangus';
+                if (!isSuccess) return false;
+
+                if (startDate || endDate) {
+                    const orderDate = new Date(o.dibuat_pada || o.created_at);
+                    if (startDate && orderDate < startDate) return false;
+                    if (endDate && orderDate > endDate) return false;
+                }
+                return true;
+            });
 
             if (validOrders.length === 0) {
-                content.innerHTML = '<p style="text-align:center; padding:2rem; color:#888;">Tidak ada data penjualan yang valid untuk periode ini.</p>';
+                content.innerHTML = '<p style="text-align:center; padding:2rem; color:#888;">Tidak ada data penjualan yang valid untuk kriteria ini.</p>';
                 return;
             }
 
@@ -1359,6 +1375,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
             // UI PREVIEW
             content.innerHTML = `
+                <div style="margin-bottom:1.5rem; padding:1rem; background:#ecfdf5; border-radius:8px; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:0.75rem;">
+                       <i class="fas fa-calendar-alt" style="color:#059669;"></i>
+                       <strong style="color:#065f46;">Rentang: ${startDate ? startDate.toLocaleDateString('id-ID') : 'Semua'} s/d ${endDate ? endDate.toLocaleDateString('id-ID') : 'Sekarang'}</strong>
+                    </div>
+                    <div style="color:#065f46; font-size:0.9rem;">Ditemukan ${validOrders.length} transaksi</div>
+                </div>
+
                 <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:2rem;">
                     <div style="background:#f8fafc; padding:1rem; border-radius:8px; border-left:4px solid #059669;">
                         <small style="color:#64748b; font-weight:600; text-transform:uppercase;">Total Pendapatan</small>
@@ -1411,23 +1435,28 @@ document.addEventListener('DOMContentLoaded', function () {
                 doc.setFontSize(9);
                 doc.text(`Waktu Cetak: ${now}`, 14, 34);
                 
-                // 1. RINGKASAN EKSEKUTIF
-                doc.setFontSize(12);
-                doc.setTextColor(0);
+                // RANGE INFO
+                doc.setFontSize(10);
                 doc.setFont('helvetica', 'bold');
-                doc.text('1. Ringkasan Eksekutif', 14, 45);
+                doc.setTextColor(0);
+                const rangeStr = `Rentang: ${startDate ? startDate.toLocaleDateString('id-ID') : 'Awal'} s/d ${endDate ? endDate.toLocaleDateString('id-ID') : 'Sekarang'}`;
+                doc.text(rangeStr, 14, 40);
+
+                // 1. RINGKASAN EKSEKUTIF
+                doc.setFontSize(11);
+                doc.text('1. Ringkasan Eksekutif', 14, 50);
                 doc.setFont('helvetica', 'normal');
                 doc.setFontSize(10);
-                doc.text(`Total Pendapatan: Rp ${totalRevenue.toLocaleString('id-ID')}`, 14, 52);
-                doc.text(`Total Cheki Terjual: ${totalQty} unit`, 14, 58);
-                doc.text(`Kertas Polaroid Digunakan: ${totalPolaroid} lembar (1 unit = 1 lembar)`, 14, 64);
+                doc.text(`Total Pendapatan: Rp ${totalRevenue.toLocaleString('id-ID')}`, 14, 57);
+                doc.text(`Total Cheki Terjual: ${totalQty} unit`, 14, 63);
+                doc.text(`Kertas Polaroid Digunakan: ${totalPolaroid} lembar (1 unit = 1 lembar)`, 14, 69);
 
                 // 2. PERINGKAT MEMBER
-                doc.setFontSize(12);
+                doc.setFontSize(11);
                 doc.setFont('helvetica', 'bold');
-                doc.text('2. Performa Penjualan per Member', 14, 75);
+                doc.text('2. Performa Penjualan per Member', 14, 80);
                 doc.autoTable({
-                    startY: 80,
+                    startY: 85,
                     head: [['Peringkat', 'Nama Member', 'Qty Terjual', 'Total Pendapatan (Rp)']],
                     body: rankRows.map((r, i) => [i + 1, r.member, r.terjual, r.pendapatan]),
                     styles: { fontSize: 9 },
@@ -1453,7 +1482,6 @@ document.addEventListener('DOMContentLoaded', function () {
                 doc.text('4. Rekapitulasi Mingguan', 14, doc.autoTable.previous.finalY + 15);
                 
                 const sortedWeeks = Object.entries(weeklyRecap).sort((a, b) => {
-                    // Extract year and week number for robust sorting
                     const matchA = a[0].match(/Minggu (\d+) \((\d+)\)/);
                     const matchB = b[0].match(/Minggu (\d+) \((\d+)\)/);
                     if (matchA && matchB) {
@@ -1465,7 +1493,7 @@ document.addEventListener('DOMContentLoaded', function () {
                         return weekB - weekA;
                     }
                     return b[0].localeCompare(a[0]);
-                }).slice(0, 10);
+                }).slice(0, 12);
 
                 doc.autoTable({
                     startY: doc.autoTable.previous.finalY + 20,
@@ -1489,7 +1517,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     alternateRowStyles: { fillColor: [248, 250, 252] }
                 });
 
-                const fileName = `Refresh_Breeze_Official_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+                const fileName = `Refresh_Breeze_Report_${startDate ? startDate.toISOString().split('T')[0] : 'All'}_to_${endDate ? endDate.toISOString().split('T')[0] : 'Now'}.pdf`;
                 doc.save(fileName);
                 showToast('Laporan PDF berhasil diunduh.', 'success');
             };
