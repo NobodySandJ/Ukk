@@ -1528,12 +1528,36 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // Report button event listeners
+    // Event listener for comprehensive report
     const btnComprehensive = document.getElementById('btn-report-comprehensive');
-    const btnDownloadPdf = document.getElementById('btn-download-pdf');
-
     if (btnComprehensive) btnComprehensive.addEventListener('click', generateComprehensiveReport);
-    if (btnDownloadPdf) { /* logic asigned in function */ }
+
+    // DATE RANGE SHORTCUTS
+    window.setReportDateRange = function(type) {
+        const startInput = document.getElementById('report-start-date');
+        const endInput = document.getElementById('report-end-date');
+        const now = new Date();
+        
+        if (type === 'all') {
+            startInput.value = '';
+            endInput.value = '';
+        } else if (type === 'week') {
+            const day = now.getDay() || 7; // 1 (Mon) - 7 (Sun)
+            const monday = new Date(now);
+            monday.setDate(now.getDate() - (day - 1));
+            startInput.value = monday.toISOString().split('T')[0];
+            endInput.value = now.toISOString().split('T')[0];
+        } else if (type === 'month') {
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            const indentAdjust = firstDay.getTimezoneOffset() * 60000;
+            const firstDayLocal = new Date(firstDay.getTime() - indentAdjust);
+            startInput.value = firstDayLocal.toISOString().split('T')[0];
+            endInput.value = now.toISOString().split('T')[0];
+        }
+        
+        // Auto trigger report
+        generateComprehensiveReport();
+    };
 
     // INIT
     switchView('dashboard');
